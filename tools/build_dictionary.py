@@ -72,7 +72,7 @@ def main():
         raise SystemExit(f'TDK kelime sayısı beklenenden farklı: {len(tdk_words)}')
     if len(roots) != 75909:
         raise SystemExit(f'Hunspell kök sayısı beklenenden farklı: {len(roots)}')
-    if len(extra) < 56000:
+    if len(extra) != 56784:
         raise SystemExit(f'Ek geçerli kelime sayısı beklenenden farklı: {len(extra)}')
 
     template_dir = Path(args.template_dir)
