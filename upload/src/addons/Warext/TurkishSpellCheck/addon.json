@@ -1,0 +1,19 @@
+{
+    "legacy_addon_id": "",
+    "title": "Warext Turkish Spell Check",
+    "description": "Türkçe akıllı yazım ve cümle denetimi: noktalama sonrası aktif kelime taraması, tüm cümle analizi, Türkçe karakter/ek hataları, niyet odaklı öneriler, noktalama ve mı/mi uyumu.",
+    "version_id": 1050000,
+    "version_string": "1",
+    "dev": "Warext Studios",
+    "dev_url": "https://github.com/benjamin1734",
+    "faq_url": "",
+    "support_url": "https://github.com/benjamin1734/Warext-Studios-Xenfero-T-rk-e-Yaz-m-Denetim-Eklentisi",
+    "extra_urls": {},
+    "require": {
+        "XF": [
+            2030070,
+            "XenForo 2.3.0+"
+        ]
+    },
+    "icon": "fa-spell-check"
+}
