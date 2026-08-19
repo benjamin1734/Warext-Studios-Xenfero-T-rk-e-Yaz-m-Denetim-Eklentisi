@@ -63,7 +63,32 @@ upload/
     ├── _data/
     ├── Setup.php
     └── addon.json
+
+source/dictionary/
+├── engine.part0
+└── engine.part1
+
+tools/
+├── build_dictionary.py
+└── build_release.sh
+
+tests/
+└── dictionary-smoke.js
 ```
+
+## Kaynak Koddan Derleme
+
+Linux veya GitHub Actions ortamında:
+
+```bash
+bash tools/build_release.sh
+```
+
+İşlem sözlük verisini sabitlenmiş açık kaynak sürümlerinden üretir, JavaScript ve PHP kontrollerini çalıştırır, smoke testlerini tamamlar ve `release/Warext-SpellCheck-1.zip` paketini oluşturur.
+
+`main` dalındaki ilgili kaynak değişikliklerinde GitHub Actions aynı doğrulamaları otomatik çalıştırır ve başarılı derlemede güncel kurulum paketini repoya kaydeder.
+
+Kullanılan sözlük kaynakları ve sabitlenen sürümler `THIRD_PARTY.md` dosyasında belirtilmiştir.
 
 ## Geliştirme
 
