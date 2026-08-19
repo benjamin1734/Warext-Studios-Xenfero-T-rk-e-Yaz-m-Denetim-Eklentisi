@@ -1,15 +1,16 @@
-# Warext Turkish Spell Check 3.0.0
+# Warext Turkish Spell Check
 
-- Yerel Türkçe denetim motoru final mimarisine yükseltildi.
-- 117.000+ yerel kelime ve form havuzu korundu.
-- Morfoloji, ses olayı, özel ad, kısaltma, sayı eki ve bağlamsal gramer denetimleri birleştirildi.
-- Yaygın yazım hataları ve birleşik/ayrı yazım kuralları genişletildi.
-- Özne-yüklem denetiminde bilinen birleşik/ayrı yazım düzeltmeleriyle çakışan yanlış pozitifler azaltıldı.
-- Kalıcı kullanıcı sözlüğü, sözlük yönetimi ve oturumluk yok sayma eklendi.
-- ACP üzerinden gramer, noktalama, özel ad, günlük yazım, alt çizgi, öneri sayısı, forum sözlüğü ve özel isim ayarları eklendi.
-- Zengin editörde yerel hata altı çizimi eklendi.
-- Öneri sonucu önbelleği eklendi.
-- URL, e-posta, domain, kullanıcı adı, IP, dosya yolu ve kod blokları denetim dışında tutuldu.
-- Harici API, Docker, Python, model sunucusu ve üçüncü taraf çalışma zamanı bağımlılığı yoktur.
-- Eski 1.6, 2.2 ve 2.3 tarayıcı dosyaları yükseltmede temizlenir.
-- Kod yorum satırları kaldırıldı.
+## 1.0.0
+
+- Tamamen yerel Türkçe denetim mimarisi nihai v1 seviyesine getirildi.
+- 117.000+ yerel kelime/form tabanı korundu.
+- Çok aşamalı morfoloji; fiilimsi, türetim, ek zinciri ve ses olayı kontrolleri genişletildi.
+- de/da, ki, soru eki, birleşik-ayrı yazım, kişi ve zaman bağlamı güçlendirildi.
+- 23 yaygın fiil ailesinde kişi duyarlı geçmiş/gelecek bağlam denetimi eklendi.
+- 50+ teknik kısaltma/teknoloji adı için Türkçe ek ve kesme işareti denetimi eklendi.
+- Türkçe Q klavye komşuluğu öneri sıralamasına dahil edildi.
+- URL, e-posta, domain, IPv4, IPv6, MAC, UUID, hash, sürüm, tarih, saat, Windows/Unix yolu, CLI parametresi, ortam değişkeni, dotfile, dosya adı, kod, BBCode, mention, hashtag ve emoji koruması genişletildi.
+- Uzun metin cümle bazlı arka plan taraması ve komşu cümle önbelleği korundu.
+- Kişisel sözlük, oturumluk yok sayma, ACP özel sözlüğü ve özel isim listesi korundu.
+- Harici API, Docker, Python çalışma zamanı veya model servisi kullanılmaz.
+- Çalışma zamanı dış ağ isteği yoktur.
