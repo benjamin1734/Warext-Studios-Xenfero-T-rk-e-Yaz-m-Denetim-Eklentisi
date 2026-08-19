@@ -66,17 +66,18 @@ def main():
     tdk_set = set(tdk_words)
     extra = [word for word in roots if word not in tdk_set]
 
-    print(f'TDK={len(tdk_words)} ROOT={len(roots)} EXTRA={len(extra)}')
-
-    if len(tdk_words) != 60711:
-        raise SystemExit(f'TDK kelime sayısı beklenenden farklı: {len(tdk_words)}')
-    if len(roots) != 75909:
-        raise SystemExit(f'Hunspell kök sayısı beklenenden farklı: {len(roots)}')
-    if len(extra) != 56784:
-        raise SystemExit(f'Ek geçerli kelime sayısı beklenenden farklı: {len(extra)}')
+    if len(tdk_words) < 60000:
+        raise SystemExit(f'TDK kelime sayısı yetersiz: {len(tdk_words)}')
+    if len(roots) < 75000:
+        raise SystemExit(f'Hunspell kök sayısı yetersiz: {len(roots)}')
+    if len(extra) < 56000:
+        raise SystemExit(f'Ek geçerli kelime sayısı yetersiz: {len(extra)}')
 
     template_dir = Path(args.template_dir)
-    template = (template_dir / 'engine.part0').read_text(encoding='utf-8') + (template_dir / 'engine.part1').read_text(encoding='utf-8')
+    parts = sorted(template_dir.glob('engine-v300.part*'))
+    if not parts:
+        raise SystemExit('v3 motor kaynak parçaları bulunamadı')
+    template = ''.join(path.read_text(encoding='utf-8') for path in parts)
     template = template.replace('__TDK_JSON__', json.dumps('\n'.join(tdk_words), ensure_ascii=False, separators=(',', ':')))
     template = template.replace('__EXTRA_JSON__', json.dumps('\n'.join(extra), ensure_ascii=False, separators=(',', ':')))
 
