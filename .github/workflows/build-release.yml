@@ -34,6 +34,14 @@ jobs:
         shell: bash
         run: bash tools/build_release.sh
 
+      - name: Kurulum paketini artifact olarak yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Warext-SpellCheck-3.1.0
+          path: release/Warext-SpellCheck-3.1.0.zip
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Üretilen dosyaları kaydet
         if: github.event_name == 'push'
         shell: bash
