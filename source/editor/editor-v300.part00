@@ -1,0 +1,216 @@
+(() => {
+  'use strict';
+
+  if (window.__warextTurkishSpellCheckV300) return;
+  window.__warextTurkishSpellCheckV300 = true;
+
+  const VERSION = '3.0.0';
+  const states = new WeakMap();
+  const stateList = new Set();
+  const boolValue = (value, fallback = true) => value == null || value === '' ? fallback : !['0','false','off','no'].includes(String(value).toLowerCase());
+  const unique = values => [...new Set((values || []).filter(Boolean))];
+  const splitConfig = value => unique(String(value || '').split(/[\n,;]+/u).map(item => item.trim()).filter(Boolean));
+  const cfg = (() => {
+    const data = document.getElementById('wtsc-config')?.dataset || {};
+    return {
+      enabled: boolValue(data.enabled),
+      grammar: boolValue(data.grammar),
+      punctuation: boolValue(data.punctuation),
+      underline: boolValue(data.underline),
+      properNames: boolValue(data.properNames),
+      informal: boolValue(data.informal),
+      maxSuggestions: Math.max(1, Math.min(3, Number(data.maxSuggestions || 3))),
+      adminWords: splitConfig(document.getElementById('wtsc-custom-words')?.textContent),
+      customProperNames: splitConfig(document.getElementById('wtsc-custom-proper-names')?.textContent)
+    };
+  })();
+  const listenedTextareas = new WeakSet();
+  const LETTERS = 'A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû';
+  const LETTER_RE = new RegExp(`[${LETTERS}]`, 'u');
+  const TOKEN_RE = new RegExp(`[${LETTERS}]{2,}`, 'gu');
+
+  document.documentElement.dataset.wtscVersion = VERSION;
+
+  const uid = window.XF?.config?.userId ?? window.XF?.config?.user_id ?? 'guest';
+  const CUSTOM_DICTIONARY_KEY = `warextSpellCustomV300:${location.host}:${uid}`;
+  const IGNORED_KEY = `warextSpellIgnoredV300:${location.host}:${uid}`;
+  const ignoredWords = new Set();
+  const checkCache = new Map();
+  let customWords = new Set();
+
+  function loadCustomDictionary() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(CUSTOM_DICTIONARY_KEY) || '[]');
+      customWords = new Set(Array.isArray(parsed) ? parsed.map(normalize).filter(Boolean) : []);
+    } catch (_) {
+      customWords = new Set();
+    }
+    try {
+      const parsed = JSON.parse(sessionStorage.getItem(IGNORED_KEY) || '[]');
+      for (const word of Array.isArray(parsed) ? parsed : []) {
+        const normalized = normalize(word);
+        if (normalized) ignoredWords.add(normalized);
+      }
+    } catch (_) {}
+    syncEngineDictionaries();
+  }
+
+  function syncEngineDictionaries() {
+    engine()?.setCustomWords?.(unique([...cfg.adminWords.map(normalize), ...customWords]));
+    engine()?.setCustomProperNames?.(cfg.customProperNames);
+  }
+
+  function persistCustomDictionary() {
+    try {
+      localStorage.setItem(CUSTOM_DICTIONARY_KEY, JSON.stringify(Array.from(customWords).sort((a,b) => a.localeCompare(b, 'tr-TR'))));
+    } catch (_) {}
+  }
+
+  function clearCheckCache() {
+    checkCache.clear();
+  }
+
+  function addCustomWord(rawWord) {
+    const word = normalize(rawWord);
+    if (!word || word.length < 2) return false;
+    customWords.add(word);
+    syncEngineDictionaries();
+    persistCustomDictionary();
+    clearCheckCache();
+    return true;
+  }
+
+  function ignoreWord(rawWord) {
+    const word = normalize(rawWord);
+    if (!word) return false;
+    ignoredWords.add(word);
+    try { sessionStorage.setItem(IGNORED_KEY, JSON.stringify(Array.from(ignoredWords))); } catch (_) {}
+    clearCheckCache();
+    return true;
+  }
+
+  function removeCustomWord(rawWord) {
+    const word = normalize(rawWord);
+    if (!word) return false;
+    const removed = customWords.delete(word);
+    if (!removed) return false;
+    persistCustomDictionary();
+    syncEngineDictionaries();
+    clearCheckCache();
+    return true;
+  }
+
+  function dictionaryDialog(el) {
+    let dialog = document.getElementById('wtsc-dictionary-dialog-v300');
+    if (!dialog) {
+      dialog = document.createElement('dialog');
+      dialog.id = 'wtsc-dictionary-dialog-v300';
+      dialog.className = 'wtsc-dialog';
+      document.body.appendChild(dialog);
+    }
+    dialog.textContent = '';
+    const header = document.createElement('div');
+    header.className = 'wtsc-row';
+    header.textContent = 'Kişisel sözlüğüm';
+    dialog.appendChild(header);
+    const words = Array.from(customWords).sort((a,b) => a.localeCompare(b, 'tr-TR'));
+    if (!words.length) {
+      const empty = document.createElement('div');
+      empty.className = 'wtsc-row';
+      empty.textContent = 'Henüz özel kelime eklenmedi.';
+      dialog.appendChild(empty);
+    }
+    for (const word of words) {
+      const row = document.createElement('div');
+      row.className = 'wtsc-row';
+      const label = document.createElement('span');
+      label.textContent = word;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'wtsc-action';
+      remove.textContent = 'Kaldır';
+      remove.addEventListener('click', () => {
+        removeCustomWord(word);
+        row.remove();
+        states.get(el)?.schedule?.(20);
+      });
+      row.append(label, remove);
+      dialog.appendChild(row);
+    }
+    const footer = document.createElement('div');
+    footer.className = 'wtsc-row';
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'wtsc-action';
+    close.textContent = 'Kapat';
+    close.addEventListener('click', () => dialog.close?.());
+    footer.appendChild(close);
+    dialog.appendChild(footer);
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+  }
+
+  function cachedCheck(rawWord, context) {
+    const localEngine = engine();
+    if (!localEngine?.check) return null;
+    const key = `${rawWord}\u0000${context?.previousWord || ''}\u0000${context?.sentenceStart ? 1 : 0}\u0000${cfg.properNames ? 1 : 0}\u0000${cfg.informal ? 1 : 0}`;
+    if (checkCache.has(key)) return checkCache.get(key);
+    const result = localEngine.check(rawWord, context || {});
+    checkCache.set(key, result);
+    if (checkCache.size > 640) {
+      const first = checkCache.keys().next().value;
+      checkCache.delete(first);
+    }
+    return result;
+  }
+
+  function ready(callback) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', callback, { once: true });
+    else callback();
+  }
+
+  function engine() {
+    return window.WarextTurkishSpellEngineV300 || null;
+  }
+
+  function installStyle() {
+    if (document.getElementById('wtsc-style-v300')) return;
+    const style = document.createElement('style');
+    style.id = 'wtsc-style-v300';
+    style.textContent = `
+      .wtsc-suggestions{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:7px 0 3px;width:100%;box-sizing:border-box}
+      .wtsc-suggestions.is-active{display:grid}
+      .wtsc-suggestion{appearance:none;min-width:0;border:1px solid rgba(127,127,127,.32);background:rgba(127,127,127,.08);color:inherit;border-radius:7px;padding:8px 10px;font:inherit;font-size:13px;font-weight:500;line-height:1.2;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+      .wtsc-suggestion:hover,.wtsc-suggestion:focus{background:rgba(127,127,127,.16);border-color:rgba(127,127,127,.55);outline:none}
+      .wtsc-suggestions.is-error{display:block;padding:7px 10px;border:1px solid rgba(180,70,70,.35);border-radius:7px;font-size:12px;line-height:1.3}
+      .wtsc-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:6px;margin-top:1px}
+      .wtsc-action{appearance:none;border:0;background:transparent;color:inherit;opacity:.68;padding:3px 5px;font:inherit;font-size:11px;cursor:pointer}
+      .wtsc-action:hover,.wtsc-action:focus{opacity:1;text-decoration:underline;outline:none}
+      .wtsc-dialog{border:1px solid rgba(127,127,127,.35);border-radius:10px;padding:0;max-width:min(520px,92vw);width:100%;color:inherit;background:Canvas}
+      .wtsc-dialog::backdrop{background:rgba(0,0,0,.35)}
+      .wtsc-row{display:flex;justify-content:space-between;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(127,127,127,.14)}
+      ::highlight(wtsc-v300){text-decoration:underline wavy #d33}
+      @media (max-width:650px){.wtsc-suggestion{padding:8px 6px;font-size:12px}.wtsc-actions{justify-content:center}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function normalize(value) {
+    return String(value || '').replace(/I/g,'ı').replace(/İ/g,'i').toLocaleLowerCase('tr-TR');
+  }
+
+  function capitalizeTurkish(value) {
+    const s = String(value || '');
+    if (!s) return s;
+    const first = s[0].replace(/i/g,'İ').replace(/ı/g,'I').toLocaleUpperCase('tr-TR');
+    return first + s.slice(1);
+  }
+
+  function isTitleInput(el) {
+    return el instanceof HTMLInputElement && el.name === 'title';
+  }
+
+  function isMessageTextarea(el) {
+    return el instanceof HTMLTextAreaElement && (
+      el.name === 'message' ||
+      el.dataset.originalName === 'message' ||
