@@ -1,0 +1,250 @@
+    let prev = Array.from({ length: m + 1 }, (_, i) => i);
+    for (let i = 1; i <= n; i++) {
+      const cur = [i];
+      let rowMin = cur[0];
+      for (let j = 1; j <= m; j++) {
+        const cost = A[i - 1] === B[j - 1] ? 0 : 1;
+        let v = Math.min(
+          cur[j - 1] + 1,
+          prev[j] + 1,
+          prev[j - 1] + cost
+        );
+        if (prev2 && i > 1 && j > 1 && A[i - 1] === B[j - 2] && A[i - 2] === B[j - 1])
+          v = Math.min(v, prev2[j - 2] + 1);
+        cur[j] = v;
+        if (v < rowMin) rowMin = v;
+      }
+      if (rowMin > maxDistance) return maxDistance + 1;
+      prev2 = prev;
+      prev = cur;
+    }
+    return prev[m];
+  }
+
+  function commonPrefix(a, b) {
+    const A = chars(a), B = chars(b);
+    let i = 0;
+    while (i < A.length && i < B.length && A[i] === B[i]) i++;
+    return i;
+  }
+
+
+  function orthographicValidVariants(word, limit = 8) {
+    const source = chars(word);
+    const positions = [];
+    for (let i = 0; i < source.length; i++) {
+      const alts = TURKISH_CHAR_ALTS[source[i]];
+      if (alts?.length) positions.push([i, alts]);
+    }
+
+    const exact = [];
+    const intent = [];
+    const morphological = [];
+    const seen = new Set();
+    const intentSet = new Set(INTENT_FORMS);
+    const pushIfValid = candidateChars => {
+      const candidate = candidateChars.join('');
+      if (candidate === word || seen.has(candidate)) return;
+      seen.add(candidate);
+      if (valid.has(candidate)) exact.push(candidate);
+      else if (intentSet.has(candidate) && isLikelyInflected(candidate)) intent.push(candidate);
+      else if (isLikelyInflected(candidate)) morphological.push(candidate);
+    };
+
+    for (const [index, alts] of positions) {
+      for (const alt of alts) {
+        const copy = source.slice();
+        copy[index] = alt;
+        pushIfValid(copy);
+      }
+    }
+
+    if (source.length <= 16 && positions.length <= 10) {
+      for (let a = 0; a < positions.length; a++) {
+        for (let b = a + 1; b < positions.length; b++) {
+          const [ia, aa] = positions[a];
+          const [ib, ab] = positions[b];
+          for (const va of aa) for (const vb of ab) {
+            const copy = source.slice();
+            copy[ia] = va;
+            copy[ib] = vb;
+            pushIfValid(copy);
+          }
+        }
+      }
+    }
+
+    return [...exact, ...intent, ...morphological].slice(0, limit);
+  }
+
+  function substitutionCost(a, b) {
+    if (a === b) return 0;
+    if (TURKISH_EQUIVALENT_PAIRS.has(`${a}${b}`)) return 0.28;
+    const pair = `${a}${b}`;
+    if (['gs','sg','ğs','sğ','lk','kl','nm','mn','io','oi','ıi','iı'].includes(pair)) return 0.78;
+    return 1;
+  }
+
+  function weightedDistance(a, b, maxDistance = 2.6) {
+    const A = chars(a), B = chars(b);
+    if (Math.abs(A.length - B.length) > 2) return maxDistance + 1;
+    let prev2 = null;
+    let prev = Array.from({length: B.length + 1}, (_, i) => i);
+    for (let i = 1; i <= A.length; i++) {
+      const cur = [i];
+      let rowMin = cur[0];
+      for (let j = 1; j <= B.length; j++) {
+        const sub = substitutionCost(A[i - 1], B[j - 1]);
+        let value = Math.min(cur[j - 1] + 1, prev[j] + 1, prev[j - 1] + sub);
+        if (prev2 && i > 1 && j > 1 && A[i - 1] === B[j - 2] && A[i - 2] === B[j - 1]) {
+          value = Math.min(value, prev2[j - 2] + 0.85);
+        }
+        cur[j] = value;
+        if (value < rowMin) rowMin = value;
+      }
+      if (rowMin > maxDistance + 0.75) return maxDistance + 1;
+      prev2 = prev;
+      prev = cur;
+    }
+    return prev[B.length];
+  }
+
+  function intentSuggestions(word, limit = 3) {
+    const scored = [];
+    const len = chars(word).length;
+    const threshold = len <= 4 ? 1.35 : (len <= 7 ? 2.15 : 2.6);
+    for (const candidate of INTENT_FORMS) {
+      if (candidate === word) continue;
+      if (Math.abs(chars(candidate).length - len) > 2) continue;
+      const distance = weightedDistance(word, candidate, threshold);
+      if (distance > threshold) continue;
+      const prefix = commonPrefix(word, candidate);
+      const score = distance * 100 - prefix * 7 + Math.abs(chars(candidate).length - len) * 5;
+      scored.push([score, candidate]);
+    }
+    scored.sort((a,b) => a[0] - b[0] || a[1].localeCompare(b[1], 'tr'));
+    return scored.slice(0, limit).map(item => item[1]);
+  }
+
+  function findSuggestions(word, limit = 3, preferred = []) {
+    const result = [];
+    const seen = new Set();
+    for (const item of preferred) {
+      const normalizedItem = normalize(item);
+      if (!normalizedItem || seen.has(normalizedItem)) continue;
+      seen.add(normalizedItem);
+      result.push(item);
+    }
+
+    const W = chars(word);
+    const len = W.length;
+    const first = W[0] || '';
+    const maxDistance = len <= 4 ? 2 : (len <= 8 ? 2 : 3);
+    const candidates = [];
+    const candidateSeen = new Set();
+
+    const completionPreferred = [];
+    for (let l = len + 1; l <= len + 3; l++) {
+      for (const candidate of (byFirstLength.get(`${first}:${l}`) || [])) {
+        if (candidate.startsWith(word)) completionPreferred.push(candidate);
+      }
+    }
+    completionPreferred.sort((a,b) => chars(a).length - chars(b).length || a.localeCompare(b, 'tr'));
+    for (const candidate of completionPreferred.slice(0, 8)) {
+      if (!seen.has(candidate)) {
+        seen.add(candidate);
+        result.push(candidate);
+        if (result.length >= limit) return result.slice(0, limit);
+      }
+    }
+
+    for (let l = Math.max(2, len - 2); l <= len + 2; l++) {
+      for (const candidate of (byFirstLength.get(`${first}:${l}`) || [])) {
+        if (!candidateSeen.has(candidate)) { candidateSeen.add(candidate); candidates.push(candidate); }
+      }
+    }
+
+    if (candidates.length < 600) {
+      for (let l = Math.max(2, len - 1); l <= len + 1; l++) {
+        for (const candidate of (byLength.get(l) || [])) {
+          if (!candidateSeen.has(candidate)) { candidateSeen.add(candidate); candidates.push(candidate); }
+        }
+      }
+    }
+
+    const scored = [];
+    for (const candidate of candidates) {
+      if (candidate === word || seen.has(candidate)) continue;
+      const dist = damerau(word, candidate, maxDistance);
+      if (dist > maxDistance) continue;
+      const prefix = commonPrefix(word, candidate);
+      const candidateChars = chars(candidate);
+      const sameSecond = W[1] && candidateChars[1] && W[1] === candidateChars[1];
+      const score = dist * 100 + Math.abs(candidateChars.length - len) * 8 - prefix * 12 - (sameSecond ? 5 : 0);
+      scored.push([score, candidate]);
+    }
+    scored.sort((a,b) => a[0] - b[0] || a[1].localeCompare(b[1], 'tr'));
+
+    for (const [, candidate] of scored) {
+      if (result.length >= limit) break;
+      if (seen.has(candidate)) continue;
+      seen.add(candidate);
+      result.push(candidate);
+    }
+    return result.slice(0, limit);
+  }
+
+  function applyCase(original, suggestions) {
+    const first = chars(original)[0] || '';
+    const isCapitalized = first && first !== normalize(first);
+    if (!isCapitalized) return suggestions;
+    return suggestions.map(value => {
+      const c = chars(value);
+      if (!c.length) return value;
+      const upper = c[0].replace(/i/g,'İ').replace(/ı/g,'I').toLocaleUpperCase('tr-TR');
+      return upper + c.slice(1).join('');
+    });
+  }
+
+  const COLLOQUIAL_YOR_ENDINGS = [
+    ['ıyosunuz','ıyorsunuz'],['iyosunuz','iyorsunuz'],['uyosunuz','uyorsunuz'],['üyosunuz','üyorsunuz'],
+    ['ıyosun','ıyorsun'],['iyosun','iyorsun'],['uyosun','uyorsun'],['üyosun','üyorsun'],
+    ['ıyon','ıyorsun'],['iyon','iyorsun'],['uyon','uyorsun'],['üyon','üyorsun'],
+    ['ıyom','ıyorum'],['iyom','iyorum'],['uyom','uyorum'],['üyom','üyorum'],
+    ['ıyoz','ıyoruz'],['iyoz','iyoruz'],['uyoz','uyoruz'],['üyoz','üyoruz'],
+    ['ıyolar','ıyorlar'],['iyolar','iyorlar'],['uyolar','uyorlar'],['üyolar','üyorlar']
+  ];
+
+  function colloquialVerbSuggestion(word) {
+    for (const [bad, good] of COLLOQUIAL_YOR_ENDINGS) {
+      if (!word.endsWith(bad) || chars(word).length <= chars(bad).length) continue;
+      const candidate = word.slice(0, -bad.length) + good;
+      if (valid.has(candidate)) return candidate;
+      const parse = analyzeMorphology(candidate);
+      if (parse.valid && parse.mode === 'verb') return candidate;
+    }
+    return '';
+  }
+
+  const QUESTION_TAIL_PATTERNS = [
+    { re: /m[ıiuü]s[ıiuü]n[ıiuü]z$/u, kind: '2pl' },
+    { re: /m[ıiuü]y[ıiuü]z$/u, kind: '1pl' },
+    { re: /m[ıiuü]y[ıiuü]m$/u, kind: '1sg' },
+    { re: /m[ıiuü]s[ıiuü]n$/u, kind: '2sg' },
+    { re: /m[ıiuü]d[ıiuü]r$/u, kind: 'cop' },
+    { re: /m[ıiuü]$/u, kind: 'plain' }
+  ];
+
+  function lastVowel(word) {
+    const c = chars(word);
+    for (let i = c.length - 1; i >= 0; i--) {
+      if ('aeıioöuü'.includes(c[i])) return c[i];
+    }
+    return '';
+  }
+
+  function questionHarmony(stem, kind) {
+    const vowel = lastVowel(stem);
+    if (!vowel) return '';
+    let group = '';
+    if ('aı'.includes(vowel)) group = 'ı';
