@@ -5,9 +5,9 @@ on:
     branches:
       - main
     paths:
-      - source/dictionary/engine.part0
-      - source/dictionary/engine.part1
-      - tools/build_dictionary.py
+      - source/dictionary/**
+      - tools/**
+      - tests/**
       - upload/js/warext/turkish-spellcheck/bootstrap-v142.js
       - upload/js/warext/turkish-spellcheck/editor-v142.js
       - upload/src/addons/Warext/TurkishSpellCheck/Setup.php
@@ -28,47 +28,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Kaynak sözlükleri al
+      - name: Eklentiyi derle ve doğrula
         shell: bash
-        run: |
-          git clone -q https://github.com/ekartal/turkce-kelime-database.git /tmp/tdk
-          git -C /tmp/tdk checkout -q 444dbcc53556618b0977a3d608cbf1402f7e9363
-          git clone -q https://github.com/tdd-ai/hunspell-tr.git /tmp/hunspell
-          git -C /tmp/hunspell checkout -q 7302eca5f3652fe7ae3d3ec06c44697c97342b4e
-
-      - name: Tarayıcı sözlüğünü üret
-        shell: bash
-        run: |
-          python3 tools/build_dictionary.py \
-            --tdk-dir /tmp/tdk \
-            --hunspell-dic /tmp/hunspell/tr_TR.dic \
-            --template-dir source/dictionary \
-            --output upload/js/warext/turkish-spellcheck/dictionary-v142.js
-          mkdir -p upload/src/addons/Warext/TurkishSpellCheck/Resources
-          cp /tmp/hunspell/LICENSE upload/src/addons/Warext/TurkishSpellCheck/Resources/LICENSE-MPL-2.0.txt
-
-      - name: Kaynağı doğrula
-        shell: bash
-        run: |
-          node --check upload/js/warext/turkish-spellcheck/bootstrap-v142.js
-          node --check upload/js/warext/turkish-spellcheck/dictionary-v142.js
-          node --check upload/js/warext/turkish-spellcheck/editor-v142.js
-          php -l upload/src/addons/Warext/TurkishSpellCheck/Setup.php
-          python3 - <<'PY'
-          import json
-          import xml.etree.ElementTree as ET
-          json.load(open('upload/src/addons/Warext/TurkishSpellCheck/addon.json', encoding='utf-8'))
-          for name in ['class_extensions.xml','code_event_listeners.xml','routes.xml','template_modifications.xml']:
-              ET.parse('upload/src/addons/Warext/TurkishSpellCheck/_data/' + name)
-          PY
-
-      - name: Kurulum paketini üret
-        shell: bash
-        run: |
-          rm -rf release
-          mkdir -p release
-          zip -qr release/Warext-SpellCheck-1.zip upload
-          sha256sum release/Warext-SpellCheck-1.zip > SHA256SUMS
+        run: bash tools/build_release.sh
 
       - name: Üretilen dosyaları kaydet
         shell: bash
