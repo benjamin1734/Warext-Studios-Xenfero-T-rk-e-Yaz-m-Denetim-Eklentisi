@@ -1,0 +1,47 @@
+name: Hata bildirimi
+description: Eklenti davranışındaki bir hatayı bildirin
+title: "[Hata] "
+labels:
+  - bug
+body:
+  - type: input
+    id: xenforo
+    attributes:
+      label: XenForo sürümü
+      placeholder: 2.3.12
+    validations:
+      required: true
+  - type: input
+    id: php
+    attributes:
+      label: PHP sürümü
+      placeholder: 8.4
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Tarayıcı
+      placeholder: Chrome, Firefox, Edge
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: Yazılan metin
+      description: Hatanın oluştuğu örnek metni aynen yazın
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Beklenen sonuç
+      description: Hangi önerinin veya davranışın çıkmasını beklediğinizi yazın
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Gerçekleşen sonuç
+    validations:
+      required: true
