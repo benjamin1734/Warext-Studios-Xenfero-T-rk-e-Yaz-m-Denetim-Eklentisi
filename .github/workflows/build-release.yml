@@ -1,7 +1,10 @@
-name: Warext Spell Check 1.1 derleme
+name: Warext Spell Check doğrulama
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
   workflow_dispatch:
@@ -10,7 +13,7 @@ permissions:
   contents: write
 
 jobs:
-  apply:
+  validate:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -18,35 +21,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Kaynakları uygula
+      - name: Doğrula ve paketle
         shell: bash
-        run: |
-          cat tools/v110_payload.part* > /tmp/v110_payload.b64
-          base64 -d /tmp/v110_payload.b64 > /tmp/v110_payload.tar.gz
-          echo "d53ec7751d3c054ccf6d4d1ea0a96d88b8f47e55d298fef63a44ea45eec5053b  /tmp/v110_payload.tar.gz" | sha256sum -c -
-          python3 - <<'PY'
-          import tarfile
-          from pathlib import Path
-          root = Path.cwd().resolve()
-          with tarfile.open('/tmp/v110_payload.tar.gz', 'r:gz') as archive:
-              for member in archive.getmembers():
-                  target = (root / member.name).resolve()
-                  if root != target and root not in target.parents:
-                      raise SystemExit('Geçersiz paket yolu')
-              archive.extractall(root)
-          for path in (root / 'tools').glob('v110_payload.part*'):
-              path.unlink()
-          PY
-          chmod +x tools/build_release.sh
-          bash tools/build_release.sh
-      - name: Nihai sürümü yayınla
+        run: bash tools/build_release.sh
+      - name: Nihai paketi kaydet
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add -A upload release SHA256SUMS
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "Warext Spell Check 1.1.0 kapsamlı yerel sürüm"
+          git commit -m "Warext Spell Check 1.1.0 nihai paket"
           git push
