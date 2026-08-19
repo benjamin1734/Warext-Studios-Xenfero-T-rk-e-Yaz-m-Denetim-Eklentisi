@@ -2,6 +2,8 @@
   'use strict';
   const s = window.WarextV100Lang;
   if (!s || s.extraSentenceIssues) return;
+  const deepValue = document.getElementById('wtsc-config')?.dataset?.deepContext;
+  const deep = deepValue == null || deepValue === '' || !['0','false','off','no'].includes(String(deepValue).toLowerCase());
   s.extraSentenceIssues = (text,context = {}) => {
     const issues = s.temporalIssues ? s.temporalIssues(text) : [];
     let m;
@@ -17,7 +19,7 @@
       const replacement = s.techSuggestion(m[0]);
       if (replacement && replacement !== m[0]) issues.push({start:m.index,end:m.index + m[0].length,suggestions:[replacement],rule:'v1-tech-abbreviation',confidence:.995,category:'spelling'});
     }
-    if (context.longText && context.previousSentence) {
+    if (deep && context.longText && context.previousSentence) {
       const previous = String(context.previousSentence);
       if (/\b(?:yarın|dün)\b/iu.test(previous) && !/\b(?:yarın|dün|bugün)\b/iu.test(text)) {
         const joined = `${previous} ${text}`;
