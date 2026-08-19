@@ -1,0 +1,193 @@
+      vowelEnd ? `n${h4}` : ''
+    ]);
+    return allowed.has(suffix);
+  }, 'case');
+
+  const copula = suffixDef([
+    'mış','miş','muş','müş','dı','di','du','dü','tı','ti','tu','tü',
+    'dır','dir','dur','dür','tır','tir','tur','tür','sa','se'
+  ], (stem, suffix) => {
+    const h4 = harmony4For(stem), h2 = harmony2For(stem);
+    if (!h4 || !h2) return false;
+    if (/^m/u.test(suffix)) return suffix === `m${h4}ş`;
+    if (/^[dt]/u.test(suffix)) {
+      const lead = VOICELESS.includes(finalChar(stem)) ? 't' : 'd';
+      if (suffix.endsWith('r')) return suffix === `${lead}${h4}r`;
+      return suffix === `${lead}${h4}`;
+    }
+    return suffix === `s${h2}`;
+  }, 'copula');
+
+  const person = suffixDef([
+    'sınız','siniz','sunuz','sünüz','nız','niz','nuz','nüz',
+    'ız','iz','uz','üz','sın','sin','sun','sün','ım','im','um','üm','m','n','k','lar','ler'
+  ], (stem, suffix) => {
+    const h4 = harmony4For(stem), h2 = harmony2For(stem);
+    if (!h4) return false;
+    const allowed = new Set([
+      `s${h4}n`, `s${h4}n${h4}z`, `${h4}z`, `n${h4}z`, `${h4}m`, 'm','n','k',
+      h2 === 'a' ? 'lar' : 'ler'
+    ]);
+    return allowed.has(suffix);
+  }, 'person');
+
+  const nominalPerson = suffixDef([
+    'sınız','siniz','sunuz','sünüz','yız','yiz','yuz','yüz','ız','iz','uz','üz',
+    'sın','sin','sun','sün','yım','yim','yum','yüm','ım','im','um','üm'
+  ], (stem, suffix) => {
+    const h4 = harmony4For(stem);
+    if (!h4) return false;
+    const vowelEnd = VOWELS.includes(finalChar(stem));
+    const allowed = new Set([
+      `${vowelEnd ? 'y' : ''}${h4}m`,
+      `s${h4}n`,
+      `${vowelEnd ? 'y' : ''}${h4}z`,
+      `s${h4}n${h4}z`
+    ]);
+    return allowed.has(suffix);
+  }, 'person');
+
+  const nounDerivation = suffixDef([
+    'lık','lik','luk','lük','lı','li','lu','lü','sız','siz','suz','süz',
+    'cı','ci','cu','cü','çı','çi','çu','çü','ca','ce','ça','çe'
+  ], (stem, suffix) => {
+    const h4 = harmony4For(stem), h2 = harmony2For(stem);
+    if (!h4 || !h2 || chars(stem).length < 2) return false;
+    if (/^l[ıiuü]k$/u.test(suffix)) return suffix === `l${h4}k`;
+    if (/^l[ıiuü]$/u.test(suffix)) return suffix === `l${h4}`;
+    if (/^s[ıiuü]z$/u.test(suffix)) return suffix === `s${h4}z`;
+    if (/^[cç][ıiuü]$/u.test(suffix)) {
+      const lead = VOICELESS.includes(finalChar(stem)) ? 'ç' : 'c';
+      return suffix === `${lead}${h4}`;
+    }
+    if (/^[cç][ae]$/u.test(suffix)) {
+      const lead = VOICELESS.includes(finalChar(stem)) ? 'ç' : 'c';
+      return suffix === `${lead}${h2}`;
+    }
+    return false;
+  }, 'derivation');
+
+  const verbTense = suffixDef([
+    'ıyor','iyor','uyor','üyor',
+    'yacak','yecek','acak','ecek','yacağ','yeceğ','acağ','eceğ',
+    'mış','miş','muş','müş',
+    'dı','di','du','dü','tı','ti','tu','tü',
+    'malı','meli','sa','se','ar','er','ır','ir','ur','ür','r'
+  ], (stem, suffix) => {
+    const h4 = harmony4For(stem), h2 = harmony2For(stem);
+    if (suffix.endsWith('yor')) {
+      if (!h4) return suffix === 'iyor' && (stem === 'd' || stem === 'y');
+      return suffix === `${h4}yor`;
+    }
+    if (!h4 || !h2) return false;
+    const vowelEnd = VOWELS.includes(finalChar(stem));
+    if (/(?:acak|ecek)$/u.test(suffix)) {
+      const expected = `${vowelEnd ? 'y' : ''}${h2}c${h2}k`;
+      return suffix === expected;
+    }
+    if (/(?:acağ|eceğ)$/u.test(suffix)) {
+      const expected = `${vowelEnd ? 'y' : ''}${h2}c${h2}ğ`;
+      return suffix === expected;
+    }
+    if (/^m[ıiuü]ş$/u.test(suffix)) return suffix === `m${h4}ş`;
+    if (/^[dt][ıiuü]$/u.test(suffix)) {
+      const lead = VOICELESS.includes(finalChar(stem)) ? 't' : 'd';
+      return suffix === `${lead}${h4}`;
+    }
+    if (/^m[ae]l[ıi]$/u.test(suffix)) return suffix === `m${h2}l${h4}`;
+    if (/^s[ae]$/u.test(suffix)) return suffix === `s${h2}`;
+    if (suffix === 'r') return vowelEnd;
+    if (/^[ae]r$/u.test(suffix)) return suffix === `${h2}r`;
+    if (/^[ıiuü]r$/u.test(suffix)) return suffix === `${h4}r`;
+    return false;
+  }, 'tense');
+
+  const verbNegation = suffixDef(['ma','me','m'], (stem, suffix) => {
+    if (suffix === 'm') return !!lexicalVerbRoot(stem);
+    const h2 = harmony2For(stem);
+    return suffix === (h2 ? `m${h2}` : '');
+  }, 'negative');
+
+  function stripCategory(states, def) {
+    const out = states.slice();
+    for (const state of states) {
+      for (const suffix of def.forms) {
+        if (!state.form.endsWith(suffix)) continue;
+        const minStem = def.label === 'tense' && /yor$/u.test(suffix) ? 1 : 2;
+        if (chars(state.form).length < chars(suffix).length + minStem) continue;
+        const stem = state.form.slice(0, -suffix.length);
+        if (!def.validate(stem, suffix)) continue;
+        out.push({ form: stem, parts: [{label:def.label, suffix}, ...state.parts] });
+      }
+    }
+    return out;
+  }
+
+  function bestMorphParse(word, mode) {
+    let states = [{ form: word, parts: [] }];
+    const defs = mode === 'verb'
+      ? [person, verbTense, verbNegation]
+      : [nominalPerson, copula, nounCase, nounPossessive, nounPlural, nounDerivation];
+    for (const def of defs) states = stripCategory(states, def);
+
+    let best = null;
+    for (const state of states) {
+      if (!state.parts.length) continue;
+      let root = mode === 'verb' ? lexicalVerbRoot(state.form) : lexicalRoot(state.form);
+      if (mode === 'verb') {
+        const progressive = state.parts.find(part => part.label === 'tense' && /yor$/u.test(part.suffix));
+        if (progressive) root = progressiveRoot(state.form, progressive.suffix) || root;
+      }
+      if (!root) continue;
+      if (!rootSurfaceAllowed(root, state.form, state.parts)) continue;
+      let score = state.parts.length * 2 + Math.min(chars(root).length, 8) / 8 + (tdkSet.has(root) ? 0.35 : 0);
+      if (mode === 'verb' && state.parts.some(part => part.label === 'tense')) score += 2;
+      if (!best || score > best.score) best = { valid: true, root, surfaceRoot: state.form, parts: state.parts, mode, score };
+    }
+    return best;
+  }
+
+  function morphologyFeatures(parse) {
+    if (!parse?.valid) return {};
+    const features = { pos: parse.mode === 'verb' ? 'verb' : 'noun' };
+    const derivations = [];
+    const h = part => part?.suffix || '';
+    for (const part of parse.parts || []) {
+      const suffix = h(part);
+      if (part.label === 'plural') features.number = 'plural';
+      else if (part.label === 'negative') features.polarity = 'negative';
+      else if (part.label === 'derivation') derivations.push(suffix);
+      else if (part.label === 'case') {
+        if (/^(?:dan|den|tan|ten|ndan|nden|ntan|nten)$/u.test(suffix)) features.case = 'ablative';
+        else if (/^(?:da|de|ta|te|nda|nde|nta|nte)$/u.test(suffix)) features.case = 'locative';
+        else if (/^(?:nın|nin|nun|nün|ın|in|un|ün)$/u.test(suffix)) features.case = 'genitive';
+        else if (/^(?:yı|yi|yu|yü|ı|i|u|ü|nı|ni|nu|nü)$/u.test(suffix)) features.case = 'accusative';
+        else if (/^(?:ya|ye|a|e)$/u.test(suffix)) features.case = 'dative';
+      }
+      else if (part.label === 'possessive') {
+        if (/^(?:ım|im|um|üm|m)$/u.test(suffix)) features.possessive = '1sg';
+        else if (/^(?:ın|in|un|ün|n)$/u.test(suffix)) features.possessive = '2sg';
+        else if (/^(?:ı|i|u|ü|sı|si|su|sü)$/u.test(suffix)) features.possessive = '3sg';
+        else if (/^(?:ımız|imiz|umuz|ümüz|mız|miz|muz|müz)$/u.test(suffix)) features.possessive = '1pl';
+        else if (/^(?:ınız|iniz|unuz|ünüz|nız|niz|nuz|nüz)$/u.test(suffix)) features.possessive = '2pl';
+        else if (/^(?:ları|leri)$/u.test(suffix)) features.possessive = '3pl';
+      }
+      else if (part.label === 'tense') {
+        if (/yor$/u.test(suffix)) features.tense = 'progressive';
+        else if (/(?:acak|ecek|acağ|eceğ)$/u.test(suffix)) features.tense = 'future';
+        else if (/^m[ıiuü]ş$/u.test(suffix)) features.tense = 'evidential-past';
+        else if (/^[dt][ıiuü]$/u.test(suffix)) features.tense = 'past';
+        else if (/^m[ae]l[ıi]$/u.test(suffix)) features.mood = 'necessitative';
+        else if (/^s[ae]$/u.test(suffix)) features.mood = 'conditional';
+        else features.tense = 'aorist';
+      }
+      else if (part.label === 'copula') {
+        if (/^m[ıiuü]ş$/u.test(suffix)) features.copula = 'evidential';
+        else if (/^[dt][ıiuü]r?$/u.test(suffix)) features.copula = suffix.endsWith('r') ? 'assertive' : 'past';
+        else if (/^s[ae]$/u.test(suffix)) features.copula = 'conditional';
+      }
+      else if (part.label === 'person') {
+        if (/^(?:ım|im|um|üm|m)$/u.test(suffix)) features.person = '1sg';
+        else if (/^(?:sın|sin|sun|sün|n)$/u.test(suffix)) features.person = '2sg';
+        else if (/^(?:ız|iz|uz|üz|k)$/u.test(suffix)) features.person = '1pl';
+        else if (/^(?:sınız|siniz|sunuz|sünüz|nız|niz|nuz|nüz)$/u.test(suffix)) features.person = '2pl';
