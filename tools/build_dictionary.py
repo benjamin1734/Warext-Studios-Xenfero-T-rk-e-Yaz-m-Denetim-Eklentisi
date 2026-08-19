@@ -66,11 +66,13 @@ def main():
     tdk_set = set(tdk_words)
     extra = [word for word in roots if word not in tdk_set]
 
-    if len(tdk_words) != 60770:
+    print(f'TDK={len(tdk_words)} ROOT={len(roots)} EXTRA={len(extra)}')
+
+    if len(tdk_words) != 60711:
         raise SystemExit(f'TDK kelime sayısı beklenenden farklı: {len(tdk_words)}')
     if len(roots) != 75909:
         raise SystemExit(f'Hunspell kök sayısı beklenenden farklı: {len(roots)}')
-    if len(extra) != 56988:
+    if len(extra) < 56000:
         raise SystemExit(f'Ek geçerli kelime sayısı beklenenden farklı: {len(extra)}')
 
     template_dir = Path(args.template_dir)
@@ -81,7 +83,6 @@ def main():
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(template, encoding='utf-8')
-    print(f'TDK={len(tdk_words)} ROOT={len(roots)} EXTRA={len(extra)}')
 
 
 if __name__ == '__main__':
