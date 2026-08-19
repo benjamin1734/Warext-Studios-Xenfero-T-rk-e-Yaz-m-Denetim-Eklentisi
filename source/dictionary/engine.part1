@@ -1,0 +1,248 @@
+|| seen.has(normalizedItem)) continue;
+      seen.add(normalizedItem);
+      result.push(item);
+    }
+
+    const W = chars(word);
+    const len = W.length;
+    const first = W[0] || '';
+    const maxDistance = len <= 4 ? 2 : (len <= 8 ? 2 : 3);
+    const candidates = [];
+    const candidateSeen = new Set();
+
+    const completionPreferred = [];
+    for (let l = len + 1; l <= len + 3; l++) {
+      for (const candidate of (byFirstLength.get(`${first}:${l}`) || [])) {
+        if (candidate.startsWith(word)) completionPreferred.push(candidate);
+      }
+    }
+    completionPreferred.sort((a,b) => chars(a).length - chars(b).length || a.localeCompare(b, 'tr'));
+    for (const candidate of completionPreferred.slice(0, 8)) {
+      if (!seen.has(candidate)) {
+        seen.add(candidate);
+        result.push(candidate);
+        if (result.length >= limit) return result.slice(0, limit);
+      }
+    }
+
+    for (let l = Math.max(2, len - 2); l <= len + 2; l++) {
+      for (const candidate of (byFirstLength.get(`${first}:${l}`) || [])) {
+        if (!candidateSeen.has(candidate)) { candidateSeen.add(candidate); candidates.push(candidate); }
+      }
+    }
+
+    if (candidates.length < 600) {
+      for (let l = Math.max(2, len - 1); l <= len + 1; l++) {
+        for (const candidate of (byLength.get(l) || [])) {
+          if (!candidateSeen.has(candidate)) { candidateSeen.add(candidate); candidates.push(candidate); }
+        }
+      }
+    }
+
+    const scored = [];
+    for (const candidate of candidates) {
+      if (candidate === word || seen.has(candidate)) continue;
+      const dist = damerau(word, candidate, maxDistance);
+      if (dist > maxDistance) continue;
+      const prefix = commonPrefix(word, candidate);
+      const candidateChars = chars(candidate);
+      const sameSecond = W[1] && candidateChars[1] && W[1] === candidateChars[1];
+      const score = dist * 100 + Math.abs(candidateChars.length - len) * 8 - prefix * 12 - (sameSecond ? 5 : 0);
+      scored.push([score, candidate]);
+    }
+    scored.sort((a,b) => a[0] - b[0] || a[1].localeCompare(b[1], 'tr'));
+
+    for (const [, candidate] of scored) {
+      if (result.length >= limit) break;
+      if (seen.has(candidate)) continue;
+      seen.add(candidate);
+      result.push(candidate);
+    }
+    return result.slice(0, limit);
+  }
+
+  function applyCase(original, suggestions) {
+    const first = chars(original)[0] || '';
+    const isCapitalized = first && first !== normalize(first);
+    if (!isCapitalized) return suggestions;
+    return suggestions.map(value => {
+      const c = chars(value);
+      if (!c.length) return value;
+      const upper = c[0].replace(/i/g,'İ').replace(/ı/g,'I').toLocaleUpperCase('tr-TR');
+      return upper + c.slice(1).join('');
+    });
+  }
+
+  const QUESTION_TAIL_PATTERNS = [
+    { re: /m[ıiuü]s[ıiuü]n[ıiuü]z$/u, kind: '2pl' },
+    { re: /m[ıiuü]y[ıiuü]z$/u, kind: '1pl' },
+    { re: /m[ıiuü]y[ıiuü]m$/u, kind: '1sg' },
+    { re: /m[ıiuü]s[ıiuü]n$/u, kind: '2sg' },
+    { re: /m[ıiuü]d[ıiuü]r$/u, kind: 'cop' },
+    { re: /m[ıiuü]$/u, kind: 'plain' }
+  ];
+
+  function lastVowel(word) {
+    const c = chars(word);
+    for (let i = c.length - 1; i >= 0; i--) {
+      if ('aeıioöuü'.includes(c[i])) return c[i];
+    }
+    return '';
+  }
+
+  function questionHarmony(stem, kind) {
+    const vowel = lastVowel(stem);
+    let group = '';
+    if ('aı'.includes(vowel)) group = 'ı';
+    else if ('ei'.includes(vowel)) group = 'i';
+    else if ('ou'.includes(vowel)) group = 'u';
+    else if ('öü'.includes(vowel)) group = 'ü';
+    if (!group) return '';
+
+    const forms = {
+      'ı': { plain: 'mı',  '1sg': 'mıyım', '2sg': 'mısın', '1pl': 'mıyız', '2pl': 'mısınız', 'cop': 'mıdır' },
+      'i': { plain: 'mi',  '1sg': 'miyim',  '2sg': 'misin', '1pl': 'miyiz', '2pl': 'misiniz', 'cop': 'midir' },
+      'u': { plain: 'mu',  '1sg': 'muyum',  '2sg': 'musun', '1pl': 'muyuz', '2pl': 'musunuz', 'cop': 'mudur' },
+      'ü': { plain: 'mü',  '1sg': 'müyüm',  '2sg': 'müsün', '1pl': 'müyüz', '2pl': 'müsünüz', 'cop': 'müdür' }
+    };
+    return forms[group]?.[kind] || forms[group]?.plain || '';
+  }
+
+  function questionParticleSuggestion(word) {
+    for (const item of QUESTION_TAIL_PATTERNS) {
+      const match = word.match(item.re);
+      if (!match) continue;
+      const tail = match[0];
+      const stem = word.slice(0, -tail.length);
+      if (chars(stem).length < 2 || !lastVowel(stem)) continue;
+
+      const correctedTail = questionHarmony(stem, item.kind);
+      if (!correctedTail) continue;
+      return `${stem} ${correctedTail}`;
+    }
+    return '';
+  }
+
+  const STANDALONE_QUESTION_FORMS = [
+    { re: /^m[ıiuü]s[ıiuü]n[ıiuü]z$/u, kind: '2pl' },
+    { re: /^m[ıiuü]y[ıiuü]z$/u, kind: '1pl' },
+    { re: /^m[ıiuü]y[ıiuü]m$/u, kind: '1sg' },
+    { re: /^m[ıiuü]s[ıiuü]n$/u, kind: '2sg' },
+    { re: /^m[ıiuü]d[ıiuü]r$/u, kind: 'cop' },
+    { re: /^m[ıiuü]$/u, kind: 'plain' }
+  ];
+
+  function standaloneQuestionSuggestion(word, previousWord) {
+    if (!previousWord) return '';
+    for (const item of STANDALONE_QUESTION_FORMS) {
+      if (!item.re.test(word)) continue;
+      const expected = questionHarmony(previousWord, item.kind);
+      if (expected && expected !== word) return expected;
+    }
+    return '';
+  }
+
+  function capitalizeTurkish(value) {
+    const c = chars(String(value || ''));
+    if (!c.length) return value;
+    const first = c[0].replace(/i/g,'İ').replace(/ı/g,'I').toLocaleUpperCase('tr-TR');
+    return first + c.slice(1).join('');
+  }
+
+  function contextCase(original, suggestions, context = {}) {
+    let out = applyCase(original, suggestions);
+    if (context.sentenceStart && original === normalize(original)) {
+      out = out.map(capitalizeTurkish);
+    }
+    return out;
+  }
+
+  function check(rawWord, context = {}) {
+    const original = String(rawWord || '').trim();
+    const word = normalize(original);
+    const len = chars(word).length;
+    if (!word || len < 2 || len > 64 || /[0-9_/@#\\]/u.test(word))
+      return { word: original, correct: true, suggestions: [], provider: 'ignored' };
+
+    const previousWord = normalize(context.previousWord || '');
+    const standaloneQuestion = standaloneQuestionSuggestion(word, previousWord);
+    if (standaloneQuestion) {
+      return {
+        word: original,
+        correct: false,
+        suggestions: [standaloneQuestion],
+        provider: 'local-tdk-question-harmony'
+      };
+    }
+
+    if (COMMON[word]) {
+      const suggestions = findSuggestions(word, 3, COMMON[word]);
+      return { word: original, correct: false, suggestions: contextCase(original, suggestions, context), provider: 'local-tdk-common-intent' };
+    }
+
+    if (valid.has(word)) {
+      if (context.sentenceStart && original === normalize(original)) {
+        const capitalized = capitalizeTurkish(original);
+        if (capitalized !== original) {
+          return { word: original, correct: false, suggestions: [capitalized], provider: 'local-sentence-capitalization' };
+        }
+      }
+      return { word: original, correct: true, suggestions: [], provider: 'local-tdk-exact' };
+    }
+
+    const orthographic = orthographicValidVariants(word, 6);
+    if (orthographic.length) {
+      const suggestions = findSuggestions(word, 3, orthographic);
+      return { word: original, correct: false, suggestions: contextCase(original, suggestions, context), provider: 'local-turkish-character-repair' };
+    }
+
+    if (isLikelyInflected(word)) {
+      if (context.sentenceStart && original === normalize(original)) {
+        const capitalized = capitalizeTurkish(original);
+        if (capitalized !== original) {
+          return { word: original, correct: false, suggestions: [capitalized], provider: 'local-sentence-capitalization' };
+        }
+      }
+      return { word: original, correct: true, suggestions: [], provider: 'local-tdk-hunspell' };
+    }
+
+    const intents = intentSuggestions(word, 3);
+
+    const questionSplit = questionParticleSuggestion(word);
+    if (questionSplit) {
+      const suggestions = findSuggestions(word, 3, [questionSplit]);
+      return { word: original, correct: false, suggestions: contextCase(original, suggestions, context), provider: 'local-tdk-question-particle' };
+    }
+
+    const suggestions = findSuggestions(word, 3, intents);
+    return { word: original, correct: false, suggestions: contextCase(original, suggestions, context), provider: intents.length ? 'local-intent-smart' : 'local-tdk-smart' };
+  }
+
+  function isValidWord(rawWord) {
+    const word = normalize(String(rawWord || '').trim());
+    if (!word) return false;
+    if (valid.has(word)) return true;
+    if (orthographicValidVariants(word, 1).length) return false;
+    return isLikelyInflected(word);
+  }
+
+  function suggest(rawWord, context = {}, limit = 3) {
+    const original = String(rawWord || '').trim();
+    const word = normalize(original);
+    if (!word) return [];
+    const preferred = [
+      ...(COMMON[word] || []),
+      ...orthographicValidVariants(word, limit),
+      ...intentSuggestions(word, limit)
+    ];
+    return contextCase(original, findSuggestions(word, limit, preferred), context);
+  }
+
+  window.WarextTurkishSpellEngineV142 = {
+    version: '1.4.2',
+    check,
+    suggest,
+    isValid: isValidWord,
+    stats: { tdkWords: tdkWords.length, extraValidWords: extraValid.length, validWords: valid.size }
+  };
+})();
