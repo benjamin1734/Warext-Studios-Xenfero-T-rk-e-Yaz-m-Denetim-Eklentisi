@@ -10,20 +10,26 @@ git -C "$TMP/tdk" checkout -q 444dbcc53556618b0977a3d608cbf1402f7e9363
 git clone -q https://github.com/tdd-ai/hunspell-tr.git "$TMP/hunspell"
 git -C "$TMP/hunspell" checkout -q 7302eca5f3652fe7ae3d3ec06c44697c97342b4e
 
+mkdir -p "$ROOT/upload/js/warext/turkish-spellcheck"
+cat "$ROOT"/source/editor/editor-v300.part* > "$ROOT/upload/js/warext/turkish-spellcheck/editor-v300.js"
+rm -f "$ROOT/upload/js/warext/turkish-spellcheck/bootstrap-v160.js" \
+      "$ROOT/upload/js/warext/turkish-spellcheck/dictionary-v160.js" \
+      "$ROOT/upload/js/warext/turkish-spellcheck/editor-v160.js" \
+      "$ROOT/upload/js/warext/turkish-spellcheck/rules-v160.js" \
+      "$ROOT/upload/js/warext/turkish-spellcheck/worker-v160.js"
+
 python3 "$ROOT/tools/build_dictionary.py" \
   --tdk-dir "$TMP/tdk" \
   --hunspell-dic "$TMP/hunspell/tr_TR.dic" \
   --template-dir "$ROOT/source/dictionary" \
-  --output "$ROOT/upload/js/warext/turkish-spellcheck/dictionary-v160.js"
+  --output "$ROOT/upload/js/warext/turkish-spellcheck/dictionary-v300.js"
 
 mkdir -p "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources"
 cp "$TMP/hunspell/LICENSE" "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources/LICENSE-MPL-2.0.txt"
 
-node --check "$ROOT/upload/js/warext/turkish-spellcheck/bootstrap-v160.js"
-node --check "$ROOT/upload/js/warext/turkish-spellcheck/dictionary-v160.js"
-node --check "$ROOT/upload/js/warext/turkish-spellcheck/rules-v160.js"
-node --check "$ROOT/upload/js/warext/turkish-spellcheck/worker-v160.js"
-node --check "$ROOT/upload/js/warext/turkish-spellcheck/editor-v160.js"
+node --check "$ROOT/upload/js/warext/turkish-spellcheck/bootstrap-v300.js"
+node --check "$ROOT/upload/js/warext/turkish-spellcheck/dictionary-v300.js"
+node --check "$ROOT/upload/js/warext/turkish-spellcheck/editor-v300.js"
 node "$ROOT/tests/dictionary-smoke.js"
 node "$ROOT/tests/rules-regression.js"
 php -l "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Setup.php"
@@ -33,7 +39,6 @@ import json
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
-
 root = Path(sys.argv[1])
 json.load((root / 'upload/src/addons/Warext/TurkishSpellCheck/addon.json').open(encoding='utf-8'))
 for path in sorted((root / 'upload/src/addons/Warext/TurkishSpellCheck/_data').glob('*.xml')):
@@ -44,13 +49,13 @@ if grep -RInE '^[[:space:]]*(//|/\*|\*)' \
   "$ROOT/source/dictionary" \
   "$ROOT/upload/js/warext/turkish-spellcheck" \
   "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Setup.php"; then
-  printf '%s\n' "Kod açıklama satırı kontrolü başarısız."
+  printf '%s\n' "Kod yorum satırı kontrolü başarısız."
   exit 1
 fi
 
 rm -rf "$ROOT/release"
 mkdir -p "$ROOT/release"
 cd "$ROOT"
-zip -qr "release/Warext-SpellCheck-1.zip" upload
-sha256sum "release/Warext-SpellCheck-1.zip" > SHA256SUMS
-printf '%s\n' "release/Warext-SpellCheck-1.zip hazırlandı."
+zip -qr "release/Warext-SpellCheck-3.0.0.zip" upload README.txt
+sha256sum "release/Warext-SpellCheck-3.0.0.zip" > SHA256SUMS
+printf '%s\n' "release/Warext-SpellCheck-3.0.0.zip hazırlandı."
