@@ -16,7 +16,8 @@ rm -f "$ROOT/upload/js/warext/turkish-spellcheck/bootstrap-v160.js" \
       "$ROOT/upload/js/warext/turkish-spellcheck/dictionary-v160.js" \
       "$ROOT/upload/js/warext/turkish-spellcheck/editor-v160.js" \
       "$ROOT/upload/js/warext/turkish-spellcheck/rules-v160.js" \
-      "$ROOT/upload/js/warext/turkish-spellcheck/worker-v160.js"
+      "$ROOT/upload/js/warext/turkish-spellcheck/worker-v160.js" \
+      "$ROOT/upload/js/warext/turkish-spellcheck/bootstrap-v300.js"
 
 python3 "$ROOT/tools/build_dictionary.py" \
   --tdk-dir "$TMP/tdk" \
@@ -27,11 +28,14 @@ python3 "$ROOT/tools/build_dictionary.py" \
 mkdir -p "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources"
 cp "$TMP/hunspell/LICENSE" "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources/LICENSE-MPL-2.0.txt"
 
-node --check "$ROOT/upload/js/warext/turkish-spellcheck/bootstrap-v300.js"
+node --check "$ROOT/upload/js/warext/turkish-spellcheck/bootstrap-v310.js"
 node --check "$ROOT/upload/js/warext/turkish-spellcheck/dictionary-v300.js"
 node --check "$ROOT/upload/js/warext/turkish-spellcheck/editor-v300.js"
+node --check "$ROOT/upload/js/warext/turkish-spellcheck/longtext-core-v310.js"
+node --check "$ROOT/upload/js/warext/turkish-spellcheck/longtext-v310.js"
 node "$ROOT/tests/dictionary-smoke.js"
 node "$ROOT/tests/rules-regression.js"
+node "$ROOT/tests/longtext-regression.js"
 php -l "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Setup.php"
 
 python3 - "$ROOT" <<'PY'
@@ -47,6 +51,7 @@ PY
 
 if grep -RInE '^[[:space:]]*(//|/\*|\*)' \
   "$ROOT/source/dictionary" \
+  "$ROOT/source/editor" \
   "$ROOT/upload/js/warext/turkish-spellcheck" \
   "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Setup.php"; then
   printf '%s\n' "Kod yorum satırı kontrolü başarısız."
@@ -56,6 +61,6 @@ fi
 rm -rf "$ROOT/release"
 mkdir -p "$ROOT/release"
 cd "$ROOT"
-zip -qr "release/Warext-SpellCheck-3.0.0.zip" upload README.txt
-sha256sum "release/Warext-SpellCheck-3.0.0.zip" > SHA256SUMS
-printf '%s\n' "release/Warext-SpellCheck-3.0.0.zip hazırlandı."
+zip -qr "release/Warext-SpellCheck-3.1.0.zip" upload README.txt
+sha256sum "release/Warext-SpellCheck-3.1.0.zip" > SHA256SUMS
+printf '%s\n' "release/Warext-SpellCheck-3.1.0.zip hazırlandı."

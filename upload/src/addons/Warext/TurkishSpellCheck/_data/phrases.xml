@@ -1,23 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <phrases>
-  <phrase title="option_group_warextSpell" version_id="3000070" version_string="3.0.0"><![CDATA[Warext Türkçe Yazım Denetimi]]></phrase>
-  <phrase title="option_group_warextSpell_description" version_id="3000070" version_string="3.0.0"><![CDATA[Türkçe yazım, dilbilgisi, noktalama, bağlam ve sözlük ayarları.]]></phrase>
-  <phrase title="option_warextSpellEnabled" version_id="3000070" version_string="3.0.0"><![CDATA[Yazım denetimini etkinleştir]]></phrase>
-  <phrase title="option_warextSpellEnabled_explain" version_id="3000070" version_string="3.0.0"><![CDATA[Mesaj editörü ve konu başlığı alanlarında yerel Türkçe denetimini çalıştırır.]]></phrase>
-  <phrase title="option_warextSpellGrammar" version_id="3000070" version_string="3.0.0"><![CDATA[Dilbilgisi ve bağlam denetimi]]></phrase>
-  <phrase title="option_warextSpellGrammar_explain" version_id="3000070" version_string="3.0.0"><![CDATA[de/da, ki, soru eki, birleşik-ayrı yazım, kişi ve yüksek güvenli bağlam kurallarını denetler.]]></phrase>
-  <phrase title="option_warextSpellPunctuation" version_id="3000070" version_string="3.0.0"><![CDATA[Noktalama denetimi]]></phrase>
-  <phrase title="option_warextSpellPunctuation_explain" version_id="3000070" version_string="3.0.0"><![CDATA[Boşluk, tekrar eden işaret, cümle sonu ve noktalama çevresi kontrollerini etkinleştirir.]]></phrase>
-  <phrase title="option_warextSpellUnderline" version_id="3000070" version_string="3.0.0"><![CDATA[Hataların altını çiz]]></phrase>
-  <phrase title="option_warextSpellUnderline_explain" version_id="3000070" version_string="3.0.0"><![CDATA[Destekleyen tarayıcılarda zengin metin editöründeki tespitleri dalgalı çizgiyle gösterir.]]></phrase>
-  <phrase title="option_warextSpellProperNames" version_id="3000070" version_string="3.0.0"><![CDATA[Özel isim ve kesme işareti denetimi]]></phrase>
-  <phrase title="option_warextSpellProperNames_explain" version_id="3000070" version_string="3.0.0"><![CDATA[Bilinen ve yönetici tarafından eklenen özel adların çekim eklerini denetler.]]></phrase>
-  <phrase title="option_warextSpellInformal" version_id="3000070" version_string="3.0.0"><![CDATA[Günlük yazım önerileri]]></phrase>
-  <phrase title="option_warextSpellInformal_explain" version_id="3000070" version_string="3.0.0"><![CDATA[Gelicem gibi günlük biçimler için standart Türkçe karşılıklarını önerir.]]></phrase>
-  <phrase title="option_warextSpellMaxSuggestions" version_id="3000070" version_string="3.0.0"><![CDATA[Maksimum öneri sayısı]]></phrase>
-  <phrase title="option_warextSpellMaxSuggestions_explain" version_id="3000070" version_string="3.0.0"><![CDATA[Öneri alanında aynı anda gösterilecek düzeltme sayısı.]]></phrase>
-  <phrase title="option_warextSpellCustomWords" version_id="3000070" version_string="3.0.0"><![CDATA[Forum özel sözlüğü]]></phrase>
-  <phrase title="option_warextSpellCustomWords_explain" version_id="3000070" version_string="3.0.0"><![CDATA[Doğru kabul edilecek özel kelimeleri satır satır veya virgülle ayırarak girin.]]></phrase>
-  <phrase title="option_warextSpellCustomProperNames" version_id="3000070" version_string="3.0.0"><![CDATA[Forum özel isim listesi]]></phrase>
-  <phrase title="option_warextSpellCustomProperNames_explain" version_id="3000070" version_string="3.0.0"><![CDATA[Kesme işareti denetiminde özel ad kabul edilecek isimleri satır satır veya virgülle ayırarak girin.]]></phrase>
+  <phrase title="option_group_warextSpell" version_id="3010070" version_string="3.1.0"><![CDATA[Warext Türkçe Yazım Denetimi]]></phrase>
+  <phrase title="option_group_warextSpell_description" version_id="3010070" version_string="3.1.0"><![CDATA[Türkçe yazım, dilbilgisi, noktalama, bağlam, uzun metin ve sözlük ayarları.]]></phrase>
+  <phrase title="option_warextSpellEnabled" version_id="3010070" version_string="3.1.0"><![CDATA[Yazım denetimini etkinleştir]]></phrase>
+  <phrase title="option_warextSpellEnabled_explain" version_id="3010070" version_string="3.1.0"><![CDATA[Mesaj editörü ve konu başlığı alanlarında yerel Türkçe denetimini çalıştırır.]]></phrase>
+  <phrase title="option_warextSpellGrammar" version_id="3010070" version_string="3.1.0"><![CDATA[Dilbilgisi ve bağlam denetimi]]></phrase>
+  <phrase title="option_warextSpellGrammar_explain" version_id="3010070" version_string="3.1.0"><![CDATA[de/da, ki, soru eki, birleşik-ayrı yazım, kişi ve yüksek güvenli bağlam kurallarını denetler.]]></phrase>
+  <phrase title="option_warextSpellPunctuation" version_id="3010070" version_string="3.1.0"><![CDATA[Noktalama denetimi]]></phrase>
+  <phrase title="option_warextSpellPunctuation_explain" version_id="3010070" version_string="3.1.0"><![CDATA[Boşluk, tekrar eden işaret, cümle sonu ve noktalama çevresi kontrollerini etkinleştirir.]]></phrase>
+  <phrase title="option_warextSpellUnderline" version_id="3010070" version_string="3.1.0"><![CDATA[Hataların altını çiz]]></phrase>
+  <phrase title="option_warextSpellUnderline_explain" version_id="3010070" version_string="3.1.0"><![CDATA[Destekleyen tarayıcılarda zengin metin editöründeki tespitleri dalgalı çizgiyle gösterir.]]></phrase>
+  <phrase title="option_warextSpellProperNames" version_id="3010070" version_string="3.1.0"><![CDATA[Özel isim ve kesme işareti denetimi]]></phrase>
+  <phrase title="option_warextSpellProperNames_explain" version_id="3010070" version_string="3.1.0"><![CDATA[Bilinen ve yönetici tarafından eklenen özel adların çekim eklerini denetler.]]></phrase>
+  <phrase title="option_warextSpellInformal" version_id="3010070" version_string="3.1.0"><![CDATA[Günlük yazım önerileri]]></phrase>
+  <phrase title="option_warextSpellInformal_explain" version_id="3010070" version_string="3.1.0"><![CDATA[Gelicem gibi günlük biçimler için standart Türkçe karşılıklarını önerir.]]></phrase>
+  <phrase title="option_warextSpellMaxSuggestions" version_id="3010070" version_string="3.1.0"><![CDATA[Maksimum öneri sayısı]]></phrase>
+  <phrase title="option_warextSpellMaxSuggestions_explain" version_id="3010070" version_string="3.1.0"><![CDATA[Öneri alanında aynı anda gösterilecek düzeltme sayısı.]]></phrase>
+  <phrase title="option_warextSpellLongText" version_id="3010070" version_string="3.1.0"><![CDATA[Uzun metin taramasını etkinleştir]]></phrase>
+  <phrase title="option_warextSpellLongText_explain" version_id="3010070" version_string="3.1.0"><![CDATA[Uzun mesajları cümlelere bölerek arka planda tamamını tarar, değişmeyen cümleleri önbellekten kullanır ve zengin editörde tüm tespitleri işaretler.]]></phrase>
+  <phrase title="option_warextSpellLongTextThreshold" version_id="3010070" version_string="3.1.0"><![CDATA[Uzun metin eşiği]]></phrase>
+  <phrase title="option_warextSpellLongTextThreshold_explain" version_id="3010070" version_string="3.1.0"><![CDATA[Tam metin arka plan taramasının başlayacağı minimum karakter sayısı. Varsayılan 800.]]></phrase>
+  <phrase title="option_warextSpellLongTextMaxIssues" version_id="3010070" version_string="3.1.0"><![CDATA[Uzun metinde maksimum tespit]]></phrase>
+  <phrase title="option_warextSpellLongTextMaxIssues_explain" version_id="3010070" version_string="3.1.0"><![CDATA[Tek bir uzun mesaj taramasında tutulacak en fazla tespit sayısı. Varsayılan 160.]]></phrase>
+  <phrase title="option_warextSpellCustomWords" version_id="3010070" version_string="3.1.0"><![CDATA[Forum özel sözlüğü]]></phrase>
+  <phrase title="option_warextSpellCustomWords_explain" version_id="3010070" version_string="3.1.0"><![CDATA[Doğru kabul edilecek özel kelimeleri satır satır veya virgülle ayırarak girin.]]></phrase>
+  <phrase title="option_warextSpellCustomProperNames" version_id="3010070" version_string="3.1.0"><![CDATA[Forum özel isim listesi]]></phrase>
+  <phrase title="option_warextSpellCustomProperNames_explain" version_id="3010070" version_string="3.1.0"><![CDATA[Kesme işareti denetiminde özel ad kabul edilecek isimleri satır satır veya virgülle ayırarak girin.]]></phrase>
 </phrases>

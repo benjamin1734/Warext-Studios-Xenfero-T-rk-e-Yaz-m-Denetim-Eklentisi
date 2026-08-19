@@ -1,5 +1,23 @@
 # Değişiklik Geçmişi
 
+## 3.1.0
+
+- Uzun mesaj ve paragrafların tamamını arka planda tarayan uzun metin modu eklendi.
+- Metin cümlelere ayrılarak aşamalı ve dağıtılmış biçimde analiz ediliyor.
+- Önceki ve sonraki cümle analiz bağlamına aktarılıyor.
+- Cümle sonuçları komşu bağlam imzasıyla önbelleğe alınıyor.
+- Metinde tek bir cümle değiştiğinde değişmeyen cümleler tekrar hesaplanmıyor.
+- Değişen cümlenin komşuları bağlam anahtarı nedeniyle otomatik yeniden analiz ediliyor.
+- 1.800 karakteri aşan tek cümleler güvenli parçalara bölünüyor.
+- requestIdleCallback destekli tarama ile uzun içerik analizi yazım akışından ayrıldı.
+- requestIdleCallback bulunmayan tarayıcılar için zaman dilimli geri dönüş mekanizması eklendi.
+- Zengin editörde uzun metnin tamamında bulunan tespitler toplu olarak işaretleniyor.
+- URL, kod, BBCode, e-posta, domain, kullanıcı adı, IP ve dosya yolu koruması uzun metin moduna taşındı.
+- Oturumluk yok sayma listesi uzun metin taramasında da dikkate alınıyor.
+- ACP'ye uzun metin taraması açma-kapama, karakter eşiği ve maksimum tespit sayısı ayarları eklendi.
+- 8.000+ karakter ve 120 cümlelik regresyon senaryosu eklendi.
+- Kod yorum satırı kontrolü yeni uzun metin dosyalarını da kapsayacak şekilde genişletildi.
+
 ## 3.0.0
 
 - Yerel Türkçe denetim motoru final mimarisine yükseltildi.
