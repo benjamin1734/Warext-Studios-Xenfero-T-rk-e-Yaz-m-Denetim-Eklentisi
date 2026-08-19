@@ -1,58 +1,57 @@
-name: Eklentiyi derle
+name: Warext v1 geçişi
 
 on:
   push:
     branches:
       - main
     paths:
-      - source/dictionary/**
-      - source/editor/**
-      - tools/**
-      - tests/**
-      - upload/js/warext/turkish-spellcheck/**
-      - upload/src/addons/Warext/TurkishSpellCheck/**
-      - README.txt
+      - tools/v1_payload.part*
       - .github/workflows/build-release.yml
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  apply:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Eklentiyi derle ve doğrula
+      - name: V1 kaynaklarını uygula
         shell: bash
-        run: bash tools/build_release.sh
+        run: |
+          cat tools/v1_payload.part* > /tmp/v1_payload.b64
+          python3 - <<'PY'
+          import base64
+          import io
+          import tarfile
+          from pathlib import Path
+          root = Path.cwd().resolve()
+          data = base64.b64decode(Path('/tmp/v1_payload.b64').read_text(encoding='ascii'))
+          with tarfile.open(fileobj=io.BytesIO(data), mode='r:gz') as archive:
+              for member in archive.getmembers():
+                  target = (root / member.name).resolve()
+                  if root != target and root not in target.parents:
+                      raise SystemExit('Geçersiz payload yolu')
+              archive.extractall(root)
+          for path in (root / 'tools').glob('v1_payload.part*'):
+              path.unlink()
+          PY
+          chmod +x tools/build_release.sh
+          bash tools/build_release.sh
 
-      - name: Kurulum paketini artifact olarak yükle
-        uses: actions/upload-artifact@v4
-        with:
-          name: Warext-SpellCheck-3.1.0
-          path: release/Warext-SpellCheck-3.1.0.zip
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Üretilen dosyaları kaydet
-        if: github.event_name == 'push'
+      - name: V1 sürümünü kaydet
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A upload/js/warext/turkish-spellcheck
-          git add -A upload/src/addons/Warext/TurkishSpellCheck/Resources
-          git add -A release SHA256SUMS
+          git add -A
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "Warext Spell Check 3.1.0 paketini derle"
+          git commit -m "Warext Spell Check 1.0.0 nihai yerel sürüm"
           git push
