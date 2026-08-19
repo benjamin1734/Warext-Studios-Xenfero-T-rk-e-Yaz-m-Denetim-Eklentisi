@@ -1,0 +1,87 @@
+    return state;
+  }
+
+  function surfaceFromEditorEvent(event) {
+    return event?.ed?.el || event?.editor?.ed?.el || event?.detail?.ed?.el || null;
+  }
+
+  function bindTextarea(textarea) {
+    if (!(textarea instanceof HTMLTextAreaElement)) return;
+
+    if (!listenedTextareas.has(textarea)) {
+      listenedTextareas.add(textarea);
+      const listener = event => {
+        const surface = surfaceFromEditorEvent(event);
+        if (surface instanceof HTMLElement) attach(surface)?.schedule(40);
+      };
+      if (window.XF && typeof XF.on === 'function') XF.on(textarea, 'editor:init', listener);
+      else textarea.addEventListener('editor:init', listener);
+    }
+
+    try {
+      const handler = window.XF?.Element?.getHandler?.(textarea, 'editor');
+      const surface = handler?.ed?.el;
+      if (surface instanceof HTMLElement) {
+        attach(surface);
+        return;
+      }
+    } catch (_) {}
+
+    const hasRich = !!textarea.parentElement?.querySelector?.('.fr-box .fr-element[contenteditable="true"]');
+    if (!hasRich && isMessageTextarea(textarea) && textarea.offsetParent !== null) attach(textarea);
+  }
+
+  function scan(root = document) {
+    if (root instanceof HTMLTextAreaElement) bindTextarea(root);
+    root.querySelectorAll?.('textarea.js-editor[data-xf-init~="editor"], textarea[name="message"], textarea[data-original-name="message"]').forEach(bindTextarea);
+
+    if (root instanceof HTMLInputElement && isTitleInput(root)) attach(root);
+    root.querySelectorAll?.('input[name="title"]').forEach(attach);
+
+    if (root instanceof HTMLElement && isRichEditor(root)) attach(root);
+    root.querySelectorAll?.('.fr-element[contenteditable="true"]').forEach(attach);
+  }
+
+  function boot() {
+    if (!cfg.enabled) { document.documentElement.dataset.wtscStatus = 'disabled'; return; }
+    loadCustomDictionary();
+    installStyle();
+    document.querySelectorAll('.wtsc-suggestions').forEach(bar => bar.remove());
+    document.documentElement.dataset.wtscStatus = engine() ? 'local-ready' : 'dictionary-missing';
+
+    if (window.XF && typeof XF.on === 'function') {
+      XF.on(document, 'editor:init', event => {
+        const surface = surfaceFromEditorEvent(event);
+        if (surface instanceof HTMLElement) attach(surface)?.schedule(40);
+      });
+    }
+
+    scan(document);
+
+    document.addEventListener('focusin', event => {
+      const target = event.target;
+      if (target instanceof HTMLTextAreaElement) bindTextarea(target);
+      const candidate = target?.closest?.('.fr-element[contenteditable="true"], textarea.js-editor, textarea[name="message"], input[name="title"]');
+      if (candidate instanceof HTMLElement) attach(candidate)?.schedule(50);
+    }, true);
+
+    const observer = new MutationObserver(mutations => {
+      for (const mutation of mutations) {
+        if (mutation.type === 'attributes') {
+          if (mutation.target instanceof Element) scan(mutation.target);
+          continue;
+        }
+        for (const node of mutation.addedNodes) if (node instanceof Element) scan(node);
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class','contenteditable','data-xf-init'] });
+
+    let passes = 0;
+    const rescanner = window.setInterval(() => {
+      scan(document);
+      if (++passes >= 12) window.clearInterval(rescanner);
+    }, 500);
+  }
+
+  ready(boot);
+})();
