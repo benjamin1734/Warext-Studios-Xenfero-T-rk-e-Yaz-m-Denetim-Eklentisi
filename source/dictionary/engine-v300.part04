@@ -1,0 +1,163 @@
+        else if (/^(?:lar|ler)$/u.test(suffix)) features.person = '3pl';
+      }
+    }
+    if (derivations.length) features.derivations = derivations;
+    return features;
+  }
+
+  function analyzeMorphology(rawWord) {
+    const word = normalize(rawWord);
+    if (!word || word.length < 3) return { valid:false, score:0, parts:[], features:{} };
+    const noun = bestMorphParse(word, 'noun');
+    const verb = bestMorphParse(word, 'verb');
+    const finiteVerb = !!verb?.parts?.some(part => part.label === 'tense');
+    const best = !noun ? verb : !verb ? noun
+      : (finiteVerb && verb.score + 0.75 >= noun.score ? verb : (noun.score >= verb.score ? noun : verb));
+    if (!best) return { valid:false, score:0, parts:[], features:{} };
+    best.features = morphologyFeatures(best);
+    return best;
+  }
+
+  function hasVowelInitialInflectionTail(tail) {
+    if (!tail) return false;
+    for (const suffix of VOWEL_INITIAL_INFLECTION_SUFFIXES) {
+      if (!tail.startsWith(suffix)) continue;
+      const rest = tail.slice(suffix.length);
+      if (!rest || repairTailIsSuffixChain(rest)) return true;
+    }
+    return false;
+  }
+
+  function soundEventRepairSuggestion(word) {
+    for (const [base, surface] of SOUND_EVENT_ROOTS) {
+      if (!word.startsWith(base) || word.length <= base.length) continue;
+      const tail = word.slice(base.length);
+      if (!hasVowelInitialInflectionTail(tail)) continue;
+      const candidate = surface + tail;
+      if (candidate === word) continue;
+      if (valid.has(candidate)) return candidate;
+      const parse = analyzeMorphology(candidate);
+      if (parse.valid) return candidate;
+    }
+    return '';
+  }
+
+  const PROPER_NAMES = new Map([
+    ['türkiye','Türkiye'],['turkiye','Türkiye'],
+    ['adana','Adana'],['adıyaman','Adıyaman'],['afyonkarahisar','Afyonkarahisar'],['ağrı','Ağrı'],['amasya','Amasya'],
+    ['ankara','Ankara'],['antalya','Antalya'],['artvin','Artvin'],['aydın','Aydın'],['balıkesir','Balıkesir'],
+    ['bilecik','Bilecik'],['bingöl','Bingöl'],['bitlis','Bitlis'],['bolu','Bolu'],['burdur','Burdur'],['bursa','Bursa'],
+    ['çanakkale','Çanakkale'],['çankırı','Çankırı'],['çorum','Çorum'],['denizli','Denizli'],['diyarbakır','Diyarbakır'],
+    ['edirne','Edirne'],['elazığ','Elazığ'],['erzincan','Erzincan'],['erzurum','Erzurum'],['eskişehir','Eskişehir'],
+    ['gaziantep','Gaziantep'],['giresun','Giresun'],['gümüşhane','Gümüşhane'],['hakkâri','Hakkâri'],['hakkari','Hakkâri'],
+    ['hatay','Hatay'],['ısparta','Isparta'],['mersin','Mersin'],['istanbul','İstanbul'],['izmir','İzmir'],['kars','Kars'],
+    ['kastamonu','Kastamonu'],['kayseri','Kayseri'],['kırklareli','Kırklareli'],['kırşehir','Kırşehir'],['kocaeli','Kocaeli'],
+    ['konya','Konya'],['kütahya','Kütahya'],['malatya','Malatya'],['manisa','Manisa'],['kahramanmaraş','Kahramanmaraş'],
+    ['mardin','Mardin'],['muğla','Muğla'],['muş','Muş'],['nevşehir','Nevşehir'],['niğde','Niğde'],['ordu','Ordu'],
+    ['rize','Rize'],['sakarya','Sakarya'],['samsun','Samsun'],['siirt','Siirt'],['sinop','Sinop'],['sivas','Sivas'],
+    ['tekirdağ','Tekirdağ'],['tokat','Tokat'],['trabzon','Trabzon'],['tunceli','Tunceli'],['şanlıurfa','Şanlıurfa'],
+    ['uşak','Uşak'],['van','Van'],['yozgat','Yozgat'],['zonguldak','Zonguldak'],['aksaray','Aksaray'],['bayburt','Bayburt'],
+    ['karaman','Karaman'],['kırıkkale','Kırıkkale'],['batman','Batman'],['şırnak','Şırnak'],['bartın','Bartın'],['ardahan','Ardahan'],
+    ['ığdır','Iğdır'],['yalova','Yalova'],['karabük','Karabük'],['kilis','Kilis'],['osmaniye','Osmaniye'],['düzce','Düzce'],
+    ['almanya','Almanya'],['fransa','Fransa'],['italya','İtalya'],['ingiltere','İngiltere'],['amerika','Amerika'],
+    ['azerbaycan','Azerbaycan'],['gürcistan','Gürcistan'],['bulgaristan','Bulgaristan'],['yunanistan','Yunanistan'],
+    ['rusya','Rusya'],['ukrayna','Ukrayna'],['hollanda','Hollanda'],['belçika','Belçika'],['ispanya','İspanya'],
+    ['portekiz','Portekiz'],['isviçre','İsviçre'],['avusturya','Avusturya'],['polonya','Polonya'],['romanya','Romanya'],
+    ['japonya','Japonya'],['çin','Çin'],['hindistan','Hindistan'],['kanada','Kanada'],['brezilya','Brezilya'],
+    ['arjantin','Arjantin'],['avustralya','Avustralya'],['iran','İran'],['irak','Irak'],['suriye','Suriye'],['filistin','Filistin'],
+    ['israil','İsrail'],['mısır','Mısır'],
+    ['atatürk','Atatürk'],['ataturk','Atatürk'],
+    ['xenforo','XenForo'],['minecraft','Minecraft'],['discord','Discord'],['github','GitHub'],['warext','Warext']
+  ]);
+  const LOWERCASE_PROPER_NAMES = new Set([
+    'türkiye','turkiye','ankara','istanbul','izmir','atatürk','ataturk','xenforo','minecraft','discord','github','warext',
+    'almanya','fransa','italya','ingiltere','amerika','azerbaycan','gürcistan','bulgaristan','yunanistan','rusya','ukrayna',
+    'hollanda','belçika','ispanya','portekiz','isviçre','avusturya','polonya','romanya','japonya','çin','hindistan','kanada',
+    'brezilya','arjantin','avustralya','iran','irak','suriye','filistin','israil'
+  ]);
+  const PROPER_NAME_KEYS = [...PROPER_NAMES.keys()].sort((a,b) => chars(b).length - chars(a).length);
+
+  function properCanonical(key) {
+    return customProperNames.get(key) || PROPER_NAMES.get(key) || '';
+  }
+
+  function properKeys() {
+    if (!customProperNames.size) return PROPER_NAME_KEYS;
+    return [...new Set([...customProperNames.keys(), ...PROPER_NAME_KEYS])].sort((a,b) => chars(b).length - chars(a).length);
+  }
+
+  function properNameSuffixes(base) {
+    const h4 = harmony4For(base), h2 = harmony2For(base);
+    if (!h4 || !h2) return new Set();
+    const vowelEnd = VOWELS.includes(finalChar(base));
+    const d = VOICELESS.includes(finalChar(base)) ? 't' : 'd';
+    const loc = `${d}${h2}`;
+    return new Set([
+      loc, `${loc}n`,
+      vowelEnd ? `y${h2}` : h2,
+      vowelEnd ? `y${h4}` : h4,
+      vowelEnd ? `n${h4}n` : `${h4}n`,
+      vowelEnd ? `yl${h2}` : `l${h2}`,
+      `${d}${h4}r`
+    ]);
+  }
+
+  function correctedProperSuffix(base, suffix) {
+    const h4 = harmony4For(base), h2 = harmony2For(base);
+    if (!h4 || !h2) return '';
+    const vowelEnd = VOWELS.includes(finalChar(base));
+    const d = VOICELESS.includes(finalChar(base)) ? 't' : 'd';
+    const loc = `${d}${h2}`;
+    if (/^(?:da|de|ta|te)$/u.test(suffix)) return loc;
+    if (/^(?:dan|den|tan|ten)$/u.test(suffix)) return `${loc}n`;
+    if (/^(?:ya|ye|a|e)$/u.test(suffix)) return vowelEnd ? `y${h2}` : h2;
+    if (/^(?:y?[ıiuü])$/u.test(suffix)) return vowelEnd ? `y${h4}` : h4;
+    if (/^(?:n?[ıiuü]n)$/u.test(suffix)) return vowelEnd ? `n${h4}n` : `${h4}n`;
+    if (/^(?:yla|yle|la|le)$/u.test(suffix)) return vowelEnd ? `yl${h2}` : `l${h2}`;
+    if (/^(?:dır|dir|dur|dür|tır|tir|tur|tür)$/u.test(suffix)) return `${d}${h4}r`;
+    return '';
+  }
+
+  function properNameSuggestion(rawToken) {
+    const raw = String(rawToken || '').trim();
+    if (!raw) return '';
+    const apostrophe = raw.match(/^([^'’]+)['’]([^'’]+)$/u);
+    if (apostrophe) {
+      const baseKey = normalize(apostrophe[1]);
+      const canonical = properCanonical(baseKey);
+      if (!canonical) return '';
+      const canonicalBase = normalize(canonical);
+      const observedSuffix = normalize(apostrophe[2]);
+      const correctedSuffix = properNameSuffixes(canonicalBase).has(observedSuffix)
+        ? observedSuffix : correctedProperSuffix(canonicalBase, observedSuffix);
+      if (!correctedSuffix) return '';
+      const candidate = `${canonical}'${correctedSuffix}`;
+      return candidate !== raw ? candidate : '';
+    }
+
+    const word = normalize(raw);
+    const startsUpper = raw[0] !== normalize(raw[0]);
+    for (const base of properKeys()) {
+      const canonical = properCanonical(base);
+      const canonicalBase = normalize(canonical);
+      if (word === base) {
+        if ((LOWERCASE_PROPER_NAMES.has(base) || startsUpper) && raw !== canonical) return canonical;
+        return '';
+      }
+      if (!word.startsWith(base)) continue;
+      const suffix = word.slice(base.length);
+      if (!suffix) continue;
+      const correctedSuffix = properNameSuffixes(canonicalBase).has(suffix) ? suffix : correctedProperSuffix(canonicalBase, suffix);
+      if (!correctedSuffix) continue;
+      if (!startsUpper && !LOWERCASE_PROPER_NAMES.has(base)) continue;
+      return `${canonical}'${correctedSuffix}`;
+    }
+    return '';
+  }
+
+  const ABBREVIATIONS = new Map([
+    ['tbmm',{canonical:'TBMM', spoken:'me'}],['tdk',{canonical:'TDK', spoken:'ke'}],
+    ['trt',{canonical:'TRT', spoken:'te'}],['meb',{canonical:'MEB', spoken:'be'}],
+    ['yök',{canonical:'YÖK', spoken:'yök'}],['ösym',{canonical:'ÖSYM', spoken:'me'}],
+    ['sgk',{canonical:'SGK', spoken:'ke'}],['tübitak',{canonical:'TÜBİTAK', spoken:'tübitak'}],
+    ['afad',{canonical:'AFAD', spoken:'afad'}],['kosgeb',{canonical:'KOSGEB', spoken:'kosgeb'}],
