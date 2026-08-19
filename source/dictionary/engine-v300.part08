@@ -1,0 +1,183 @@
+            for (const to of group) {
+              if (to === from) continue;
+              const candidate = before + to + after;
+              if (seen.has(candidate)) continue;
+              seen.add(candidate);
+              if (strongRepairCandidate(candidate)) {
+                results.push(candidate);
+                if (results.length >= limit) return results;
+              }
+              next.push(candidate);
+            }
+          }
+        }
+      }
+      frontier = next.slice(0, 80);
+    }
+    return results;
+  }
+
+  function check(rawWord, context = {}) {
+    const original = String(rawWord || '').trim();
+    const word = normalize(original);
+    const len = chars(word).length;
+    if (!word || len < 2 || len > 64 || /[0-9_/@#\\]/u.test(word))
+      return { word: original, correct: true, suggestions: [], provider: 'ignored' };
+
+    if (customWords.has(word)) return { word: original, correct: true, suggestions: [], provider: 'local-custom-dictionary' };
+
+    const previousWord = normalize(context.previousWord || '');
+    const standaloneQuestion = standaloneQuestionSuggestion(word, previousWord);
+    if (standaloneQuestion) {
+      return {
+        word: original,
+        correct: false,
+        suggestions: [standaloneQuestion],
+        provider: 'local-tdk-question-harmony'
+      };
+    }
+
+    const properSuggestion = context.properNames === false ? '' : properNameSuggestion(original);
+    if (properSuggestion && properSuggestion !== original) {
+      return { word: original, correct: false, suggestions: [properSuggestion], provider: 'local-proper-name' };
+    }
+
+    const abbreviation = abbreviationSuggestion(original);
+    if (abbreviation && abbreviation !== original) {
+      return { word: original, correct: false, suggestions: [abbreviation], provider: 'local-abbreviation' };
+    }
+    if (ABBREVIATIONS.has(word) && original === ABBREVIATIONS.get(word).canonical) {
+      return { word: original, correct: true, suggestions: [], provider: 'local-abbreviation-exact' };
+    }
+
+    const soundRepair = soundEventRepairSuggestion(word);
+    if (soundRepair) {
+      const suggestions = findSuggestions(word, 3, [soundRepair]);
+      return { word: original, correct: false, suggestions: contextCase(original, suggestions, context), provider: 'local-sound-event-repair' };
+    }
+
+    const progressiveRepair = progressiveSoundRepairSuggestion(word);
+    if (progressiveRepair) {
+      const suggestions = findSuggestions(word, 3, [progressiveRepair]);
+      return { word: original, correct: false, suggestions: contextCase(original, suggestions, context), provider: 'local-progressive-vowel-narrowing' };
+    }
+
+    const colloquialVerb = context.informal === false ? '' : colloquialVerbSuggestion(word);
+    if (colloquialVerb) {
+      const suggestions = findSuggestions(word, 3, [colloquialVerb]);
+      return { word: original, correct: false, suggestions: contextCase(original, suggestions, context), provider: 'local-colloquial-verb' };
+    }
+
+    const kiSplit = gluedKiSuggestion(word);
+    if (kiSplit) {
+      return { word: original, correct: false, suggestions: contextCase(original, [kiSplit], context), provider: 'local-ki-spacing' };
+    }
+
+    if (COMMON[word]) {
+      const suggestions = findSuggestions(word, 3, COMMON[word]);
+      return { word: original, correct: false, suggestions: contextCase(original, suggestions, context), provider: 'local-tdk-common-intent' };
+    }
+
+    if (valid.has(word)) {
+      if (context.sentenceStart && original === normalize(original)) {
+        const capitalized = capitalizeTurkish(original);
+        if (capitalized !== original) {
+          return { word: original, correct: false, suggestions: [capitalized], provider: 'local-sentence-capitalization' };
+        }
+      }
+      return { word: original, correct: true, suggestions: [], provider: 'local-tdk-exact' };
+    }
+
+    const harmonyRepairs = suffixHarmonyRepairs(word, 3);
+    if (harmonyRepairs.length) {
+      return { word: original, correct: false, suggestions: contextCase(original, harmonyRepairs, context), provider: 'local-suffix-harmony-repair' };
+    }
+
+    const earlyQuestionSplit = questionParticleSuggestion(word);
+    if (earlyQuestionSplit) {
+      const suggestions = findSuggestions(word, 3, [earlyQuestionSplit]);
+      return { word: original, correct: false, suggestions: contextCase(original, suggestions, context), provider: 'local-tdk-question-particle' };
+    }
+
+    const morphology = analyzeMorphology(word);
+    if (morphology.valid && morphology.score >= 4.5) {
+      if (context.sentenceStart && original === normalize(original)) {
+        const capitalized = capitalizeTurkish(original);
+        if (capitalized !== original) return { word: original, correct: false, suggestions: [capitalized], provider: 'local-morphology-capitalization', morphology };
+      }
+      return { word: original, correct: true, suggestions: [], provider: `local-morphology-${morphology.mode}`, morphology };
+    }
+
+    const orthographic = orthographicValidVariants(word, 6);
+    if (orthographic.length) {
+      const suggestions = findSuggestions(word, 3, orthographic);
+      return { word: original, correct: false, suggestions: contextCase(original, suggestions, context), provider: 'local-turkish-character-repair' };
+    }
+
+    if (morphology.valid) {
+      if (context.sentenceStart && original === normalize(original)) {
+        const capitalized = capitalizeTurkish(original);
+        if (capitalized !== original) return { word: original, correct: false, suggestions: [capitalized], provider: 'local-morphology-capitalization', morphology };
+      }
+      return { word: original, correct: true, suggestions: [], provider: `local-morphology-${morphology.mode}`, morphology };
+    }
+
+    if (isLikelyInflected(word)) {
+      if (context.sentenceStart && original === normalize(original)) {
+        const capitalized = capitalizeTurkish(original);
+        if (capitalized !== original) {
+          return { word: original, correct: false, suggestions: [capitalized], provider: 'local-sentence-capitalization' };
+        }
+      }
+      return { word: original, correct: true, suggestions: [], provider: 'local-tdk-hunspell' };
+    }
+
+    const intents = intentSuggestions(word, 3);
+
+    const suggestions = findSuggestions(word, 3, intents);
+    return { word: original, correct: false, suggestions: contextCase(original, suggestions, context), provider: intents.length ? 'local-intent-smart' : 'local-tdk-smart' };
+  }
+
+  function isValidWord(rawWord) {
+    const original = String(rawWord || '').trim();
+    const word = normalize(original);
+    if (!word) return false;
+    if (customWords.has(word)) return true;
+    if (ABBREVIATIONS.has(word) && original === ABBREVIATIONS.get(word).canonical) return true;
+    if (soundEventRepairSuggestion(word) || progressiveSoundRepairSuggestion(word)) return false;
+    if (valid.has(word)) return true;
+    const morphology = analyzeMorphology(word);
+    if (morphology.valid && morphology.score >= 4.5) return true;
+    if (orthographicValidVariants(word, 1).length) return false;
+    if (morphology.valid) return true;
+    return isLikelyInflected(word);
+  }
+
+  function suggest(rawWord, context = {}, limit = 3) {
+    const original = String(rawWord || '').trim();
+    const word = normalize(original);
+    if (!word) return [];
+    const preferred = [
+      ...(COMMON[word] || []),
+      ...orthographicValidVariants(word, limit),
+      ...intentSuggestions(word, limit)
+    ];
+    return contextCase(original, findSuggestions(word, limit, preferred), context);
+  }
+
+  window.WarextTurkishSpellEngineV300 = {
+    version: '3.0.0',
+    check,
+    suggest,
+    isValid: isValidWord,
+    analyzeMorphology,
+    analyzeSentence,
+    setCustomWords,
+    addCustomWord,
+    removeCustomWord,
+    getCustomWords,
+    setCustomProperNames,
+    getCustomProperNames,
+    stats: { tdkWords: tdkWords.length, extraValidWords: extraValid.length, validWords: valid.size, morphology: 'v3-local-context-morphology', sentenceRules: PHRASE_RULES.length + 21, properNames: PROPER_NAMES.size + customProperNames.size, abbreviations: ABBREVIATIONS.size, externalDependencies: 0 }
+  };
+})();
