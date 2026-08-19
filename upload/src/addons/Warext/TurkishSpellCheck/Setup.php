@@ -30,87 +30,16 @@ class Setup extends AbstractSetup
 
     public function upgrade1020100Step1(): void
     {
-        $this->clearCache();
+        try
+        {
+            $this->query('TRUNCATE TABLE xf_warext_spell_cache');
+        }
+        catch (\Throwable $e)
+        {
+        }
     }
 
     public function upgrade1020200Step1(): void
-    {
-        $this->clearCache();
-    }
-
-    public function upgrade1030000Step1(): void
-    {
-        $this->clearCache();
-        $this->removeFiles([
-            'warext_spellcheck.php',
-            'js/warext/turkish-spellcheck/editor-v114.js',
-            'js/warext/turkish-spellcheck/editor-v121.js',
-            'js/warext/turkish-spellcheck/editor-v122.js',
-            'js/warext/turkish-spellcheck/editor-v123.js',
-            'js/warext/turkish-spellcheck/editor-v124.js'
-        ]);
-    }
-
-    public function upgrade1030100Step1(): void
-    {
-        $this->removeFiles([
-            'js/warext/turkish-spellcheck/dictionary-v130.js',
-            'js/warext/turkish-spellcheck/editor-v130.js'
-        ]);
-    }
-
-    public function upgrade1030200Step1(): void
-    {
-        $this->removeFiles([
-            'js/warext/turkish-spellcheck/dictionary-v131.js',
-            'js/warext/turkish-spellcheck/editor-v131.js',
-            'js/warext/turkish-spellcheck/bootstrap-v131.js'
-        ]);
-    }
-
-    public function upgrade1040000Step1(): void
-    {
-        $this->removeFiles([
-            'js/warext/turkish-spellcheck/dictionary-v132.js',
-            'js/warext/turkish-spellcheck/editor-v132.js',
-            'js/warext/turkish-spellcheck/bootstrap-v132.js'
-        ]);
-    }
-
-    public function upgrade1040100Step1(): void
-    {
-        $this->removeFiles([
-            'js/warext/turkish-spellcheck/dictionary-v140.js',
-            'js/warext/turkish-spellcheck/editor-v140.js',
-            'js/warext/turkish-spellcheck/bootstrap-v140.js'
-        ]);
-    }
-
-    public function upgrade1040200Step1(): void
-    {
-        $this->removeFiles([
-            'js/warext/turkish-spellcheck/dictionary-v141.js',
-            'js/warext/turkish-spellcheck/editor-v141.js',
-            'js/warext/turkish-spellcheck/bootstrap-v141.js'
-        ]);
-    }
-
-    public function upgrade1060000Step1(): void
-    {
-        $this->clearCache();
-        $this->removeFiles([
-            'js/warext/turkish-spellcheck/dictionary-v142.js',
-            'js/warext/turkish-spellcheck/editor-v142.js',
-            'js/warext/turkish-spellcheck/bootstrap-v142.js'
-        ]);
-    }
-
-    public function uninstallStep1(): void
-    {
-        $this->schemaManager()->dropTable('xf_warext_spell_cache');
-    }
-
-    private function clearCache(): void
     {
         try
         {
@@ -121,14 +50,29 @@ class Setup extends AbstractSetup
         }
     }
 
-    private function removeFiles(array $files): void
+    public function upgrade1030000Step1(): void
     {
         try
         {
+            $this->query('TRUNCATE TABLE xf_warext_spell_cache');
+        }
+        catch (\Throwable $e)
+        {
+        }
+
+        try
+        {
             $root = \XF::getRootDirectory();
-            foreach ($files as $relative)
+            $oldFiles = [
+                $root . '/warext_spellcheck.php',
+                $root . '/js/warext/turkish-spellcheck/editor-v114.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v121.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v122.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v123.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v124.js'
+            ];
+            foreach ($oldFiles as $file)
             {
-                $file = $root . '/' . $relative;
                 if (is_file($file))
                 {
                     @unlink($file);
@@ -139,4 +83,284 @@ class Setup extends AbstractSetup
         {
         }
     }
+
+
+    public function upgrade1030100Step1(): void
+    {
+        try
+        {
+            $root = \XF::getRootDirectory();
+            foreach ([
+                $root . '/js/warext/turkish-spellcheck/dictionary-v130.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v130.js'
+            ] as $file)
+            {
+                if (is_file($file))
+                {
+                    @unlink($file);
+                }
+            }
+        }
+        catch (\Throwable $e)
+        {
+        }
+    }
+
+    public function upgrade1030200Step1(): void
+    {
+        try
+        {
+            $root = \XF::getRootDirectory();
+            foreach ([
+                $root . '/js/warext/turkish-spellcheck/dictionary-v131.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v131.js',
+                $root . '/js/warext/turkish-spellcheck/bootstrap-v131.js'
+            ] as $file)
+            {
+                if (is_file($file))
+                {
+                    @unlink($file);
+                }
+            }
+        }
+        catch (\Throwable $e)
+        {
+        }
+    }
+
+
+    public function upgrade1040000Step1(): void
+    {
+        try
+        {
+            $root = \XF::getRootDirectory();
+            foreach ([
+                $root . '/js/warext/turkish-spellcheck/dictionary-v132.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v132.js',
+                $root . '/js/warext/turkish-spellcheck/bootstrap-v132.js'
+            ] as $file)
+            {
+                if (is_file($file))
+                {
+                    @unlink($file);
+                }
+            }
+        }
+        catch (\Throwable $e)
+        {
+        }
+    }
+
+
+    public function upgrade1040100Step1(): void
+    {
+        try
+        {
+            $root = \XF::getRootDirectory();
+            foreach ([
+                $root . '/js/warext/turkish-spellcheck/dictionary-v140.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v140.js',
+                $root . '/js/warext/turkish-spellcheck/bootstrap-v140.js'
+            ] as $file)
+            {
+                if (is_file($file))
+                {
+                    @unlink($file);
+                }
+            }
+        }
+        catch (\Throwable $e)
+        {
+        }
+    }
+
+
+    public function upgrade1040200Step1(): void
+    {
+        try
+        {
+            $root = \XF::getRootDirectory();
+            foreach ([
+                $root . '/js/warext/turkish-spellcheck/dictionary-v141.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v141.js',
+                $root . '/js/warext/turkish-spellcheck/bootstrap-v141.js'
+            ] as $file)
+            {
+                if (is_file($file))
+                {
+                    @unlink($file);
+                }
+            }
+        }
+        catch (\Throwable $e)
+        {
+        }
+    }
+
+
+    public function upgrade2000070Step1(): void
+    {
+        try
+        {
+            $this->query('TRUNCATE TABLE xf_warext_spell_cache');
+        }
+        catch (\Throwable $e)
+        {
+        }
+
+        try
+        {
+            $root = \XF::getRootDirectory();
+            foreach ([
+                $root . '/js/warext/turkish-spellcheck/dictionary-v142.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v142.js',
+                $root . '/js/warext/turkish-spellcheck/bootstrap-v142.js'
+            ] as $file)
+            {
+                if (is_file($file))
+                {
+                    @unlink($file);
+                }
+            }
+        }
+        catch (\Throwable $e)
+        {
+        }
+    }
+
+    public function upgrade2100070Step1(): void
+    {
+        try
+        {
+            $this->query('TRUNCATE TABLE xf_warext_spell_cache');
+        }
+        catch (\Throwable $e)
+        {
+        }
+
+        try
+        {
+            $root = \XF::getRootDirectory();
+            foreach ([
+                $root . '/js/warext/turkish-spellcheck/dictionary-v200.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v200.js',
+                $root . '/js/warext/turkish-spellcheck/bootstrap-v200.js'
+            ] as $file)
+            {
+                if (is_file($file))
+                {
+                    @unlink($file);
+                }
+            }
+        }
+        catch (\Throwable $e)
+        {
+        }
+    }
+
+
+    public function upgrade2200070Step1(): void
+    {
+        try
+        {
+            $this->query('TRUNCATE TABLE xf_warext_spell_cache');
+        }
+        catch (\Throwable $e)
+        {
+        }
+
+        try
+        {
+            $root = \XF::getRootDirectory();
+            foreach ([
+                $root . '/js/warext/turkish-spellcheck/dictionary-v210.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v210.js',
+                $root . '/js/warext/turkish-spellcheck/bootstrap-v210.js'
+            ] as $file)
+            {
+                if (is_file($file))
+                {
+                    @unlink($file);
+                }
+            }
+        }
+        catch (\Throwable $e)
+        {
+        }
+    }
+
+
+    public function upgrade2300070Step1(): void
+    {
+        try
+        {
+            $this->query('TRUNCATE TABLE xf_warext_spell_cache');
+        }
+        catch (\Throwable $e)
+        {
+        }
+
+        try
+        {
+            $root = \XF::getRootDirectory();
+            foreach ([
+                $root . '/js/warext/turkish-spellcheck/dictionary-v220.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v220.js',
+                $root . '/js/warext/turkish-spellcheck/bootstrap-v220.js'
+            ] as $file)
+            {
+                if (is_file($file))
+                {
+                    @unlink($file);
+                }
+            }
+        }
+        catch (\Throwable $e)
+        {
+        }
+    }
+
+    public function uninstallStep1(): void
+    {
+        $this->schemaManager()->dropTable('xf_warext_spell_cache');
+    }
+
+    public function upgrade3000070Step1(): void
+    {
+        try
+        {
+            $this->query('TRUNCATE TABLE xf_warext_spell_cache');
+        }
+        catch (\Throwable $e)
+        {
+        }
+
+        try
+        {
+            $root = \XF::getRootDirectory();
+            foreach ([
+                $root . '/js/warext/turkish-spellcheck/dictionary-v220.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v220.js',
+                $root . '/js/warext/turkish-spellcheck/bootstrap-v220.js',
+                $root . '/js/warext/turkish-spellcheck/dictionary-v230.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v230.js',
+                $root . '/js/warext/turkish-spellcheck/bootstrap-v230.js',
+                $root . '/js/warext/turkish-spellcheck/dictionary-v160.js',
+                $root . '/js/warext/turkish-spellcheck/editor-v160.js',
+                $root . '/js/warext/turkish-spellcheck/bootstrap-v160.js',
+                $root . '/js/warext/turkish-spellcheck/rules-v160.js',
+                $root . '/js/warext/turkish-spellcheck/worker-v160.js'
+            ] as $file)
+            {
+                if (is_file($file))
+                {
+                    @unlink($file);
+                }
+            }
+        }
+        catch (\Throwable $e)
+        {
+        }
+    }
+
 }
