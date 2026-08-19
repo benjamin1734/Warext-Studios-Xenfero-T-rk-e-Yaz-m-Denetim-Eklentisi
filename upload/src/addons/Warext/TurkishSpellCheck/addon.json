@@ -1,9 +1,9 @@
 {
     "legacy_addon_id": "",
     "title": "Warext Turkish Spell Check",
-    "description": "Tamamen yerel Türkçe yazım ve cümle denetimi: 117K+ sözlük/form, gelişmiş morfoloji ve ses olayları, bağlamsal gramer, özel ad/kısaltma/sayı ekleri, uzun metin arka plan taraması, kalıcı kişisel sözlük ve 3 akıllı öneri. Harici API/model/servis gerekmez.",
-    "version_id": 3010070,
-    "version_string": "3.1.0",
+    "description": "Tamamen yerel Türkçe yazım ve dilbilgisi denetimi: geniş sözlük tabanı, çok aşamalı morfoloji, bağlam ve zaman-kişi uyumu, teknik terim/kod koruması, uzun metin taraması, özel ad/kısaltma/sayı ekleri, kişisel ve forum sözlüğü, 3 akıllı öneri. Harici API/model/servis gerekmez.",
+    "version_id": 4000070,
+    "version_string": "1.0.0",
     "dev": "Warext Studios",
     "dev_url": "",
     "faq_url": "",
