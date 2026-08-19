@@ -1,0 +1,153 @@
+      push({ start:spacingMatch.index, end:spacingMatch.index + spacingMatch[0].length, suggestions:[`${spacingMatch[1]} ${spacingMatch[2]}`], rule:'multi-space', confidence:0.98 });
+    }
+
+    const periodSpaceRe = new RegExp(`([${letterClass}]{2,})\\.([${letterClass}]{2,})`, 'gu');
+    while ((spacingMatch = periodSpaceRe.exec(text))) {
+      const next = capitalizeTurkish(spacingMatch[2]);
+      push({ start:spacingMatch.index, end:spacingMatch.index + spacingMatch[0].length, suggestions:[`${spacingMatch[1]}. ${next}`], rule:'sentence-space-after-period', confidence:0.98 });
+    }
+
+    const repeatedPunctuationRe = /([!?;,])\1+/gu;
+    while ((spacingMatch = repeatedPunctuationRe.exec(text))) {
+      push({ start:spacingMatch.index, end:spacingMatch.index + spacingMatch[0].length, suggestions:[spacingMatch[1]], rule:'punctuation-repeat', confidence:0.95 });
+    }
+
+    const dotRunRe = /\.{2,}/gu;
+    while ((spacingMatch = dotRunRe.exec(text))) {
+      if (spacingMatch[0] === '...') continue;
+      const replacement = spacingMatch[0].length === 2 ? '.' : '...';
+      push({ start:spacingMatch.index, end:spacingMatch.index + spacingMatch[0].length, suggestions:[replacement], rule:'ellipsis-normalization', confidence:0.97 });
+    }
+
+    const openParenSpaceRe = /([([{])\s+([A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû])/gu;
+    while ((spacingMatch = openParenSpaceRe.exec(text))) {
+      push({ start:spacingMatch.index, end:spacingMatch.index + spacingMatch[0].length, suggestions:[`${spacingMatch[1]}${spacingMatch[2]}`], rule:'punctuation-parenthesis-open', confidence:0.98 });
+    }
+
+    const closeParenSpaceRe = /([A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû])\s+([)\]}])/gu;
+    while ((spacingMatch = closeParenSpaceRe.exec(text))) {
+      push({ start:spacingMatch.index, end:spacingMatch.index + spacingMatch[0].length, suggestions:[`${spacingMatch[1]}${spacingMatch[2]}`], rule:'punctuation-parenthesis-close', confidence:0.98 });
+    }
+
+    if (context.properNames !== false) {
+      const apostropheTokenRe = new RegExp(`[${letterClass}]{2,}['’][${letterClass}]{1,10}`, 'gu');
+      let specialMatch;
+      while ((specialMatch = apostropheTokenRe.exec(text))) {
+        const replacement = properNameSuggestion(specialMatch[0]) || abbreviationSuggestion(specialMatch[0]);
+        if (replacement && replacement !== specialMatch[0]) {
+          push({ start:specialMatch.index, end:specialMatch.index + specialMatch[0].length, suggestions:[replacement], rule:'proper-abbreviation-apostrophe-suffix', confidence:0.995 });
+        }
+      }
+
+      const properTokenRe = new RegExp(`[${letterClass}]{2,}`, 'gu');
+      let properMatch;
+      while ((properMatch = properTokenRe.exec(text))) {
+        const before = text[properMatch.index - 1] || '';
+        const after = text[properMatch.index + properMatch[0].length] || '';
+        if (before === "'" || before === '’' || after === "'" || after === '’') continue;
+        const replacement = properNameSuggestion(properMatch[0]) || abbreviationSuggestion(properMatch[0]);
+        if (replacement && replacement !== properMatch[0]) {
+          push({ start:properMatch.index, end:properMatch.index + properMatch[0].length, suggestions:[replacement], rule:'proper-name-abbreviation-apostrophe-capitalization', confidence:0.99 });
+        }
+      }
+    }
+    const numberTokenRe = new RegExp(`\\b\\d{1,30}['’]?[${letterClass}]{1,10}\\b`, 'gu');
+    let numberMatch;
+    while ((numberMatch = numberTokenRe.exec(text))) {
+      const replacement = numberSuffixSuggestion(numberMatch[0]);
+      if (replacement && replacement !== numberMatch[0]) {
+        push({ start:numberMatch.index, end:numberMatch.index + numberMatch[0].length, suggestions:[replacement], rule:'number-apostrophe-suffix', confidence:0.995 });
+      }
+    }
+
+    const protectedLanguageRanges = issues.filter(issue => /^phrase-|^conjunction-|^locative-|^suffix-|^possessive-/u.test(issue.rule || '')).map(issue => ({ start:issue.start, end:issue.end }));
+    const agreementIssues = subjectAgreementIssues(text);
+    for (const issue of agreementIssues) {
+      const overlaps = protectedLanguageRanges.some(range => range.start < issue.end && range.end > issue.start);
+      if (!overlaps) push(issue);
+    }
+
+    const subject = text.match(/^\s*(ben|sen|biz|siz)\b/iu)?.[1]?.toLocaleLowerCase('tr-TR') || '';
+
+    if (subject === 'ben') {
+      const normalizedText = normalize(text);
+      const tomorrow = /\byarın\b/u.test(normalizedText);
+      const yesterday = /\bdün\b/u.test(normalizedText);
+      const timePairs = tomorrow ? {
+        'gittim':'gideceğim','geldim':'geleceğim','yaptım':'yapacağım','aldım':'alacağım','yazdım':'yazacağım',
+        'okudum':'okuyacağım','çalıştım':'çalışacağım','gördüm':'göreceğim','baktım':'bakacağım','konuştum':'konuşacağım',
+        'başladım':'başlayacağım','bitirdim':'bitireceğim','gönderdim':'göndereceğim','döndüm':'döneceğim','çıktım':'çıkacağım',
+        'girdim':'gireceğim','kaldım':'kalacağım','verdim':'vereceğim','sordum':'soracağım','söyledim':'söyleyeceğim',
+        'denedim':'deneyeceğim','oynadım':'oynayacağım','bekledim':'bekleyeceğim','hazırladım':'hazırlayacağım'
+      } : yesterday ? {
+        'gideceğim':'gittim','geleceğim':'geldim','yapacağım':'yaptım','alacağım':'aldım','yazacağım':'yazdım',
+        'okuyacağım':'okudum','çalışacağım':'çalıştım','göreceğim':'gördüm','bakacağım':'baktım','konuşacağım':'konuştum',
+        'başlayacağım':'başladım','bitireceğim':'bitirdim','göndereceğim':'gönderdim','döneceğim':'döndüm','çıkacağım':'çıktım',
+        'gireceğim':'girdim','kalacağım':'kaldım','vereceğim':'verdim','soracağım':'sordum','söyleyeceğim':'söyledim',
+        'deneyeceğim':'denedim','oynayacağım':'oynadım','bekleyeceğim':'bekledim','hazırlayacağım':'hazırladım'
+      } : null;
+      if (timePairs) {
+        const tokenRe = new RegExp(`[${'A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû'}]{2,}`, 'gu');
+        let match;
+        while ((match = tokenRe.exec(text))) {
+          const n = normalize(match[0]);
+          const replacement = timePairs[n];
+          if (replacement) push({ start:match.index, end:match.index + match[0].length, suggestions:[replacement], rule:'temporal-consistency', confidence:0.94 });
+        }
+      }
+    }
+
+    return issues.sort((a,b) => a.start - b.start || b.confidence - a.confidence);
+  }
+
+  const SUFFIX_REPAIR_GROUPS = [
+    ['lar','ler'],['dan','den','tan','ten'],['da','de','ta','te'],
+    ['lık','lik','luk','lük'],['lı','li','lu','lü'],['sız','siz','suz','süz'],
+    ['cı','ci','cu','cü','çı','çi','çu','çü'],
+    ['ımız','imiz','umuz','ümüz'],['ınız','iniz','unuz','ünüz'],
+    ['mız','miz','muz','müz'],['nız','niz','nuz','nüz'],
+    ['ım','im','um','üm'],['ın','in','un','ün']
+  ];
+
+  const REPAIR_TAIL_SUFFIXES = [...new Set([
+    ...SUFFIXES,
+    'sınız','siniz','sunuz','sünüz','ız','iz','uz','üz','sın','sin','sun','sün','ım','im','um','üm','m','n','k',
+    'mış','miş','muş','müş','dı','di','du','dü','tı','ti','tu','tü','dır','dir','dur','dür','tır','tir','tur','tür','sa','se',
+    'sı','si','su','sü','mız','miz','muz','müz','nız','niz','nuz','nüz'
+  ])].sort((a,b) => chars(b).length - chars(a).length);
+
+  function repairTailIsSuffixChain(tail, depth = 0) {
+    if (!tail) return true;
+    if (depth >= 5) return false;
+    for (const suffix of REPAIR_TAIL_SUFFIXES) {
+      if (!tail.startsWith(suffix)) continue;
+      if (repairTailIsSuffixChain(tail.slice(suffix.length), depth + 1)) return true;
+    }
+    return false;
+  }
+
+  function strongRepairCandidate(candidate) {
+    if (!candidate || COMMON[candidate]) return false;
+    if (valid.has(candidate)) return true;
+    const morphology = analyzeMorphology(candidate);
+    if (!morphology.valid) return false;
+    if (morphology.mode === 'noun' && morphology.parts.length && (tdkSet.has(morphology.root) || valid.has(morphology.root))) return true;
+    return morphology.score >= 4.4;
+  }
+
+  function suffixHarmonyRepairs(word, limit = 3) {
+    if (!word || chars(word).length < 4 || chars(word).length > 40) return [];
+    const results = [];
+    const seen = new Set([word]);
+    let frontier = [word];
+    for (let depth = 0; depth < 2 && frontier.length; depth++) {
+      const next = [];
+      for (const form of frontier) {
+        for (const group of SUFFIX_REPAIR_GROUPS) {
+          for (const from of group) {
+            let index = form.lastIndexOf(from);
+            if (index < 2 || index < form.length - 14) continue;
+            const before = form.slice(0, index);
+            const after = form.slice(index + from.length);
+            if (!repairTailIsSuffixChain(after)) continue;
+            if (depth === 0 && !valid.has(before) && !tdkSet.has(before) && !analyzeMorphology(before).valid) continue;
