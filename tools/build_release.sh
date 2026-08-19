@@ -14,16 +14,39 @@ python3 "$ROOT/tools/build_dictionary.py" \
   --tdk-dir "$TMP/tdk" \
   --hunspell-dic "$TMP/hunspell/tr_TR.dic" \
   --template-dir "$ROOT/source/dictionary" \
-  --output "$ROOT/upload/js/warext/turkish-spellcheck/dictionary-v142.js"
+  --output "$ROOT/upload/js/warext/turkish-spellcheck/dictionary-v160.js"
 
 mkdir -p "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources"
 cp "$TMP/hunspell/LICENSE" "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources/LICENSE-MPL-2.0.txt"
 
-node --check "$ROOT/upload/js/warext/turkish-spellcheck/bootstrap-v142.js"
-node --check "$ROOT/upload/js/warext/turkish-spellcheck/dictionary-v142.js"
-node --check "$ROOT/upload/js/warext/turkish-spellcheck/editor-v142.js"
+node --check "$ROOT/upload/js/warext/turkish-spellcheck/bootstrap-v160.js"
+node --check "$ROOT/upload/js/warext/turkish-spellcheck/dictionary-v160.js"
+node --check "$ROOT/upload/js/warext/turkish-spellcheck/rules-v160.js"
+node --check "$ROOT/upload/js/warext/turkish-spellcheck/worker-v160.js"
+node --check "$ROOT/upload/js/warext/turkish-spellcheck/editor-v160.js"
 node "$ROOT/tests/dictionary-smoke.js"
+node "$ROOT/tests/rules-regression.js"
 php -l "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Setup.php"
+
+python3 - "$ROOT" <<'PY'
+import json
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+root = Path(sys.argv[1])
+json.load((root / 'upload/src/addons/Warext/TurkishSpellCheck/addon.json').open(encoding='utf-8'))
+for path in sorted((root / 'upload/src/addons/Warext/TurkishSpellCheck/_data').glob('*.xml')):
+    ET.parse(path)
+PY
+
+if grep -RInE '^[[:space:]]*(//|/\*|\*)' \
+  "$ROOT/source/dictionary" \
+  "$ROOT/upload/js/warext/turkish-spellcheck" \
+  "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Setup.php"; then
+  printf '%s\n' "Kod açıklama satırı kontrolü başarısız."
+  exit 1
+fi
 
 rm -rf "$ROOT/release"
 mkdir -p "$ROOT/release"
