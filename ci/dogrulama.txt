@@ -1,1 +1,2 @@
 Warext Spell Check CI doğrulaması
+İkinci doğrulama
