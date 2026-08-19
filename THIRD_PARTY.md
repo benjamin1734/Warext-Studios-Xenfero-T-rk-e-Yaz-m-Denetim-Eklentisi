@@ -1,18 +1,11 @@
-# Üçüncü Taraf Kaynakları
+# Üçüncü Taraf Kaynaklar
 
-Bu proje Türkçe sözlük verisini iki açık kaynak çalışmadan üretir.
+Warext Turkish Spell Check çalışma zamanında harici API, model sunucusu veya üçüncü taraf servis kullanmaz.
 
-## Türkçe kelime veritabanı
+Sözlük tabanının hazırlanmasında Warext projesinin daha önce kullandığı açık kaynak Türkçe kaynaklar temel alınmıştır:
 
-- Proje: `ekartal/turkce-kelime-database`
-- Sabitlenen commit: `444dbcc53556618b0977a3d608cbf1402f7e9363`
-- Kullanım: Yerel Türkçe kelime doğrulama ve öneri adaylarının oluşturulması
+- `ekartal/turkce-kelime-database`, sabitlenen kaynak revizyonu: `444dbcc53556618b0977a3d608cbf1402f7e9363`
+- `tdd-ai/hunspell-tr`, sabitlenen kaynak revizyonu: `7302eca5f3652fe7ae3d3ec06c44697c97342b4e`
+- Hunspell Türkçe kaynağının MPL-2.0 lisans metni eklenti kaynakları altında korunur.
 
-## Hunspell Türkçe
-
-- Proje: `tdd-ai/hunspell-tr`
-- Sabitlenen commit: `7302eca5f3652fe7ae3d3ec06c44697c97342b4e`
-- Lisans: MPL-2.0
-- Kullanım: Türkçe kök ve çekim doğrulama verisi
-
-`tools/build_dictionary.py` bu iki kaynağın sabitlenmiş sürümlerini kullanarak tarayıcı tarafında çalışan sözlük dosyasını üretir. Derlenen kurulum paketinin içine Hunspell lisans metni de eklenir.
+Karşılaştırma amacıyla kullanıcı tarafından sağlanan başka bir eklenti arşivinden hiçbir kaynak kod, regex, veri dosyası, sözlük, kural listesi veya çalışma zamanı varlığı Warext kod tabanına kopyalanmamıştır. Benzer işlevler Warext mimarisi içinde bağımsız olarak uygulanmıştır.
