@@ -1,0 +1,166 @@
+      const normalized = normalize(match[0]);
+      if (SUBJECT_PERSON[normalized]) {
+        currentPerson = SUBJECT_PERSON[normalized];
+        continue;
+      }
+      if (!currentPerson) continue;
+      const replacement = agreementSuggestion(match[0], currentPerson) || nominalAgreementSuggestion(match[0], currentPerson);
+      if (!replacement || replacement === match[0]) continue;
+      issues.push({ start:match.index, end:match.index + match[0].length, suggestions:[replacement], rule:'subject-person-agreement', confidence:0.97 });
+    }
+    return issues;
+  }
+
+
+  function verbPerson(rawToken) {
+    const word = normalize(rawToken);
+    let match = word.match(/[ıiuü]yor(um|sun|uz|sunuz)$/u);
+    if (match) return {um:'1sg',sun:'2sg',uz:'1pl',sunuz:'2pl'}[match[1]] || '';
+    if (/(?:acağım|eceğim)$/u.test(word)) return '1sg';
+    if (/(?:acaksın|eceksin)$/u.test(word)) return '2sg';
+    if (/(?:acağız|eceğiz)$/u.test(word)) return '1pl';
+    if (/(?:acaksınız|eceksiniz)$/u.test(word)) return '2pl';
+    match = word.match(/[dt][ıiuü](m|n|k|n[ıiuü]z)$/u);
+    if (match) return match[1] === 'm' ? '1sg' : match[1] === 'n' ? '2sg' : match[1] === 'k' ? '1pl' : '2pl';
+    match = word.match(/m([ıiuü])ş([ıiuü]m|s[ıiuü]n|[ıiuü]z|s[ıiuü]n[ıiuü]z)$/u);
+    if (match) {
+      const v = match[1], tail = match[2];
+      if (tail === `${v}m`) return '1sg';
+      if (tail === `s${v}n`) return '2sg';
+      if (tail === `${v}z`) return '1pl';
+      if (tail === `s${v}n${v}z`) return '2pl';
+    }
+    match = word.match(/m[ae]l([ıi])(y[ıi]m|s[ıi]n|y[ıi]z|s[ıi]n[ıi]z)$/u);
+    if (match) {
+      const v = match[1], tail = match[2];
+      if (tail === `y${v}m`) return '1sg';
+      if (tail === `s${v}n`) return '2sg';
+      if (tail === `y${v}z`) return '1pl';
+      if (tail === `s${v}n${v}z`) return '2pl';
+    }
+    return '';
+  }
+
+  function gluedKiSuggestion(word) {
+    if (!word.endsWith('ki') || chars(word).length < 6 || valid.has(word)) return '';
+    const stem = word.slice(0, -2);
+    if (['bel','san','çün','çünkü','sanki','halbuki','oysaki'].includes(stem)) return '';
+    const parse = analyzeMorphology(stem);
+    if (!parse.valid || parse.mode !== 'verb') return '';
+    const finite = parse.parts.some(part => part.label === 'tense' || part.label === 'person');
+    return finite ? `${stem} ki` : '';
+  }
+
+  function locativeSuffixFor(word) {
+    const h2 = harmony2For(word);
+    if (!h2) return '';
+    const lead = VOICELESS.includes(finalChar(word)) ? 't' : 'd';
+    return `${lead}${h2}`;
+  }
+
+  function addDeDaKiIssues(text, push) {
+    const letterClass = 'A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû';
+    const pronounMap = new Map([
+      ['bende',['ben de','1sg']],['sende',['sen de','2sg']],
+      ['bizde',['biz de','1pl']],['sizde',['siz de','2pl']]
+    ]);
+    const pronounRe = new RegExp(`\\b(bende|sende|bizde|sizde)\\s+([${letterClass}]{3,})`, 'giu');
+    const additiveVerbRe = /^(?:gel|git|gid|yap|al|gör|katıl|başla|bitir|dene|söyle|sor|iste|bekle|oyna|dön|çık|gir)/u;
+    let match;
+    while ((match = pronounRe.exec(text))) {
+      const config = pronounMap.get(normalize(match[1]));
+      const next = normalize(match[2]);
+      if (!config || verbPerson(next) !== config[1] || !additiveVerbRe.test(next)) continue;
+      push({ start:match.index, end:match.index + match[1].length, suggestions:[preserveInitialCase(match[1], config[0])], rule:'conjunction-de-da-pronoun', confidence:0.97 });
+    }
+
+    const separatedPronounLocative = new Map([
+      ['ben','bende'],['sen','sende'],['biz','bizde'],['siz','sizde'],
+      ['o','onda'],['bu','bunda'],['şu','şunda']
+    ]);
+    const pronounLocativeRe = new RegExp(`\\b(ben|sen|biz|siz|o|bu|şu)\\s+(de|da)\\s+([${letterClass}]{2,})\\s+(var|yok|kaldı|kalıyor|duruyor|bulunuyor|yaşıyor)(?=\\s|[.!?,;:]|$)`, 'giu');
+    while ((match = pronounLocativeRe.exec(text))) {
+      const replacement = separatedPronounLocative.get(normalize(match[1]));
+      if (!replacement) continue;
+      push({ start:match.index, end:match.index + match[1].length + 1 + match[2].length, suggestions:[preserveInitialCase(match[1], replacement)], rule:'locative-de-da-pronoun-spacing', confidence:0.98 });
+    }
+
+    const locativeRe = new RegExp(`\\b([${letterClass}]{2,})\\s+(de|da)\\s+([${letterClass}]{2,})\\s+(var|yok|kaldı|kalıyor|duruyor|bulunuyor|yaşıyor)(?=\\s|[.!?,;:]|$)`, 'giu');
+    while ((match = locativeRe.exec(text))) {
+      const startsUpper = match[1][0] !== normalize(match[1][0]);
+      const sentenceInitial = text.slice(0, match.index).trim() === '' || /[.!?…]\s*$/u.test(text.slice(0, match.index));
+      if (startsUpper && !sentenceInitial) continue;
+      const base = normalize(match[1]);
+      if (['ben','sen','biz','siz','o','bu','şu'].includes(base)) continue;
+      const suffix = locativeSuffixFor(base);
+      if (!suffix) continue;
+      const candidate = base + suffix;
+      if (!isValidWord(candidate)) continue;
+      push({ start:match.index, end:match.index + match[1].length + 1 + match[2].length, suggestions:[preserveInitialCase(match[1], candidate)], rule:'locative-de-da-spacing', confidence:0.96 });
+    }
+
+    const locativeKiRe = new RegExp(`\\b([${letterClass}]{2,}(?:da|de|ta|te))\\s+ki\\b`, 'giu');
+    while ((match = locativeKiRe.exec(text))) {
+      const combined = `${match[1]}ki`;
+      push({ start:match.index, end:match.index + match[0].length, suggestions:[combined], rule:'suffix-ki-spacing', confidence:0.99 });
+    }
+
+    const possessiveKiRe = /\b(benim|senin|onun|bizim|sizin|bun(?:un)?|şun(?:un)?|onların)\s+ki\b/giu;
+    while ((match = possessiveKiRe.exec(text))) {
+      push({ start:match.index, end:match.index + match[0].length, suggestions:[`${match[1]}ki`], rule:'possessive-ki-spacing', confidence:0.99 });
+    }
+  }
+
+  const PHRASE_RULES = [
+    { re:/\bbir\s+çok\b/giu, replacement:'birçok', rule:'phrase-bircok' },
+    { re:/(?<![A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû])bir\s+kaç(?![A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû])/giu, replacement:'birkaç', rule:'phrase-birkac' },
+    { re:/\bhiç\s+bir\b/giu, replacement:'hiçbir', rule:'phrase-hicbir' },
+    { re:/\bher\s+hangi\b/giu, replacement:'herhangi', rule:'phrase-herhangi' },
+    { re:/\bşuanki\b/giu, replacement:'şu anki', rule:'phrase-su-anki' },
+    { re:/\bbugünki\b/giu, replacement:'bugünkü', rule:'phrase-bugunku' },
+    { re:/\bgit\s+gide\b/giu, replacement:'gitgide', rule:'phrase-gitgide' },
+    { re:/\bolağan\s+üstü\b/giu, replacement:'olağanüstü', rule:'phrase-olaganustu' },
+    { re:/\bsuç\s+üstü\b/giu, replacement:'suçüstü', rule:'phrase-sucustu' },
+    { re:/\bbilinç\s+altı\b/giu, replacement:'bilinçaltı', rule:'phrase-bilincalti' },
+    { re:/\bön\s+görü\b/giu, replacement:'öngörü', rule:'phrase-ongoru' },
+    { re:/\böz\s+veri\b/giu, replacement:'özveri', rule:'phrase-ozveri' },
+    { re:/\bart\s+arda\b/giu, replacement:'art arda', rule:'phrase-art-arda-normalize' },
+    { re:/\bbir\s+arada\b/giu, replacement:'bir arada', rule:'phrase-bir-arada-normalize' },
+    { re:/\bbirkez\b/giu, replacement:'bir kez', rule:'phrase-bir-kez' },
+    { re:/\bherbir\b/giu, replacement:'her bir', rule:'phrase-her-bir' },
+    { re:/\bhiçkimse\b/giu, replacement:'hiç kimse', rule:'phrase-hic-kimse' },
+    { re:/\bhoşgeldin\b/giu, replacement:'hoş geldin', rule:'phrase-hos-geldin' },
+    { re:/\bhoşgeldiniz\b/giu, replacement:'hoş geldiniz', rule:'phrase-hos-geldiniz' },
+    { re:/\bpekçok\b/giu, replacement:'pek çok', rule:'phrase-pek-cok' },
+    { re:/\byanısıra\b/giu, replacement:'yanı sıra', rule:'phrase-yani-sira' },
+    { re:/\byinede\b/giu, replacement:'yine de', rule:'phrase-yine-de' },
+    { re:/\byada\b/giu, replacement:'ya da', rule:'phrase-ya-da' },
+    { re:/\bfark\s+etmek\b/giu, replacement:'fark etmek', rule:'phrase-fark-etmek-normalize' },
+    { re:/\bfarketmek\b/giu, replacement:'fark etmek', rule:'phrase-fark-etmek' }
+  ];
+
+  function analyzeSentence(rawText, context = {}) {
+    const text = String(rawText || '');
+    const issues = [];
+    const seen = new Set();
+    const push = issue => {
+      const key = `${issue.start}:${issue.end}:${issue.rule}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      issues.push(issue);
+    };
+
+    for (const item of PHRASE_RULES) {
+      item.re.lastIndex = 0;
+      let match;
+      while ((match = item.re.exec(text))) {
+        push({ start:match.index, end:match.index + match[0].length, suggestions:[item.replacement], rule:item.rule, confidence:0.99 });
+      }
+    }
+
+    addDeDaKiIssues(text, push);
+
+    const letterClass = 'A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû';
+    let spacingMatch;
+    const multiSpaceRe = new RegExp(`([${letterClass}]{2,})[ \t]{2,}([${letterClass}]{2,})`, 'gu');
+    while ((spacingMatch = multiSpaceRe.exec(text))) {
