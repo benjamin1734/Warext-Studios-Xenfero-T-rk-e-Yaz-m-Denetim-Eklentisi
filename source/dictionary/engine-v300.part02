@@ -1,0 +1,226 @@
+    else if ('ei'.includes(vowel)) group = 'i';
+    else if ('ou'.includes(vowel)) group = 'u';
+    else if ('öü'.includes(vowel)) group = 'ü';
+    if (!group) return '';
+
+    const forms = {
+      'ı': { plain: 'mı',  '1sg': 'mıyım', '2sg': 'mısın', '1pl': 'mıyız', '2pl': 'mısınız', 'cop': 'mıdır' },
+      'i': { plain: 'mi',  '1sg': 'miyim',  '2sg': 'misin', '1pl': 'miyiz', '2pl': 'misiniz', 'cop': 'midir' },
+      'u': { plain: 'mu',  '1sg': 'muyum',  '2sg': 'musun', '1pl': 'muyuz', '2pl': 'musunuz', 'cop': 'mudur' },
+      'ü': { plain: 'mü',  '1sg': 'müyüm',  '2sg': 'müsün', '1pl': 'müyüz', '2pl': 'müsünüz', 'cop': 'müdür' }
+    };
+    return forms[group]?.[kind] || forms[group]?.plain || '';
+  }
+
+  function questionParticleSuggestion(word) {
+    for (const item of QUESTION_TAIL_PATTERNS) {
+      const match = word.match(item.re);
+      if (!match) continue;
+      const tail = match[0];
+      const stem = word.slice(0, -tail.length);
+      if (chars(stem).length < 2 || !lastVowel(stem)) continue;
+
+      const correctedTail = questionHarmony(stem, item.kind);
+      if (!correctedTail) continue;
+      return `${stem} ${correctedTail}`;
+    }
+    return '';
+  }
+
+  const STANDALONE_QUESTION_FORMS = [
+    { re: /^m[ıiuü]s[ıiuü]n[ıiuü]z$/u, kind: '2pl' },
+    { re: /^m[ıiuü]y[ıiuü]z$/u, kind: '1pl' },
+    { re: /^m[ıiuü]y[ıiuü]m$/u, kind: '1sg' },
+    { re: /^m[ıiuü]s[ıiuü]n$/u, kind: '2sg' },
+    { re: /^m[ıiuü]d[ıiuü]r$/u, kind: 'cop' },
+    { re: /^m[ıiuü]$/u, kind: 'plain' }
+  ];
+
+  function standaloneQuestionSuggestion(word, previousWord) {
+    if (!previousWord) return '';
+    for (const item of STANDALONE_QUESTION_FORMS) {
+      if (!item.re.test(word)) continue;
+      const expected = questionHarmony(previousWord, item.kind);
+      if (expected && expected !== word) return expected;
+    }
+    return '';
+  }
+
+  function capitalizeTurkish(value) {
+    const c = chars(String(value || ''));
+    if (!c.length) return value;
+    const first = c[0].replace(/i/g,'İ').replace(/ı/g,'I').toLocaleUpperCase('tr-TR');
+    return first + c.slice(1).join('');
+  }
+
+  function contextCase(original, suggestions, context = {}) {
+    let out = applyCase(original, suggestions);
+    if (context.sentenceStart && original === normalize(original)) {
+      out = out.map(capitalizeTurkish);
+    }
+    return out;
+  }
+
+  const VOWELS = 'aeıioöuü';
+  const VOICELESS = 'çfhkpsşt';
+
+  function harmony4For(word) {
+    const vowel = lastVowel(word);
+    if (!vowel) return '';
+    if ('aı'.includes(vowel)) return 'ı';
+    if ('ei'.includes(vowel)) return 'i';
+    if ('ou'.includes(vowel)) return 'u';
+    if ('öü'.includes(vowel)) return 'ü';
+    return '';
+  }
+
+  function harmony2For(word) {
+    const vowel = lastVowel(word);
+    if (!vowel) return '';
+    if ('aıou'.includes(vowel)) return 'a';
+    if ('eiöü'.includes(vowel)) return 'e';
+    return '';
+  }
+
+  function finalChar(word) {
+    const c = chars(word);
+    return c.length ? c[c.length - 1] : '';
+  }
+
+  const SOUND_EVENT_ROOTS = new Map([
+    ['kitap','kitab'],['ağaç','ağac'],['renk','reng'],['çocuk','çocuğ'],
+    ['dolap','dolab'],['sebep','sebeb'],['cevap','cevab'],['hesap','hesab'],
+    ['kalp','kalb'],['yurt','yurd'],['kağıt','kağıd'],['kanat','kanad'],
+    ['umut','umud'],['armut','armud'],['yoğurt','yoğurd'],
+    ['burun','burn'],['ağız','ağz'],['oğul','oğl'],['beyin','beyn'],
+    ['karın','karn'],['göğüs','göğs'],['omuz','omz'],['alın','aln'],
+    ['gönül','gönl'],['ömür','ömr'],['fikir','fikr'],['akıl','akl'],
+    ['sabır','sabr'],['şehir','şehr'],['zehir','zehr']
+  ]);
+  const SOUND_EVENT_SURFACE_TO_ROOT = new Map([...SOUND_EVENT_ROOTS].map(([base, surface]) => [surface, base]));
+  const VOWEL_INITIAL_INFLECTION_SUFFIXES = [
+    'ımız','imiz','umuz','ümüz','ınız','iniz','unuz','ünüz',
+    'ım','im','um','üm','ın','in','un','ün','ı','i','u','ü','a','e'
+  ].sort((a,b) => chars(b).length - chars(a).length);
+
+  function rootCandidates(stem) {
+    const out = [stem];
+    const irregularRoot = SOUND_EVENT_SURFACE_TO_ROOT.get(stem);
+    if (irregularRoot) out.push(irregularRoot);
+    const c = chars(stem);
+    if (!c.length) return [...new Set(out)];
+    const last = c[c.length - 1];
+    const map = { b: 'p', c: 'ç', d: 't', ğ: 'k', g: 'k' };
+    if (map[last]) {
+      c[c.length - 1] = map[last];
+      out.push(c.join(''));
+    }
+    return [...new Set(out)];
+  }
+
+  function rootSurfaceAllowed(root, surface, parts) {
+    const mutated = SOUND_EVENT_ROOTS.get(root);
+    if (!mutated || !parts?.length) return true;
+    const firstSuffix = parts[0]?.suffix || '';
+    if (!firstSuffix || !VOWELS.includes(firstSuffix[0])) return true;
+    return surface === mutated;
+  }
+
+  function lexicalRoot(stem) {
+    for (const candidate of rootCandidates(stem)) {
+      if (tdkSet.has(candidate) || LOCAL_TECH_WORDS.has(candidate)) return candidate;
+    }
+    return '';
+  }
+
+  function lexicalVerbRoot(stem) {
+    for (const candidate of rootCandidates(stem)) {
+      if (tdkSet.has(candidate) || LOCAL_TECH_WORDS.has(candidate)) return candidate;
+      const h2 = harmony2For(candidate);
+      if (h2 && tdkSet.has(`${candidate}m${h2}k`)) return candidate;
+      if (tdkSet.has(`${candidate}mak`) || tdkSet.has(`${candidate}mek`)) return candidate;
+    }
+    return '';
+  }
+
+  function progressiveRoot(stem, suffix) {
+    const direct = lexicalVerbRoot(stem);
+    if (direct) return direct;
+    const vowel = suffix?.[0] || '';
+    const endings = vowel === 'ı' ? ['a','ı']
+      : vowel === 'i' ? ['e','i']
+      : vowel === 'u' ? ['u']
+      : vowel === 'ü' ? ['ü'] : [];
+    for (const ending of endings) {
+      const root = lexicalVerbRoot(stem + ending);
+      if (root) return root;
+    }
+    return '';
+  }
+
+
+  function progressiveSoundRepairSuggestion(word) {
+    const markerIndex = word.indexOf('yor');
+    if (markerIndex < 1) return '';
+    const stem = word.slice(0, markerIndex);
+    const tail = word.slice(markerIndex + 3);
+    const root = lexicalVerbRoot(stem);
+    if (!root || !/[ae]$/u.test(root)) return '';
+    const narrowed = root === 'de' ? 'di' : root === 'ye' ? 'yi'
+      : root.slice(0, -1) + (root.endsWith('a') ? 'ı' : 'i');
+    const candidate = `${narrowed}yor${tail}`;
+    if (candidate === word) return '';
+    if (valid.has(candidate)) return candidate;
+    const parse = analyzeMorphology(candidate);
+    return parse.valid && parse.mode === 'verb' ? candidate : '';
+  }
+
+  function suffixDef(forms, validate, label) {
+    return { forms: [...forms].sort((a,b) => chars(b).length - chars(a).length), validate, label };
+  }
+
+  const nounPlural = suffixDef(['lar','ler'], (stem, suffix) => {
+    const h = harmony2For(stem);
+    return suffix === (h === 'a' ? 'lar' : h === 'e' ? 'ler' : '');
+  }, 'plural');
+
+  const nounPossessive = suffixDef([
+    'ımız','imiz','umuz','ümüz','mız','miz','muz','müz',
+    'ınız','iniz','unuz','ünüz','nız','niz','nuz','nüz',
+    'ları','leri','ım','im','um','üm','m','ın','in','un','ün','n','ı','i','u','ü','sı','si','su','sü'
+  ], (stem, suffix) => {
+    const h = harmony4For(stem);
+    if (!h) return false;
+    const vowelEnd = VOWELS.includes(finalChar(stem));
+    const forms = {
+      'ı': {one:['ım','m'], two:['ın','n'], three:['ı','sı'], onepl:['ımız','mız'], twopl:['ınız','nız']},
+      'i': {one:['im','m'], two:['in','n'], three:['i','si'], onepl:['imiz','miz'], twopl:['iniz','niz']},
+      'u': {one:['um','m'], two:['un','n'], three:['u','su'], onepl:['umuz','muz'], twopl:['unuz','nuz']},
+      'ü': {one:['üm','m'], two:['ün','n'], three:['ü','sü'], onepl:['ümüz','müz'], twopl:['ünüz','nüz']}
+    }[h];
+    const allowed = [...forms.one, ...forms.two, ...forms.three, ...forms.onepl, ...forms.twopl, harmony2For(stem)==='a'?'ları':'leri'];
+    if (!allowed.includes(suffix)) return false;
+    if (vowelEnd && ['ım','im','um','üm','ın','in','un','ün','ı','i','u','ü','ımız','imiz','umuz','ümüz','ınız','iniz','unuz','ünüz'].includes(suffix)) return false;
+    return true;
+  }, 'possessive');
+
+  const nounCase = suffixDef([
+    'dan','den','tan','ten','ndan','nden','ntan','nten',
+    'da','de','ta','te','nda','nde','nta','nte',
+    'nın','nin','nun','nün','ın','in','un','ün',
+    'yı','yi','yu','yü','ı','i','u','ü','nı','ni','nu','nü',
+    'ya','ye','a','e'
+  ], (stem, suffix) => {
+    const h4 = harmony4For(stem), h2 = harmony2For(stem);
+    if (!h4 || !h2) return false;
+    const vowelEnd = VOWELS.includes(finalChar(stem));
+    const last = finalChar(stem);
+    const d = VOICELESS.includes(last) ? 't' : 'd';
+    const loc = d + (h2 === 'a' ? 'a' : 'e');
+    const abl = loc + 'n';
+    const allowed = new Set([
+      loc, abl,
+      vowelEnd ? `n${h4}n` : `${h4}n`,
+      vowelEnd ? `y${h4}` : h4,
+      vowelEnd ? `y${h2}` : h2,
+      vowelEnd ? `n${loc}` : '', vowelEnd ? `n${abl}` : '',
