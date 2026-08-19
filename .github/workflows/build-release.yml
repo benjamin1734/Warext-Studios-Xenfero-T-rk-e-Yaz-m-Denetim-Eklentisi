@@ -14,6 +14,9 @@ on:
       - upload/src/addons/Warext/TurkishSpellCheck/addon.json
       - upload/src/addons/Warext/TurkishSpellCheck/_data/**
       - .github/workflows/build-release.yml
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -33,6 +36,7 @@ jobs:
         run: bash tools/build_release.sh
 
       - name: Üretilen dosyaları kaydet
+        if: github.event_name == 'push'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
