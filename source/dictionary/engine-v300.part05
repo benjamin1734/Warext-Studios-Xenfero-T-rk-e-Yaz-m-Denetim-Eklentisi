@@ -1,0 +1,197 @@
+    ['rtük',{canonical:'RTÜK', spoken:'rütük'}],['btk',{canonical:'BTK', spoken:'ke'}],
+    ['ysk',{canonical:'YSK', spoken:'ke'}],['aym',{canonical:'AYM', spoken:'me'}],
+    ['mgk',{canonical:'MGK', spoken:'ke'}],['abd',{canonical:'ABD', spoken:'de'}],
+    ['ab',{canonical:'AB', spoken:'be'}],['bm',{canonical:'BM', spoken:'me'}],
+    ['nato',{canonical:'NATO', spoken:'nato'}],['fifa',{canonical:'FIFA', spoken:'fifa'}],
+    ['uefa',{canonical:'UEFA', spoken:'uefa'}],['php',{canonical:'PHP', spoken:'pe'}]
+  ]);
+  const ABBREVIATION_KEYS = [...ABBREVIATIONS.keys()].sort((a,b) => chars(b).length - chars(a).length);
+
+  function abbreviationSuggestion(rawToken) {
+    const raw = String(rawToken || '').trim();
+    if (!raw) return '';
+    const apostrophe = raw.match(/^([^'’]+)['’]([^'’]+)$/u);
+    if (apostrophe) {
+      const key = normalize(apostrophe[1]);
+      const entry = ABBREVIATIONS.get(key);
+      if (!entry) return '';
+      const suffix = normalize(apostrophe[2]);
+      const corrected = correctedProperSuffix(entry.spoken, suffix);
+      if (!corrected) return '';
+      const candidate = `${entry.canonical}'${corrected}`;
+      return candidate !== raw ? candidate : '';
+    }
+
+    const word = normalize(raw);
+    const exact = ABBREVIATIONS.get(word);
+    if (exact) return raw === exact.canonical ? '' : exact.canonical;
+    for (const key of ABBREVIATION_KEYS) {
+      if (!word.startsWith(key) || word.length <= key.length) continue;
+      const entry = ABBREVIATIONS.get(key);
+      const suffix = word.slice(key.length);
+      const corrected = correctedProperSuffix(entry.spoken, suffix);
+      if (!corrected) continue;
+      return `${entry.canonical}'${corrected}`;
+    }
+    return '';
+  }
+
+  const NUMBER_UNITS = ['', 'bir','iki','üç','dört','beş','altı','yedi','sekiz','dokuz'];
+  const NUMBER_TENS = ['', 'on','yirmi','otuz','kırk','elli','altmış','yetmiş','seksen','doksan'];
+  const NUMBER_MAGNITUDES = ['', 'bin','milyon','milyar','trilyon','katrilyon','kentilyon'];
+
+  function numberLastSpokenWord(rawDigits) {
+    let digits = String(rawDigits || '').replace(/^0+(?=\d)/u, '');
+    if (!digits || /^0+$/u.test(digits)) return 'sıfır';
+    const last = Number(digits.slice(-1));
+    if (last) return NUMBER_UNITS[last];
+    const tens = Number(digits.slice(-2, -1) || '0');
+    if (tens) return NUMBER_TENS[tens];
+    const hundreds = Number(digits.slice(-3, -2) || '0');
+    if (hundreds) return 'yüz';
+    let zeroGroups = 0;
+    let i = digits.length;
+    while (i >= 3 && digits.slice(i - 3, i) === '000') { zeroGroups++; i -= 3; }
+    return NUMBER_MAGNITUDES[Math.min(zeroGroups, NUMBER_MAGNITUDES.length - 1)] || 'bin';
+  }
+
+  function ordinalSuffixFor(spoken) {
+    const h4 = harmony4For(spoken);
+    if (!h4) return '';
+    return VOWELS.includes(finalChar(spoken)) ? `nc${h4}` : `${h4}nc${h4}`;
+  }
+
+  function numberSuffixSuggestion(rawToken) {
+    const raw = String(rawToken || '').trim();
+    const match = raw.match(/^(\d+)['’]?([A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû]+)$/u);
+    if (!match) return '';
+    const digits = match[1];
+    const suffix = normalize(match[2]);
+    const spoken = numberLastSpokenWord(digits);
+    let corrected = '';
+    if (/^(?:ıncı|inci|uncu|üncü|ncı|nci|ncu|ncü)$/u.test(suffix)) corrected = ordinalSuffixFor(spoken);
+    else corrected = correctedProperSuffix(spoken, suffix);
+    if (!corrected) return '';
+    const candidate = `${digits}'${corrected}`;
+    return candidate !== raw ? candidate : '';
+  }
+
+  const SUBJECT_PERSON = { ben:'1sg', sen:'2sg', biz:'1pl', siz:'2pl' };
+
+  function preserveInitialCase(raw, replacement) {
+    if (!raw || !replacement) return replacement;
+    return raw[0] !== normalize(raw[0]) ? capitalizeTurkish(replacement) : replacement;
+  }
+
+  function agreementSuggestion(rawToken, expectedPerson) {
+    const word = normalize(rawToken);
+    let match;
+
+    match = word.match(/^(.+?)([ıiuü])yor(um|sun|uz|sunuz)$/u);
+    if (match) {
+      const observed = {um:'1sg',sun:'2sg',uz:'1pl',sunuz:'2pl'}[match[3]];
+      if (observed && observed !== expectedPerson) {
+        const tail = { '1sg':'um','2sg':'sun','1pl':'uz','2pl':'sunuz' }[expectedPerson];
+        return preserveInitialCase(rawToken, `${match[1]}${match[2]}yor${tail}`);
+      }
+      return '';
+    }
+
+    match = word.match(/^(.{2,}?)(acağım|eceğim|acaksın|eceksin|acağız|eceğiz|acaksınız|eceksiniz)$/u);
+    if (match) {
+      const ending = match[2];
+      const observed = /(?:acağım|eceğim)$/u.test(ending) ? '1sg'
+        : /(?:acaksın|eceksin)$/u.test(ending) ? '2sg'
+        : /(?:acağız|eceğiz)$/u.test(ending) ? '1pl' : '2pl';
+      if (observed !== expectedPerson) {
+        const a = ending[0] === 'a';
+        const tails = a
+          ? { '1sg':'acağım','2sg':'acaksın','1pl':'acağız','2pl':'acaksınız' }
+          : { '1sg':'eceğim','2sg':'eceksin','1pl':'eceğiz','2pl':'eceksiniz' };
+        return preserveInitialCase(rawToken, `${match[1]}${tails[expectedPerson]}`);
+      }
+      return '';
+    }
+
+    match = word.match(/^(.{2,}?)([dt])([ıiuü])(m|n|k|n[ıiuü]z)$/u);
+    if (match) {
+      const observed = match[4] === 'm' ? '1sg' : match[4] === 'n' ? '2sg' : match[4] === 'k' ? '1pl' : '2pl';
+      if (observed !== expectedPerson) {
+        const v = match[3];
+        const tail = { '1sg':'m','2sg':'n','1pl':'k','2pl':`n${v}z` }[expectedPerson];
+        return preserveInitialCase(rawToken, `${match[1]}${match[2]}${v}${tail}`);
+      }
+      return '';
+    }
+
+    match = word.match(/^(.{2,}?)(m([ıiuü])ş)([ıiuü]m|s[ıiuü]n|[ıiuü]z|s[ıiuü]n[ıiuü]z)$/u);
+    if (match) {
+      const v = match[3], personTail = match[4];
+      const observed = personTail === `${v}m` ? '1sg' : personTail === `s${v}n` ? '2sg' : personTail === `${v}z` ? '1pl' : personTail === `s${v}n${v}z` ? '2pl' : '';
+      if (observed && observed !== expectedPerson) {
+        const tail = { '1sg':`${v}m`,'2sg':`s${v}n`,'1pl':`${v}z`,'2pl':`s${v}n${v}z` }[expectedPerson];
+        return preserveInitialCase(rawToken, `${match[1]}${match[2]}${tail}`);
+      }
+      return '';
+    }
+
+    match = word.match(/^(.{2,}?)(m([ae])l([ıi]))(y[ıi]m|s[ıi]n|y[ıi]z|s[ıi]n[ıi]z)$/u);
+    if (match) {
+      const v = match[4], personTail = match[5];
+      const observed = personTail === `y${v}m` ? '1sg' : personTail === `s${v}n` ? '2sg' : personTail === `y${v}z` ? '1pl' : personTail === `s${v}n${v}z` ? '2pl' : '';
+      if (observed && observed !== expectedPerson) {
+        const tail = { '1sg':`y${v}m`,'2sg':`s${v}n`,'1pl':`y${v}z`,'2pl':`s${v}n${v}z` }[expectedPerson];
+        return preserveInitialCase(rawToken, `${match[1]}${match[2]}${tail}`);
+      }
+      return '';
+    }
+
+    match = word.match(/^(.{2,}?)(s([ae]))(m|n|k|n[ıi]z)$/u);
+    if (match) {
+      const v = match[3] === 'a' ? 'ı' : 'i';
+      const observed = match[4] === 'm' ? '1sg' : match[4] === 'n' ? '2sg' : match[4] === 'k' ? '1pl' : '2pl';
+      if (observed !== expectedPerson) {
+        const tail = { '1sg':'m','2sg':'n','1pl':'k','2pl':`n${v}z` }[expectedPerson];
+        return preserveInitialCase(rawToken, `${match[1]}${match[2]}${tail}`);
+      }
+    }
+    return '';
+  }
+
+  function nominalAgreementSuggestion(rawToken, expectedPerson) {
+    const word = normalize(rawToken);
+    const suffixes = [
+      ['2pl',['sınız','siniz','sunuz','sünüz']],
+      ['1pl',['yız','yiz','yuz','yüz','ız','iz','uz','üz']],
+      ['2sg',['sın','sin','sun','sün']],
+      ['1sg',['yım','yim','yum','yüm','ım','im','um','üm']]
+    ];
+    for (const [observedPerson, forms] of suffixes) {
+      for (const suffix of forms) {
+        if (!word.endsWith(suffix) || chars(word).length <= chars(suffix).length + 1) continue;
+        const stem = word.slice(0, -suffix.length);
+        if (!valid.has(stem) && !tdkSet.has(stem) && !LOCAL_TECH_WORDS.has(stem)) continue;
+        const h4 = harmony4For(stem);
+        if (!h4) continue;
+        const vowelEnd = VOWELS.includes(finalChar(stem));
+        const expectedObserved = observedPerson === '1sg' ? `${vowelEnd ? 'y' : ''}${h4}m`
+          : observedPerson === '2sg' ? `s${h4}n`
+          : observedPerson === '1pl' ? `${vowelEnd ? 'y' : ''}${h4}z`
+          : `s${h4}n${h4}z`;
+        if (suffix !== expectedObserved) continue;
+        if (observedPerson === expectedPerson) return '';
+        const replacementSuffix = expectedPerson === '1sg' ? `${vowelEnd ? 'y' : ''}${h4}m`
+          : expectedPerson === '2sg' ? `s${h4}n`
+          : expectedPerson === '1pl' ? `${vowelEnd ? 'y' : ''}${h4}z`
+          : `s${h4}n${h4}z`;
+        return preserveInitialCase(rawToken, `${stem}${replacementSuffix}`);
+      }
+    }
+    return '';
+  }
+
+  function subjectAgreementIssues(text) {
+    const issues = [];
+    const tokenRe = new RegExp(`[A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû]{2,}`, 'gu');
+    let currentPerson = '', match;
+    while ((match = tokenRe.exec(text))) {
