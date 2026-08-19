@@ -1,0 +1,238 @@
+      el.matches('textarea.js-editor[data-xf-init~="editor"]')
+    );
+  }
+
+  function isRichEditor(el) {
+    return el instanceof HTMLElement && el.isContentEditable && (el.classList.contains('fr-element') || !!el.closest('.fr-box'));
+  }
+
+  function mergeRanges(ranges) {
+    const sorted = ranges.filter(r => r && r.end > r.start).sort((a,b) => a.start - b.start || a.end - b.end);
+    const out = [];
+    for (const range of sorted) {
+      const last = out[out.length - 1];
+      if (last && range.start <= last.end) last.end = Math.max(last.end, range.end);
+      else out.push({ start: range.start, end: range.end });
+    }
+    return out;
+  }
+
+  function textualProtectedRanges(text) {
+    const ranges = [];
+    const addMatches = re => {
+      re.lastIndex = 0;
+      let match;
+      while ((match = re.exec(text))) {
+        ranges.push({ start: match.index, end: match.index + match[0].length });
+        if (!match[0].length) re.lastIndex++;
+      }
+    };
+    addMatches(/\[(?:CODE|PHP|HTML|ICODE|PLAIN)\b[^\]]*\][\s\S]*?\[\/(?:CODE|PHP|HTML|ICODE|PLAIN)\]/giu);
+    addMatches(/\[\/?[A-Z][^\]\n]{0,200}\]/giu);
+    addMatches(/```[\s\S]*?```/gu);
+    addMatches(/`[^`\n]+`/gu);
+    addMatches(/(?:https?:\/\/|ftp:\/\/|www\.)[^\s<>()\[\]{}]+/giu);
+    addMatches(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/giu);
+    addMatches(/\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}(?:\/[^\s<>()\[\]{}]*)?/giu);
+    addMatches(/(?<![A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû0-9])[@#][A-Za-z0-9_ÇĞİÖŞÜçğıöşü]{2,}/gu);
+    addMatches(/\b(?:\d{1,3}\.){3}\d{1,3}\b/gu);
+    addMatches(/\b[A-Za-z]:\\(?:[^\\\s]+\\)*[^\\\s]*/gu);
+    addMatches(/(?:\/[A-Za-z0-9_.-]+){2,}(?:\/[A-Za-z0-9_.-]+)?/gu);
+    return mergeRanges(ranges);
+  }
+
+  function isProtectedRange(ranges, start, end) {
+    const targetEnd = Math.max(start + 1, end);
+    return (ranges || []).some(range => range.start < targetEnd && range.end > start);
+  }
+
+  function maskProtectedText(text, ranges) {
+    if (!ranges?.length) return text;
+    const chars = text.split('');
+    for (const range of ranges) {
+      for (let i = Math.max(0, range.start); i < Math.min(chars.length, range.end); i++) {
+        if (chars[i] !== '\n' && chars[i] !== '\r') chars[i] = '\uE000';
+      }
+    }
+    return chars.join('');
+  }
+
+  function createBar(el) {
+    const box = isRichEditor(el) ? el.closest('.fr-box') : null;
+    const owner = box || el;
+    const existing = owner.__wtscSuggestionBar || el.__wtscSuggestionBar;
+    if (existing?.isConnected) return existing;
+
+    const bar = document.createElement('div');
+    bar.className = 'wtsc-suggestions';
+    bar.setAttribute('role', 'listbox');
+    bar.setAttribute('aria-label', 'Yazım ve cümle önerileri');
+    bar.dataset.wtscVersion = VERSION;
+
+    if (isRichEditor(el)) {
+      const richBox = box || el.parentElement;
+      richBox?.parentElement?.querySelectorAll('.wtsc-suggestions').forEach(other => other.remove());
+      richBox?.insertAdjacentElement('afterend', bar);
+      if (richBox) richBox.__wtscSuggestionBar = bar;
+    } else {
+      const holder = el.closest('.inputGroup') || el.parentElement;
+      holder?.insertAdjacentElement('afterend', bar);
+    }
+
+    owner.__wtscSuggestionBar = bar;
+    el.__wtscSuggestionBar = bar;
+    return bar;
+  }
+
+  function textNodes(root) {
+    const nodes = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let node;
+    while ((node = walker.nextNode())) nodes.push(node);
+    return nodes;
+  }
+
+  function richTextAndCaret(el) {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount || !selection.isCollapsed) return null;
+    const caretRange = selection.getRangeAt(0);
+    if (!el.contains(caretRange.startContainer)) return null;
+
+    const nodes = textNodes(el);
+    let text = '';
+    let caret = null;
+    const domProtected = [];
+
+    for (const node of nodes) {
+      const nodeStart = text.length;
+      const value = node.nodeValue || '';
+      if (node.parentElement?.closest?.('code,pre,.bbCodeCode,.bbCodeBlock--code,.fr-code')) {
+        domProtected.push({ start: nodeStart, end: nodeStart + value.length });
+      }
+      if (node === caretRange.startContainer) {
+        caret = text.length + Math.max(0, Math.min(value.length, caretRange.startOffset));
+      }
+      text += value;
+    }
+
+    if (caret === null) {
+      try {
+        const beforeRange = document.createRange();
+        beforeRange.selectNodeContents(el);
+        beforeRange.setEnd(caretRange.startContainer, caretRange.startOffset);
+        caret = beforeRange.toString().length;
+      } catch (_) {
+        caret = text.length;
+      }
+    }
+
+    const protectedRanges = mergeRanges([...textualProtectedRanges(text), ...domProtected]);
+    return { text, caret: Math.max(0, Math.min(text.length, caret)), protectedRanges };
+  }
+
+  function getDocumentState(el) {
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+      const text = el.value || '';
+      const caret = el.selectionStart ?? text.length;
+      return { text, caret: Math.max(0, Math.min(text.length, caret)), protectedRanges: textualProtectedRanges(text) };
+    }
+    if (isRichEditor(el)) return richTextAndCaret(el);
+    return null;
+  }
+
+  function rangeFromOffsets(root, start, end) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let pos = 0, startNode = null, startOffset = 0, endNode = null, endOffset = 0, node;
+    while ((node = walker.nextNode())) {
+      const len = node.nodeValue?.length || 0;
+      const next = pos + len;
+      if (!startNode && start >= pos && start <= next) {
+        startNode = node;
+        startOffset = Math.max(0, Math.min(len, start - pos));
+      }
+      if (end >= pos && end <= next) {
+        endNode = node;
+        endOffset = Math.max(0, Math.min(len, end - pos));
+        break;
+      }
+      pos = next;
+    }
+    if (!startNode || !endNode) return null;
+    const range = document.createRange();
+    range.setStart(startNode, startOffset);
+    range.setEnd(endNode, endOffset);
+    return range;
+  }
+
+  function makeContext(el, state, start, end, extra = {}) {
+    if (!extra.allowProtected && isProtectedRange(state.protectedRanges, start, end)) return null;
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+      return { start, end, type: 'input', fullText: state.text, caret: state.caret, ...extra };
+    }
+    const range = rangeFromOffsets(el, start, end);
+    if (!range) return null;
+    return { range, start, end, type: 'contenteditable', fullText: state.text, caret: state.caret, ...extra };
+  }
+
+  function isLetterAt(text, index) {
+    if (index < 0 || index >= text.length) return false;
+    return LETTER_RE.test(text[index]);
+  }
+
+  function tokenAtCaret(text, caret) {
+    if (!text) return null;
+    let pos = Math.max(0, Math.min(text.length, caret));
+
+    if (!isLetterAt(text, pos) && !isLetterAt(text, pos - 1)) {
+      let probe = pos - 1;
+      while (probe >= 0 && !isLetterAt(text, probe)) {
+        if (text[probe] === '\n' || text[probe] === '\r') break;
+        probe--;
+      }
+      if (isLetterAt(text, probe)) pos = probe + 1;
+    }
+
+    let start = pos;
+    while (start > 0 && isLetterAt(text, start - 1)) start--;
+    let end = pos;
+    while (end < text.length && isLetterAt(text, end)) end++;
+
+    if (start === end || end - start < 2) return null;
+    return { word: text.slice(start, end), start, end };
+  }
+
+  function sentenceBounds(text, position, protectedRanges = []) {
+    let start = 0;
+    for (let i = Math.max(0, position - 1); i >= 0; i--) {
+      if (text[i] !== '\n' && isProtectedRange(protectedRanges, i, i + 1)) continue;
+      if (/[.!?\n]/u.test(text[i])) { start = i + 1; break; }
+    }
+    let end = text.length;
+    for (let i = Math.max(0, position); i < text.length; i++) {
+      if (text[i] !== '\n' && isProtectedRange(protectedRanges, i, i + 1)) continue;
+      if (/[.!?\n]/u.test(text[i])) { end = i + 1; break; }
+    }
+    while (start < end && /\s/u.test(text[start])) start++;
+    return { start, end };
+  }
+
+  function tokensInRange(text, start, end, protectedRanges = []) {
+    const out = [];
+    const part = text.slice(start, end);
+    const re = new RegExp(`[${LETTERS}]{2,}`, 'gu');
+    let match;
+    while ((match = re.exec(part))) {
+      const tokenStart = start + match.index;
+      const tokenEnd = tokenStart + match[0].length;
+      if (isProtectedRange(protectedRanges, tokenStart, tokenEnd)) continue;
+      out.push({ word: match[0], start: tokenStart, end: tokenEnd });
+    }
+    return out;
+  }
+
+  function previousToken(text, token, sentenceStart, protectedRanges = []) {
+    const tokens = tokensInRange(text, sentenceStart, token.start, protectedRanges);
+    return tokens.length ? tokens[tokens.length - 1] : null;
+  }
+
+  function isSentenceStart(text, tokenStart, sentenceStart) {
