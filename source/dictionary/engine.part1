@@ -153,9 +153,9 @@
     const word = normalize(rawWord);
     if (!word) return false;
     if (runtimeIgnored.has(word) || runtimeValid.has(word) || tdkSet.has(word)) return true;
+    if (isLikelyInflected(word)) return true;
     if (suspiciousExtraWord(word).length) return false;
-    if (extraSet.has(word)) return true;
-    return isLikelyInflected(word);
+    return extraSet.has(word);
   }
 
   function check(rawWord, context = {}) {
@@ -174,32 +174,32 @@
       return {word:original,correct:false,suggestions:applyContextCase(original,suggestions,context),provider:'common-intent',category:'spelling',message:'Yaygın yazım biçimine göre düzeltme önerisi.'};
     }
 
+    if (tdkSet.has(word) || isLikelyInflected(word)) {
+      if (context.sentenceStart && original === normalize(original)) {
+        const capitalized = capitalizeTurkish(original);
+        if (capitalized !== original) return {word:original,correct:false,suggestions:[capitalized],provider:'sentence-capitalization',category:'capitalization',message:'Cümle büyük harfle başlamalı.'};
+      }
+      return {word:original,correct:true,suggestions:[],provider:tdkSet.has(word)?'tdk-exact':'morphology',category:'correct'};
+    }
+
     const suspicious = suspiciousExtraWord(word);
     if (suspicious.length) {
       const suggestions = findSuggestions(word, 3, suspicious);
       return {word:original,correct:false,suggestions:applyContextCase(original,suggestions,context),provider:'turkish-character-repair',category:'spelling',message:'Türkçe karakter veya ek yazımı hatalı olabilir.'};
     }
 
-    if (tdkSet.has(word) || extraSet.has(word)) {
+    if (extraSet.has(word)) {
       if (context.sentenceStart && original === normalize(original)) {
         const capitalized = capitalizeTurkish(original);
         if (capitalized !== original) return {word:original,correct:false,suggestions:[capitalized],provider:'sentence-capitalization',category:'capitalization',message:'Cümle büyük harfle başlamalı.'};
       }
-      return {word:original,correct:true,suggestions:[],provider:tdkSet.has(word)?'tdk-exact':'hunspell-exact',category:'correct'};
+      return {word:original,correct:true,suggestions:[],provider:'hunspell-exact',category:'correct'};
     }
 
     const orthographic = orthographicValidVariants(word, 6);
     if (orthographic.length) {
       const suggestions = findSuggestions(word, 3, orthographic);
       return {word:original,correct:false,suggestions:applyContextCase(original,suggestions,context),provider:'turkish-character-repair',category:'spelling',message:'Türkçe karakter veya çekim biçimi için düzeltme önerisi.'};
-    }
-
-    if (isLikelyInflected(word)) {
-      if (context.sentenceStart && original === normalize(original)) {
-        const capitalized = capitalizeTurkish(original);
-        if (capitalized !== original) return {word:original,correct:false,suggestions:[capitalized],provider:'sentence-capitalization',category:'capitalization',message:'Cümle büyük harfle başlamalı.'};
-      }
-      return {word:original,correct:true,suggestions:[],provider:'morphology',category:'correct'};
     }
 
     const questionSplit = questionParticleSuggestion(word);
