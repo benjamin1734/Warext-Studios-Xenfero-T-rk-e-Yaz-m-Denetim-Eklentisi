@@ -1,13 +1,13 @@
 {
     "legacy_addon_id": "",
     "title": "Warext Turkish Spell Check",
-    "description": "XenForo 2.3 için Türkçe yazım, dilbilgisi, noktalama, cümle bağlamı, özel isim, kullanıcı sözlüğü ve akıllı öneri denetimi.",
-    "version_id": 1060000,
-    "version_string": "1",
+    "description": "Tamamen yerel Türkçe yazım ve cümle denetimi: 117K+ sözlük/form, gelişmiş morfoloji ve ses olayları, bağlamsal gramer, özel ad/kısaltma/sayı ekleri, kalıcı kişisel sözlük ve 3 akıllı öneri. Harici API/model/servis gerekmez.",
+    "version_id": 3000070,
+    "version_string": "3.0.0",
     "dev": "Warext Studios",
-    "dev_url": "https://github.com/benjamin1734",
+    "dev_url": "",
     "faq_url": "",
-    "support_url": "https://github.com/benjamin1734/Warext-Studios-Xenfero-T-rk-e-Yaz-m-Denetim-Eklentisi",
+    "support_url": "",
     "extra_urls": {},
     "require": {
         "XF": [
