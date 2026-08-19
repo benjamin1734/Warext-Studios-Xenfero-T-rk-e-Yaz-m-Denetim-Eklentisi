@@ -1,0 +1,26 @@
+name: Geliştirme önerisi
+description: Yeni yazım kuralı veya özellik önerin
+title: "[Öneri] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: request
+    attributes:
+      label: Öneri
+      description: Eklenmesini istediğiniz davranışı açıklayın
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Örnekler
+      description: Yazılan metin ve beklenen öneri örneklerini verin
+      placeholder: "saol → sağ ol"
+    validations:
+      required: true
+  - type: textarea
+    id: benefit
+    attributes:
+      label: Faydası
+      description: Bu değişikliğin kullanıcı deneyimine katkısını kısaca açıklayın
