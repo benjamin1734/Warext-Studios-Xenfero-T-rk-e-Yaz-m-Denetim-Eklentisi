@@ -1,8 +1,8 @@
 {
     "legacy_addon_id": "",
     "title": "Warext Turkish Spell Check",
-    "description": "Türkçe akıllı yazım ve cümle denetimi: noktalama sonrası aktif kelime taraması, tüm cümle analizi, Türkçe karakter/ek hataları, niyet odaklı öneriler, noktalama ve mı/mi uyumu.",
-    "version_id": 1050000,
+    "description": "XenForo 2.3 için Türkçe yazım, dilbilgisi, noktalama, cümle bağlamı, özel isim, kullanıcı sözlüğü ve akıllı öneri denetimi.",
+    "version_id": 1060000,
     "version_string": "1",
     "dev": "Warext Studios",
     "dev_url": "https://github.com/benjamin1734",

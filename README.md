@@ -1,63 +1,75 @@
 # Warext Studios XenForo Türkçe Yazım Denetimi
 
-XenForo 2.3 için geliştirilmiş, tarayıcı tarafında çalışan Türkçe yazım denetimi ve akıllı öneri eklentisidir.
+XenForo 2.3 için yerel çalışan Türkçe yazım, dilbilgisi, noktalama ve bağlam denetimi eklentisidir. Düzeltmeleri otomatik uygulamaz; kullanıcıya en fazla üç öneri gösterir ve seçim kullanıcıya bırakılır.
 
 ## Özellikler
 
-- Yazım hatalarında en fazla 3 düzeltme önerisi
-- Türkçe karakter hataları için akıllı öneriler
-- Kelime tamamlama önerileri
-- Yaygın yanlış yazım kalıplarının düzeltilmesi
-- `mı / mi / mu / mü` soru ekinin ayrı yazım kontrolü
-- Soru ekinde ünlü uyumu kontrolü
-- Cümle içindeki önceki kelimelerin geriye dönük taranması
-- Cümle başında büyük harf önerisi
+- TDK tabanlı yerel kelime sözlüğü
+- Hunspell kök verisiyle genişletilmiş kelime doğrulama
+- Türkçe karakter hataları ve Q klavye yakın tuşlarına göre ağırlıklı öneri sıralama
+- Damerau ve ağırlıklı kelime benzerliği
+- Kelime tamamlama ve niyet odaklı öneriler
+- `saol → sağ ol`, `patate → patates`, `nasilsin → nasılsın`, `dünyanin → dünyanın`
+- Gelişmiş soru eki ve birleşik zaman biçimleri
+- `tamammı → tamam mı`, `gelecekmisin → gelecek misin`, `güzeldimi → güzel miydi`, `yapacakmıydınız → yapacak mıydınız`
+- Ayrı yazılmış soru ekinde ünlü uyumu: `daha mi → daha mı`
+- `de/da` için yüksek güvenli bağlam kuralları
+- `ki` bağlacı ve `-ki` eki için bağlam denetimi
+- Cümlenin tamamını ve önceki kelimeleri geriye dönük tarama
+- İmleç noktalama işaretinin sonundayken önceki cümlenin taranması
+- Tamlayan eki ve cümle bağlamı önerileri
+- Özel isim ve kesme işareti denetimi: `Ankaraya → Ankara'ya`, `Türkiyenin → Türkiye'nin`
+- Cümle başı ve noktalama sonrası büyük harf denetimi
 - Cümle sonu noktalama önerisi
-- Noktalama öncesi ve sonrası boşluk kontrolü
-- Tekrarlanan noktalama ve kelime kontrolü
-- Bağlama ve kullanıcı niyetine göre öneri sıralama
-- XenForo zengin metin editörü ve başlık alanı desteği
-- Otomatik düzeltme yapmadan kullanıcı seçimiyle değiştirme
-- Harici API veya ayrı bir yazım denetimi sunucusu gerektirmeyen yerel motor
+- Noktalama öncesi/sonrası boşluk, tekrar eden işaret, çoklu boşluk, açık parantez ve tırnak denetimi
+- `bir çok → birçok`, `hiç bir → hiçbir`, `her hangi → herhangi` gibi çok kelimeli kurallar
+- Yüksek güvenli cümle yapısı ve gereksiz bağlaç tekrarı kontrolleri
+- Hata türleri: Yazım, Dilbilgisi, Noktalama, Büyük harf, Özel isim, Cümle yapısı
+- Destekleyen tarayıcılarda zengin editörde hata altı çizimi
+- `Yoksay`, `Sözlüğe ekle` ve kullanıcı sözlüğü yönetimi
+- ACP üzerinden forum özel sözlüğü ve özel isim listesi
+- ACP üzerinden modülleri açıp kapatma ve 1–3 arası öneri sayısı ayarı
+- Web Worker ile arka planda analiz
+- Yalnız değişen cümleyi yeniden analiz eden performans yapısı
+- Worker kullanılamadığında ana iş parçacığı yedeği
+- XenForo zengin metin editörü, hızlı cevap ve konu başlığı desteği
+- Harici API, Composer, SSH veya sunucu taraflı Hunspell gerektirmeyen çalışma modeli
+- Otomatik smoke ve regresyon testleri
 
-## Örnekler
+## Yönetici Ayarları
 
-| Yazılan | Öneri |
-| --- | --- |
-| `yanlız` | `yalnız` |
-| `saol` | `sağ ol` |
-| `patate` | `patates` |
-| `tamammı` | `tamam mı` |
-| `daha mi` | `daha mı` |
-| `dünyanin` | `dünyanın` |
-| `nasilsin` | `nasılsın` |
+ACP içindeki Warext Türkçe Yazım Denetimi seçenek grubundan eklentiyi, dilbilgisi denetimini, noktalama denetimini, hata altı çizimini, özel isim denetimini, günlük konuşma önerilerini ve maksimum öneri sayısını yönetebilirsiniz. Forum özel sözlüğü ve özel isim listesi de aynı alandan düzenlenir.
+
+## Kullanıcı Sözlüğü
+
+Öneri panelindeki **Sözlüğe ekle** seçeneği kelimeyi kullanıcının tarayıcıdaki kişisel sözlüğüne ekler. **Sözlüğüm** alanından kelimeler görüntülenebilir ve kaldırılabilir. **Yoksay** seçeneği mevcut tarayıcı oturumu boyunca kelimeyi denetim dışında bırakır.
 
 ## Gereksinimler
 
-- XenForo 2.3 veya üzeri
+- XenForo 2.3+
 - XenForo 2.3 ile uyumlu PHP sürümü
 - JavaScript etkin modern tarayıcı
 
-PHP 8.4 ve XenForo 2.3 serisi ile test edilmiştir.
+PHP 8.4 ve XenForo 2.3 serisi hedeflenmektedir.
 
 ## Kurulum
 
 1. `release/Warext-SpellCheck-1.zip` dosyasını indirin.
-2. XenForo Yönetici Paneline girin.
-3. **Eklentiler → Arşivden yükle/yükselt** bölümünü açın.
-4. ZIP dosyasını seçin.
-5. **Kur** veya mevcut kurulumda **Yükselt** işlemini tamamlayın.
-
-Eklenti için SSH, Composer, Hunspell kurulumu veya ayrı bir servis gerekmez.
+2. XenForo Yönetici Panelinde **Eklentiler → Arşivden yükle/yükselt** alanını açın.
+3. ZIP dosyasını seçin.
+4. Kurulum veya yükseltme işlemini tamamlayın.
+5. Eski JavaScript önbelleği varsa bir kez zorla yenileyin.
 
 ## Kaynak Yapısı
 
 ```text
 upload/
 ├── js/warext/turkish-spellcheck/
-│   ├── bootstrap-v142.js
-│   ├── dictionary-v142.js
-│   └── editor-v142.js
+│   ├── bootstrap-v160.js
+│   ├── dictionary-v160.js
+│   ├── editor-v160.js
+│   ├── rules-v160.js
+│   └── worker-v160.js
 └── src/addons/Warext/TurkishSpellCheck/
     ├── Resources/
     ├── _data/
@@ -73,30 +85,21 @@ tools/
 └── build_release.sh
 
 tests/
-└── dictionary-smoke.js
+├── dictionary-smoke.js
+└── rules-regression.js
 ```
 
 ## Kaynak Koddan Derleme
-
-Linux veya GitHub Actions ortamında:
 
 ```bash
 bash tools/build_release.sh
 ```
 
-İşlem sözlük verisini sabitlenmiş açık kaynak sürümlerinden üretir, JavaScript ve PHP kontrollerini çalıştırır, smoke testlerini tamamlar ve `release/Warext-SpellCheck-1.zip` paketini oluşturur.
-
-`main` dalındaki ilgili kaynak değişikliklerinde GitHub Actions aynı doğrulamaları otomatik çalıştırır ve başarılı derlemede güncel kurulum paketini repoya kaydeder.
-
-Kullanılan sözlük kaynakları ve sabitlenen sürümler `THIRD_PARTY.md` dosyasında belirtilmiştir.
-
-## Geliştirme
-
-Hata bildirimleri ve geliştirme önerileri GitHub Issues üzerinden paylaşılabilir. Kod katkıları Pull Request olarak gönderilebilir.
+Derleme işlemi sabitlenmiş sözlük kaynaklarını alır, tarayıcı sözlüğünü üretir, JavaScript/PHP/XML/JSON doğrulamalarını ve regresyon testlerini çalıştırır, kod yorum satırı kontrolünü uygular ve `release/Warext-SpellCheck-1.zip` paketini oluşturur.
 
 ## Lisans
 
-Proje MPL-2.0 lisansı altında yayımlanmaktadır. Sözlük/veri bileşenleriyle ilgili lisans metni ayrıca eklenti paketinin `Resources` dizininde tutulur.
+Proje MPL-2.0 lisansı altında yayımlanmaktadır. Kullanılan üçüncü taraf sözlük/veri kaynakları `THIRD_PARTY.md` içinde belirtilir.
 
 ## Geliştirici
 

@@ -8,11 +8,8 @@ on:
       - source/dictionary/**
       - tools/**
       - tests/**
-      - upload/js/warext/turkish-spellcheck/bootstrap-v142.js
-      - upload/js/warext/turkish-spellcheck/editor-v142.js
-      - upload/src/addons/Warext/TurkishSpellCheck/Setup.php
-      - upload/src/addons/Warext/TurkishSpellCheck/addon.json
-      - upload/src/addons/Warext/TurkishSpellCheck/_data/**
+      - upload/js/warext/turkish-spellcheck/**
+      - upload/src/addons/Warext/TurkishSpellCheck/**
       - .github/workflows/build-release.yml
   pull_request:
     branches:
@@ -41,7 +38,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add upload/js/warext/turkish-spellcheck/dictionary-v142.js
+          git add upload/js/warext/turkish-spellcheck/dictionary-v160.js
           git add upload/src/addons/Warext/TurkishSpellCheck/Resources/LICENSE-MPL-2.0.txt
           git add release/Warext-SpellCheck-1.zip SHA256SUMS
           if git diff --cached --quiet; then

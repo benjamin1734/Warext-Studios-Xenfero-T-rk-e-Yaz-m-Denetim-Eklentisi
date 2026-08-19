@@ -1,49 +1,70 @@
 (() => {
   'use strict';
 
-  if (window.WarextTurkishSpellEngineV142) return;
+  const G = typeof globalThis !== 'undefined' ? globalThis : self;
+  if (G.WarextTurkishSpellEngineV160) return;
 
   const TDK_TEXT = __TDK_JSON__;
   const EXTRA_VALID_TEXT = __EXTRA_JSON__;
-  const COMMON = {"dah":["dağ","daha","dahi"],"saol":["sağ ol"],"sagol":["sağ ol"],"sağol":["sağ ol"],"saolun":["sağ olun"],"sagolun":["sağ olun"],"sağolun":["sağ olun"],"patate":["patates"],"merhab":["merhaba"],"tmm":["tamam"],"yanlız":["yalnız"],"yalnış":["yanlış"],"herkez":["herkes"],"şarz":["şarj"],"klavuz":["kılavuz"],"traş":["tıraş"],"eşortman":["eşofman"],"şöför":["şoför"],"süpriz":["sürpriz"],"antreman":["antrenman"],"orjinal":["orijinal"],"malesef":["maalesef"],"müsade":["müsaade"],"deyil":["değil"],"kirbit":["kibrit"],"anfi":["amfi"],"herşey":["her şey"],"birşey":["bir şey"],"bişey":["bir şey"],"hiçbirşey":["hiçbir şey"],"hiçbişey":["hiçbir şey"],"pekçok":["pek çok"],"yada":["ya da"],"şuan":["şu an"],"hoşgeldin":["hoş geldin"],"hoşbulduk":["hoş bulduk"],"peşpeşe":["peş peşe"],"ardarda":["art arda"],"denmee":["deneme"],"dejeme":["deneme"],"tabiki":["tabii ki"],"iyiki":["iyi ki"],"demekki":["demek ki"],"belkide":["belki de"],"naber":["ne haber"],"napıyorsun":["ne yapıyorsun"],"napıyon":["ne yapıyorsun"],"noldu":["ne oldu"],"gelicem":["geleceğim"],"gidicem":["gideceğim"],"yapıcam":["yapacağım"],"yapcam":["yapacağım"],"ediyom":["ediyorum"],"geliyom":["geliyorum"],"gidiyom":["gidiyorum"],"çünki":["çünkü"],"yanlızlık":["yalnızlık"],"yanlızca":["yalnızca"]};
-
-  const INTENT_FORMS = [
-    'nasılsın','nasılsınız','nasılım','iyisin','iyiyim','iyiyiz','iyisiniz',
-    'merhaba','görüşürüz','teşekkürler','teşekkür','tamam','tamamdır',
-    'geleceğim','gideceğim','yapacağım','olacağım','istiyorum','istemiyorum',
-    'biliyorum','bilmiyorum','anlıyorum','anlamadım','dünyanın','bugün','yarın',
-    'şimdi','çünkü','değil','mısın','misin','musun','müsün','mısınız','misiniz',
-    'musunuz','müsünüz','oluyor','olmuyor','geliyor','gidiyor','yapıyor'
-  ];
-
-  const TURKISH_CHAR_ALTS = {
-    'i': ['ı'],
-    'g': ['ğ'],
-    's': ['ş'],
-    'c': ['ç'],
-    'o': ['ö'],
-    'u': ['ü']
-  };
-  const TURKISH_EQUIVALENT_PAIRS = new Set(['iı','ıi','gğ','ğg','sş','şs','cç','çc','oö','öo','uü','üu']);
-
-  const normalize = value => String(value || '')
-    .replace(/I/g, 'ı')
-    .replace(/İ/g, 'i')
-    .toLocaleLowerCase('tr-TR')
-    .trim();
-
-  const chars = value => Array.from(value);
+  const normalize = value => String(value || '').replace(/I/g, 'ı').replace(/İ/g, 'i').toLocaleLowerCase('tr-TR').trim();
+  const chars = value => Array.from(String(value || ''));
   const tdkWords = TDK_TEXT ? TDK_TEXT.split('\n') : [];
   const extraValid = EXTRA_VALID_TEXT ? EXTRA_VALID_TEXT.split('\n') : [];
+  const tdkSet = new Set(tdkWords);
+  const extraSet = new Set(extraValid);
   const valid = new Set(tdkWords);
   for (const word of extraValid) valid.add(word);
 
-  for (const word of ['xenforo','minecraft','discord','warext','mc-tr','php','javascript','css','html'])
-    valid.add(word);
+  const COMMON = {
+    "dah":["dağ","daha","dahi"],"saol":["sağ ol"],"sagol":["sağ ol"],"sağol":["sağ ol"],
+    "saolun":["sağ olun"],"sagolun":["sağ olun"],"sağolun":["sağ olun"],"patate":["patates"],
+    "merhab":["merhaba"],"tmm":["tamam"],"yanlız":["yalnız"],"yalnış":["yanlış"],"herkez":["herkes"],
+    "şarz":["şarj"],"klavuz":["kılavuz"],"traş":["tıraş"],"eşortman":["eşofman"],"şöför":["şoför"],
+    "süpriz":["sürpriz"],"antreman":["antrenman"],"orjinal":["orijinal"],"malesef":["maalesef"],
+    "müsade":["müsaade"],"deyil":["değil"],"kirbit":["kibrit"],"anfi":["amfi"],"herşey":["her şey"],
+    "birşey":["bir şey"],"bişey":["bir şey"],"hiçbirşey":["hiçbir şey"],"hiçbişey":["hiçbir şey"],
+    "pekçok":["pek çok"],"yada":["ya da"],"şuan":["şu an"],"hoşgeldin":["hoş geldin"],
+    "hoşbulduk":["hoş bulduk"],"peşpeşe":["peş peşe"],"ardarda":["art arda"],"denmee":["deneme"],
+    "dejeme":["deneme"],"tabiki":["tabii ki"],"iyiki":["iyi ki"],"demekki":["demek ki"],
+    "belkide":["belki de"],"naber":["ne haber"],"napıyorsun":["ne yapıyorsun"],"napıyon":["ne yapıyorsun"],
+    "noldu":["ne oldu"],"gelicem":["geleceğim"],"gidicem":["gideceğim"],"yapıcam":["yapacağım"],
+    "yapcam":["yapacağım"],"ediyom":["ediyorum"],"geliyom":["geliyorum"],"gidiyom":["gidiyorum"],
+    "çünki":["çünkü"],"yanlızlık":["yalnızlık"],"yanlızca":["yalnızca"],"her hangi":["herhangi"],
+    "bir kaç":["birkaç"],"hiç bir":["hiçbir"],"bir çok":["birçok"],"şuanki":["şu anki"],
+    "bugünki":["bugünkü"],"dünki":["dünkü"]
+  };
+
+  const INFORMAL_KEYS = new Set(['tmm','naber','napıyorsun','napıyon','noldu','gelicem','gidicem','yapıcam','yapcam','ediyom','geliyom','gidiyom']);
+
+  const INTENT_FORMS = [
+    'nasılsın','nasılsınız','nasılım','iyisin','iyiyim','iyiyiz','iyisiniz','merhaba','görüşürüz',
+    'teşekkürler','teşekkür','tamam','tamamdır','geleceğim','gideceğim','yapacağım','olacağım',
+    'istiyorum','istemiyorum','biliyorum','bilmiyorum','anlıyorum','anlamadım','dünyanın','bugün',
+    'yarın','şimdi','çünkü','değil','mısın','misin','musun','müsün','mısınız','misiniz','musunuz',
+    'müsünüz','oluyor','olmuyor','geliyor','gidiyor','yapıyor','gelecek','gidecek','yapacak'
+  ];
+
+  const BUILTIN_VALID = ['xenforo','minecraft','discord','warext','mc-tr','php','javascript','typescript','css','html','json','github'];
+  for (const word of BUILTIN_VALID) valid.add(word);
+
+  const runtimeValid = new Set();
+  const runtimeIgnored = new Set();
+
+  function setRuntimeLexicon(payload = {}) {
+    runtimeValid.clear();
+    runtimeIgnored.clear();
+    for (const item of [...(payload.adminWords || []), ...(payload.userWords || [])]) {
+      const word = normalize(item);
+      if (word) runtimeValid.add(word);
+    }
+    for (const item of payload.ignoredWords || []) {
+      const word = normalize(item);
+      if (word) runtimeIgnored.add(word);
+    }
+  }
 
   const byFirstLength = new Map();
   const byLength = new Map();
-  const lengthOf = word => chars(word).length;
   for (const word of tdkWords) {
     const c = chars(word);
     if (!c.length) continue;
@@ -55,38 +76,157 @@
     byLength.get(len).push(word);
   }
 
-  const SUFFIXES = [
+  const TURKISH_CHAR_ALTS = {
+    'i':['ı'],'ı':['i'],'g':['ğ'],'ğ':['g'],'s':['ş'],'ş':['s'],'c':['ç'],'ç':['c'],
+    'o':['ö'],'ö':['o'],'u':['ü'],'ü':['u']
+  };
+  const TURKISH_EQUIVALENT_PAIRS = new Set(['iı','ıi','gğ','ğg','sş','şs','cç','çc','oö','öo','uü','üu']);
+  const KEYBOARD_NEIGHBORS = {
+    q:'wa',w:'qeas',e:'wrsd',r:'etdf',t:'ryfg',y:'tuhg',u:'yıjh',ı:'uokj',o:'ıpkl',p:'oğl',
+    ğ:'pü',ü:'ğ',a:'qwsz',s:'awedxz',d:'serfcx',f:'drtgcv',g:'ftyhbv',h:'gyujnb',
+    j:'huıkmn',k:'jıolm',l:'kopş',ş:'l',i:'',z:'asx',x:'zsdc',c:'xdfv',v:'cfgb',b:'vghn',n:'bhjm',m:'njk',
+    ç:'ö',ö:'ç'
+  };
+
+  const HIGH_VOWEL = vowel => {
+    if ('aı'.includes(vowel)) return 'ı';
+    if ('ei'.includes(vowel)) return 'i';
+    if ('ou'.includes(vowel)) return 'u';
+    if ('öü'.includes(vowel)) return 'ü';
+    return '';
+  };
+  const LOW_VOWEL = vowel => 'aıou'.includes(vowel) ? 'a' : ('eiöü'.includes(vowel) ? 'e' : '');
+
+  function lastVowel(word) {
+    const c = chars(normalize(word));
+    for (let i = c.length - 1; i >= 0; i--) if ('aeıioöuü'.includes(c[i])) return c[i];
+    return '';
+  }
+
+  function consonantAlternates(stem) {
+    const out = [stem];
+    const map = { b:'p', c:'ç', d:'t', ğ:'k' };
+    const last = stem.slice(-1);
+    if (map[last]) out.push(stem.slice(0, -1) + map[last]);
+    if (last === 'k') out.push(stem.slice(0, -1) + 'ğ');
+    return [...new Set(out)];
+  }
+
+  const NOUN_SUFFIXES = [
     'lerimizden','larımızdan','lerinizden','larınızdan','lerimiz','larımız','leriniz','larınız',
     'umuzdan','ümüzden','ımızdan','imizden','unuzdan','ünüzden','ınızdan','inizden',
     'umuzda','ümüzde','ımızda','imizde','unuzda','ünüzde','ınızda','inizde',
-    'umuz','ümüz','ımız','imiz','unuz','ünüz','ınız','iniz',
-    'ları','leri','lar','ler','dan','den','tan','ten','dır','dir','dur','dür','tır','tir','tur','tür',
-    'lık','lik','luk','lük','cı','ci','cu','cü','çı','çi','çu','çü','sız','siz','suz','süz',
-    'ım','im','um','üm','ın','in','un','ün','da','de','ta','te','ya','ye','yı','yi','yu','yü',
-    'la','le','lı','li','lu','lü'
-  ].sort((a,b) => chars(b).length - chars(a).length);
+    'larımız','lerimiz','larınız','leriniz','ları','leri','lar','ler',
+    'dan','den','tan','ten','da','de','ta','te','ya','ye','yı','yi','yu','yü',
+    'nı','ni','nu','nü','ın','in','un','ün','nın','nin','nun','nün',
+    'ım','im','um','üm','ımız','imiz','umuz','ümüz','ınız','iniz','unuz','ünüz',
+    'la','le','lı','li','lu','lü','lık','lik','luk','lük','sız','siz','suz','süz',
+    'cı','ci','cu','cü','çı','çi','çu','çü','dır','dir','dur','dür','tır','tir','tur','tür'
+  ].sort((a,b) => b.length - a.length);
 
-  function isLikelyInflected(word) {
-    if (COMMON[word]) return false;
+  const VERB_PERSONAL = [
+    'sınız','siniz','sunuz','sünüz','yız','yiz','yuz','yüz','m','n','k','nız','niz','nuz','nüz'
+  ].sort((a,b)=>b.length-a.length);
+  const VERB_TENSE = [
+    'mayacak','meyecek','acak','ecek','ıyor','iyor','uyor','üyor','mış','miş','muş','müş',
+    'malı','meli','madı','medi','dı','di','du','dü','tı','ti','tu','tü','ar','er','ır','ir','ur','ür','r',
+    'ma','me'
+  ].sort((a,b)=>b.length-a.length);
+
+  function suffixHarmonyOkay(stem, suffix) {
+    const lv = lastVowel(stem);
+    if (!lv) return true;
+    const expectedHigh = HIGH_VOWEL(lv);
+    const expectedLow = LOW_VOWEL(lv);
+    const n = normalize(suffix);
+    const highMatch = n.match(/[ıiuü]/u);
+    if (highMatch && !n.startsWith('ler') && !n.startsWith('lar')) {
+      const hv = highMatch[0];
+      if (['ın','in','un','ün','nın','nin','nun','nün','yı','yi','yu','yü','nı','ni','nu','nü','ım','im','um','üm'].some(x => n.endsWith(x))) {
+        if (hv !== expectedHigh) return false;
+      }
+    }
+    if (['da','de','ta','te','dan','den','tan','ten','la','le','lar','ler'].some(x => n.endsWith(x))) {
+      const lastLow = [...n].reverse().find(ch => ch === 'a' || ch === 'e');
+      if (lastLow && lastLow !== expectedLow) return false;
+    }
+    return true;
+  }
+
+  function baseValid(word) {
+    return tdkSet.has(word) || valid.has(word) || runtimeValid.has(word);
+  }
+
+  function nounInflectionValid(word) {
     const seen = new Set([word]);
     let frontier = [word];
-    for (let depth = 0; depth < 3; depth++) {
+    for (let depth = 0; depth < 4; depth++) {
       const next = [];
       for (const form of frontier) {
-        for (const suffix of SUFFIXES) {
-          if (!form.endsWith(suffix)) continue;
+        for (const suffix of NOUN_SUFFIXES) {
+          if (!form.endsWith(suffix) || form.length <= suffix.length + 1) continue;
           const stem = form.slice(0, -suffix.length);
-          if (chars(stem).length < 3 || seen.has(stem)) continue;
-          if (COMMON[stem]) continue;
-          if (valid.has(stem)) return true;
-          seen.add(stem);
-          next.push(stem);
+          if (!suffixHarmonyOkay(stem, suffix)) continue;
+          for (const candidate of consonantAlternates(stem)) {
+            if (baseValid(candidate)) return true;
+            if (!seen.has(candidate) && candidate.length >= 3) {
+              seen.add(candidate);
+              next.push(candidate);
+            }
+          }
         }
       }
       frontier = next;
       if (!frontier.length) break;
     }
     return false;
+  }
+
+  function verbStemCandidates(word) {
+    const out = new Set();
+    const push = value => {
+      if (!value || value.length < 2) return;
+      out.add(value);
+      for (const alt of consonantAlternates(value)) out.add(alt);
+    };
+    push(word);
+    for (const person of VERB_PERSONAL) {
+      if (word.endsWith(person) && word.length > person.length + 2) push(word.slice(0, -person.length));
+    }
+    const snapshot = [...out];
+    for (const form of snapshot) {
+      for (const tense of VERB_TENSE) {
+        if (!form.endsWith(tense) || form.length <= tense.length + 1) continue;
+        const stem = form.slice(0, -tense.length);
+        push(stem);
+        if (/^[ae]$/u.test(stem.slice(-1)) && stem.length > 2) push(stem.slice(0,-1));
+      }
+    }
+    return [...out];
+  }
+
+  function verbInflectionValid(word) {
+    for (const stem of verbStemCandidates(word)) {
+      if (baseValid(stem)) return true;
+      if (stem.endsWith('d') && baseValid(stem.slice(0,-1)+'t')) return true;
+      if (stem.endsWith('ğ') && baseValid(stem.slice(0,-1)+'k')) return true;
+    }
+    return false;
+  }
+
+  function isLikelyInflected(word) {
+    if (!word || COMMON[word]) return false;
+    return nounInflectionValid(word) || verbInflectionValid(word);
+  }
+
+  function isFiniteVerb(word) {
+    const n = normalize(word);
+    if (!n) return false;
+    if (/(?:ıyor|iyor|uyor|üyor)(?:um|üm|sun|sün|uz|üz|lar|ler)?$/u.test(n)) return true;
+    if (/(?:acak|ecek)(?:ım|im|sın|sin|ız|iz|lar|ler)?$/u.test(n)) return true;
+    if (/(?:dı|di|du|dü|tı|ti|tu|tü|mış|miş|muş|müş)(?:m|n|k|nız|niz|lar|ler)?$/u.test(n)) return true;
+    if (/(?:malı|meli)(?:yım|yim|sın|sin|yız|yiz|lar|ler)?$/u.test(n)) return true;
+    return verbInflectionValid(n);
   }
 
   function damerau(a, b, maxDistance = 3) {
@@ -100,15 +240,10 @@
       let rowMin = cur[0];
       for (let j = 1; j <= m; j++) {
         const cost = A[i - 1] === B[j - 1] ? 0 : 1;
-        let v = Math.min(
-          cur[j - 1] + 1,
-          prev[j] + 1,
-          prev[j - 1] + cost
-        );
-        if (prev2 && i > 1 && j > 1 && A[i - 1] === B[j - 2] && A[i - 2] === B[j - 1])
-          v = Math.min(v, prev2[j - 2] + 1);
-        cur[j] = v;
-        if (v < rowMin) rowMin = v;
+        let value = Math.min(cur[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+        if (prev2 && i > 1 && j > 1 && A[i - 1] === B[j - 2] && A[i - 2] === B[j - 1]) value = Math.min(value, prev2[j - 2] + 1);
+        cur[j] = value;
+        rowMin = Math.min(rowMin, value);
       }
       if (rowMin > maxDistance) return maxDistance + 1;
       prev2 = prev;
@@ -124,106 +259,85 @@
     return i;
   }
 
-  function orthographicValidVariants(word, limit = 8) {
-    const source = chars(word);
-    const positions = [];
-    for (let i = 0; i < source.length; i++) {
-      const alts = TURKISH_CHAR_ALTS[source[i]];
-      if (alts?.length) positions.push([i, alts]);
-    }
-
-    const exact = [];
-    const intent = [];
-    const morphological = [];
-    const seen = new Set();
-    const intentSet = new Set(INTENT_FORMS);
-    const pushIfValid = candidateChars => {
-      const candidate = candidateChars.join('');
-      if (candidate === word || seen.has(candidate)) return;
-      seen.add(candidate);
-      if (valid.has(candidate)) exact.push(candidate);
-      else if (intentSet.has(candidate) && isLikelyInflected(candidate)) intent.push(candidate);
-      else if (isLikelyInflected(candidate)) morphological.push(candidate);
-    };
-
-    for (const [index, alts] of positions) {
-      for (const alt of alts) {
-        const copy = source.slice();
-        copy[index] = alt;
-        pushIfValid(copy);
-      }
-    }
-
-    if (source.length <= 16 && positions.length <= 10) {
-      for (let a = 0; a < positions.length; a++) {
-        for (let b = a + 1; b < positions.length; b++) {
-          const [ia, aa] = positions[a];
-          const [ib, ab] = positions[b];
-          for (const va of aa) for (const vb of ab) {
-            const copy = source.slice();
-            copy[ia] = va;
-            copy[ib] = vb;
-            pushIfValid(copy);
-          }
-        }
-      }
-    }
-
-    return [...exact, ...intent, ...morphological].slice(0, limit);
-  }
-
   function substitutionCost(a, b) {
     if (a === b) return 0;
-    if (TURKISH_EQUIVALENT_PAIRS.has(`${a}${b}`)) return 0.28;
-    const pair = `${a}${b}`;
-    if (['gs','sg','ğs','sğ','lk','kl','nm','mn','io','oi','ıi','iı'].includes(pair)) return 0.78;
+    if (TURKISH_EQUIVALENT_PAIRS.has(`${a}${b}`)) return 0.22;
+    if ((KEYBOARD_NEIGHBORS[a] || '').includes(b)) return 0.52;
+    if ((a === 'ğ' && b === 'g') || (a === 'g' && b === 'ğ')) return 0.2;
     return 1;
   }
 
-  function weightedDistance(a, b, maxDistance = 2.6) {
+  function weightedDistance(a, b, maxDistance = 3) {
     const A = chars(a), B = chars(b);
-    if (Math.abs(A.length - B.length) > 2) return maxDistance + 1;
+    if (Math.abs(A.length - B.length) > 3) return maxDistance + 1;
     let prev2 = null;
     let prev = Array.from({length: B.length + 1}, (_, i) => i);
     for (let i = 1; i <= A.length; i++) {
       const cur = [i];
       let rowMin = cur[0];
       for (let j = 1; j <= B.length; j++) {
-        const sub = substitutionCost(A[i - 1], B[j - 1]);
-        let value = Math.min(cur[j - 1] + 1, prev[j] + 1, prev[j - 1] + sub);
-        if (prev2 && i > 1 && j > 1 && A[i - 1] === B[j - 2] && A[i - 2] === B[j - 1]) {
-          value = Math.min(value, prev2[j - 2] + 0.85);
-        }
+        let value = Math.min(
+          cur[j - 1] + 0.95,
+          prev[j] + 0.95,
+          prev[j - 1] + substitutionCost(A[i - 1], B[j - 1])
+        );
+        if (prev2 && i > 1 && j > 1 && A[i - 1] === B[j - 2] && A[i - 2] === B[j - 1]) value = Math.min(value, prev2[j - 2] + 0.65);
         cur[j] = value;
-        if (value < rowMin) rowMin = value;
+        rowMin = Math.min(rowMin, value);
       }
-      if (rowMin > maxDistance + 0.75) return maxDistance + 1;
+      if (rowMin > maxDistance + 1) return maxDistance + 1;
       prev2 = prev;
       prev = cur;
     }
     return prev[B.length];
   }
 
+  function orthographicValidVariants(word, limit = 8) {
+    const source = chars(word);
+    const positions = [];
+    for (let i = 0; i < source.length; i++) if (TURKISH_CHAR_ALTS[source[i]]?.length) positions.push([i, TURKISH_CHAR_ALTS[source[i]]]);
+    const out = [];
+    const seen = new Set();
+    const push = candidateChars => {
+      const candidate = candidateChars.join('');
+      if (candidate === word || seen.has(candidate)) return;
+      seen.add(candidate);
+      if (tdkSet.has(candidate) || runtimeValid.has(candidate) || isLikelyInflected(candidate)) out.push(candidate);
+    };
+    for (const [index, alts] of positions) {
+      for (const alt of alts) {
+        const copy = source.slice();
+        copy[index] = alt;
+        push(copy);
+      }
+    }
+    if (source.length <= 18 && positions.length <= 9) {
+      for (let a = 0; a < positions.length; a++) {
+        for (let b = a + 1; b < positions.length; b++) {
+          const [ia, aa] = positions[a], [ib, ab] = positions[b];
+          for (const va of aa) for (const vb of ab) {
+            const copy = source.slice();
+            copy[ia] = va;
+            copy[ib] = vb;
+            push(copy);
+          }
+        }
+      }
+    }
+    return out.slice(0, limit);
+  }
+
   function intentSuggestions(word, limit = 3) {
     const scored = [];
     const len = chars(word).length;
-    const threshold = len <= 4 ? 1.35 : (len <= 7 ? 2.15 : 2.6);
+    const threshold = len <= 4 ? 1.35 : (len <= 7 ? 2.15 : 2.8);
     for (const candidate of INTENT_FORMS) {
-      if (candidate === word) continue;
-      if (Math.abs(chars(candidate).length - len) > 2) continue;
+      if (candidate === word || Math.abs(chars(candidate).length - len) > 3) continue;
       const distance = weightedDistance(word, candidate, threshold);
       if (distance > threshold) continue;
       const prefix = commonPrefix(word, candidate);
-      const score = distance * 100 - prefix * 7 + Math.abs(chars(candidate).length - len) * 5;
-      scored.push([score, candidate]);
+      scored.push([distance * 100 - prefix * 8 + Math.abs(chars(candidate).length - len) * 5, candidate]);
     }
     scored.sort((a,b) => a[0] - b[0] || a[1].localeCompare(b[1], 'tr'));
     return scored.slice(0, limit).map(item => item[1]);
   }
-
-  function findSuggestions(word, limit = 3, preferred = []) {
-    const result = [];
-    const seen = new Set();
-    for (const item of preferred) {
-      const normalizedItem = normalize(item);
-      if (!normalizedItem 
