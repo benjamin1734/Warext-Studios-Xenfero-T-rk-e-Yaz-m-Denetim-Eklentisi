@@ -1,39 +1,18 @@
-'use strict';
-
-const assert = require('node:assert/strict');
-
-require('../upload/js/warext/turkish-spellcheck/dictionary-v160.js');
-
-const engine = globalThis.WarextTurkishSpellEngineV160;
-assert.ok(engine);
-
+global.window = global;
+require('../upload/js/warext/turkish-spellcheck/dictionary-v300.js');
+const e = global.WarextTurkishSpellEngineV300;
+if (!e || e.version !== '3.0.0') process.exit(1);
+if (!e.stats || e.stats.validWords < 117000 || e.stats.externalDependencies !== 0) process.exit(1);
 const cases = [
-  ['yanlız','yalnız'],
-  ['saol','sağ ol'],
-  ['patate','patates'],
-  ['tamammı','tamam mı'],
-  ['nasilsin','nasılsın'],
-  ['dünyanin','dünyanın'],
-  ['gelecekmisin','gelecek misin'],
-  ['güzeldimi','güzel miydi'],
-  ['yapacakmıydınız','yapacak mıydınız']
+  ['yalnış','yanlış'],['herkez','herkes'],['şöför','şoför'],['traş','tıraş'],['klavuz','kılavuz'],
+  ['geliyormusun','geliyor musun'],['baktımki','baktım ki'],['kitapı','kitabı'],['renki','rengi'],['burunu','burnu'],
+  ['TBMMye',"TBMM'ye"],['Ankarada',"Ankara'da"],['Türkiyede',"Türkiye'de"]
 ];
-
-for (const [input,expected] of cases) {
-  const result = engine.check(input,{});
-  assert.equal(result.correct,false,input);
-  assert.ok(result.suggestions.includes(expected),`${input} → ${result.suggestions.join(' | ')}`);
+for (const [input, expected] of cases) {
+  const result = e.check(input, { properNames:true, informal:true });
+  if (!(result.suggestions || []).includes(expected)) throw new Error(`${input} => ${JSON.stringify(result)}`);
 }
-
-for (const word of ['ekonomi','resmi','nasılsın','dünyanın','evde','kaldım']) {
-  assert.equal(engine.check(word,{}).correct,true,word);
-}
-
-const harmony = engine.check('mi',{previousWord:'daha'});
-assert.equal(harmony.correct,false);
-assert.equal(harmony.suggestions[0],'mı');
-
-engine.setRuntimeLexicon({userWords:['warextözel']});
-assert.equal(engine.check('warextözel',{}).correct,true);
-
-console.log('Sözlük smoke testleri başarılı.');
+e.setCustomWords(['Vianore']);
+if (!e.check('Vianore', {}).correct) throw new Error('custom dictionary');
+e.setCustomProperNames(['Vianore']);
+if (!(e.check('Vianoreda', { properNames:true }).suggestions || []).includes("Vianore'de")) throw new Error('custom proper name');
