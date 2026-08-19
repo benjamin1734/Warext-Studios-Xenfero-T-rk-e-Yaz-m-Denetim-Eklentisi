@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template_modifications>
+  <modification type="public" template="PAGE_CONTAINER" modification_key="warext_turkish_spellcheck_global_bootstrap_v142" description="Globally bootstraps Warext Turkish spell checker when an editor is present" execution_order="900" enabled="1" action="str_replace">
+    <find><![CDATA[</body>]]></find>
+    <replace><![CDATA[<script src="{{ base_url('js/warext/turkish-spellcheck/bootstrap-v142.js') }}"></script>
+$0]]></replace>
+  </modification>
+  <modification type="public" template="editor" modification_key="warext_turkish_spellcheck_editor_loader" description="Backup loader for Warext Turkish spell checker" execution_order="100" enabled="1" action="str_replace">
+    <find><![CDATA[<!--[XF:include_js]-->]]></find>
+    <replace><![CDATA[$0
+<script src="{{ base_url('js/warext/turkish-spellcheck/bootstrap-v142.js') }}"></script>]]></replace>
+  </modification>
+</template_modifications>
