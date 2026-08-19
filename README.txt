@@ -1,6 +1,6 @@
-Warext Turkish Spell Check 3.0.0
+Warext Turkish Spell Check 3.1.0
 
-Sürüm durumu: Nihai
+Sürüm durumu: Kararlı
 
 Kurulum:
 1. ZIP dosyasını XenForo ACP > Add-ons > Install/upgrade from archive alanından yükleyin.
@@ -18,6 +18,14 @@ Kurulum:
 - URL, e-posta, kullanıcı adı, domain, IP, dosya yolu ve kod bloklarını hariç tutma
 - 1-3 arası ayarlanabilir akıllı öneri
 - Zengin editörde hata altı çizimi
+- Uzun mesaj ve paragrafların tamamını arka planda cümle cümle tarama
+- Önceki ve sonraki cümleyi bağlam olarak analize aktarma
+- Değişmeyen cümleleri tekrar hesaplamadan önbellekten kullanma
+- Değişen cümle ve komşu bağlamını otomatik yeniden analiz etme
+- 1.800 karakteri aşan tek cümleleri güvenli parçalara ayırma
+- 8.000+ karakter ve yüzlerce cümle için dağıtılmış boşta-zaman taraması
+- Uzun metindeki tüm tespitleri zengin editörde işaretleme
+- ACP üzerinden uzun metin taraması, karakter eşiği ve maksimum tespit sayısı ayarları
 - Kullanıcının tarayıcısında kalıcı kişisel sözlük ve sözlük yönetimi
 - Oturumluk yok sayma
 - ACP üzerinden gramer, noktalama, özel ad, günlük yazım, alt çizgi ve öneri sayısı ayarları
