@@ -1,0 +1,204 @@
+    return text.slice(sentenceStart, tokenStart).trim() === '';
+  }
+
+  function directPunctuationIssue(el, state) {
+    const text = state.text;
+    const caret = state.caret;
+    const before = text.slice(0, caret);
+    let m;
+
+    m = before.match(new RegExp(`([${LETTERS}]{2,})\\s+([,;:.!?])$`, 'u'));
+    if (m) {
+      const raw = m[0];
+      return makeContext(el, state, caret - raw.length, caret, {
+        word: raw,
+        directSuggestions: [`${m[1]}${m[2]}`],
+        compareKey: raw,
+        rule: 'punctuation-space-before'
+      });
+    }
+
+    m = before.match(/([!?;,:])\1+$/u);
+    if (m) {
+      return makeContext(el, state, caret - m[0].length, caret, {
+        word: m[0], directSuggestions: [m[1]], compareKey: m[0], rule: 'punctuation-repeat'
+      });
+    }
+
+    m = before.match(/\.{2,}$/u);
+    if (m && m[0] !== '...') {
+      return makeContext(el, state, caret - m[0].length, caret, {
+        word: m[0], directSuggestions: [m[0].length === 2 ? '.' : '...'], compareKey: m[0], rule: 'ellipsis-normalization'
+      });
+    }
+
+    m = before.match(new RegExp(`([,;:!?])([${LETTERS}]{2,})$`, 'u'));
+    if (m) {
+      return makeContext(el, state, caret - m[0].length, caret, {
+        word: m[0], directSuggestions: [`${m[1]} ${m[2]}`], compareKey: m[0], rule: 'punctuation-space-after'
+      });
+    }
+
+    m = before.match(new RegExp(`([${LETTERS}]{2,})\\s+\\1$`, 'iu'));
+    if (m) {
+      return makeContext(el, state, caret - m[0].length, caret, {
+        word: m[0], directSuggestions: [m[1]], compareKey: normalize(m[0]), rule: 'duplicate-word'
+      });
+    }
+
+    return null;
+  }
+
+  function harmonyVowel(word) {
+    const n = normalize(word);
+    let last = '';
+    for (let i = n.length - 1; i >= 0; i--) {
+      if ('aeıioöuü'.includes(n[i])) { last = n[i]; break; }
+    }
+    if ('aı'.includes(last)) return 'ı';
+    if ('ei'.includes(last)) return 'i';
+    if ('ou'.includes(last)) return 'u';
+    if ('öü'.includes(last)) return 'ü';
+    return '';
+  }
+
+  function genitiveCandidate(word) {
+    const vowel = harmonyVowel(word);
+    if (!vowel) return '';
+    const lower = normalize(word);
+    if (/(?:n?[ıiuü]n)$/u.test(lower)) return '';
+    const endsVowel = /[aeıioöuü]$/u.test(lower);
+    return word + (endsVowel ? `n${vowel}n` : `${vowel}n`);
+  }
+
+  function contextualGrammarIssue(el, state, token, bounds) {
+    const localEngine = engine();
+    if (!localEngine) return null;
+
+    const following = state.text.slice(token.end, bounds.end);
+    const enPattern = new RegExp(`^\\s+en\\s+[${LETTERS}]{2,}\\s+(?:günü|günüdür|günüydü)(?=\\s|[.!?,;:]|$)`, 'iu');
+    if (enPattern.test(following)) {
+      const candidate = genitiveCandidate(token.word);
+      if (candidate && localEngine.isValid?.(candidate)) {
+        const cased = token.word[0] !== normalize(token.word[0]) ? capitalizeTurkish(candidate) : candidate;
+        return makeContext(el, state, token.start, token.end, {
+          word: token.word,
+          directSuggestions: [cased],
+          compareKey: `${token.start}:${token.end}:${token.word}`,
+          rule: 'context-genitive'
+        });
+      }
+    }
+
+    return null;
+  }
+
+  function checkToken(el, state, token, bounds) {
+    const localEngine = engine();
+    if (!localEngine || typeof localEngine.check !== 'function') return { error: true };
+    if (ignoredWords.has(normalize(token.word))) return { context: null, result: { correct: true, provider: 'session-ignore' } };
+    const prev = previousToken(state.text, token, bounds.start, state.protectedRanges);
+    const sentenceStart = isSentenceStart(state.text, token.start, bounds.start);
+    const result = cachedCheck(token.word, {
+      previousWord: prev?.word || '',
+      sentenceStart,
+      before: state.text.slice(0, token.end),
+      properNames: cfg.properNames,
+      informal: cfg.informal
+    });
+
+    if (result?.correct) {
+      const grammar = cfg.grammar ? contextualGrammarIssue(el, state, token, bounds) : null;
+      if (grammar) return { context: grammar, result: null };
+      return { context: null, result };
+    }
+
+    const context = makeContext(el, state, token.start, token.end, {
+      word: token.word,
+      previousWord: prev?.word || '',
+      sentenceStart,
+      compareKey: `${token.start}:${token.end}:${normalize(token.word)}`,
+      rule: 'word'
+    });
+    return { context, result };
+  }
+
+  function collectSentenceIssues(el, state, bounds, activeToken, limit = 3) {
+    const localEngine = engine();
+    if (!localEngine || typeof localEngine.check !== 'function') return { error: true, issues: [] };
+
+    const issues = [];
+    const signatures = new Set();
+    const addIssue = issue => {
+      if (!issue?.context || issues.length >= limit) return;
+      const signature = `${issue.context.rule || ''}:${issue.context.start ?? ''}:${issue.context.end ?? ''}:${issue.context.word || ''}`;
+      if (signatures.has(signature)) return;
+      signatures.add(signature);
+      issues.push(issue);
+    };
+
+    const sentenceText = state.text.slice(bounds.start, bounds.end);
+    const localProtected = (state.protectedRanges || []).map(range => ({
+      start: Math.max(0, range.start - bounds.start),
+      end: Math.min(sentenceText.length, range.end - bounds.start)
+    })).filter(range => range.end > 0 && range.start < sentenceText.length && range.end > range.start);
+    const analysisText = maskProtectedText(sentenceText, localProtected);
+    let m;
+
+    if (cfg.grammar && typeof localEngine.analyzeSentence === 'function') {
+      const languageIssues = localEngine.analyzeSentence(analysisText, { properNames: cfg.properNames, punctuation: cfg.punctuation }) || [];
+      for (const issue of languageIssues) {
+        if (!cfg.punctuation && /^(?:multi-space|sentence-space-after-period|punctuation-|ellipsis-|sentence-terminal)/u.test(issue.rule || '')) continue;
+        if (!cfg.properNames && /^(?:proper-|proper-name)/u.test(issue.rule || '')) continue;
+        if (issues.length >= limit) break;
+        const start = bounds.start + Math.max(0, Number(issue.start) || 0);
+        const end = bounds.start + Math.max(Number(issue.end) || 0, Number(issue.start) || 0);
+        const suggestions = Array.isArray(issue.suggestions) ? issue.suggestions.filter(Boolean).slice(0,3) : [];
+        if (!suggestions.length) continue;
+        addIssue({ context: makeContext(el, state, start, end, {
+          word: state.text.slice(start, end), directSuggestions: suggestions,
+          compareKey: `lang:${issue.rule || 'rule'}:${start}:${end}`, rule: issue.rule || 'language-rule'
+        }), result: null });
+      }
+    }
+
+    const beforeRe = new RegExp(`([${LETTERS}]{2,})\\s+([,;:.!?])`, 'gu');
+    while (beforeRe && (m = beforeRe.exec(analysisText)) && issues.length < limit) {
+      const start = bounds.start + m.index;
+      addIssue({ context: makeContext(el, state, start, start + m[0].length, {
+        word: m[0], directSuggestions: [`${m[1]}${m[2]}`], compareKey: `p:${start}`, rule: 'punctuation-space-before'
+      }), result: null });
+    }
+
+    const afterRe = cfg.punctuation ? new RegExp(`([,;:!?])([${LETTERS}]{2,})`, 'gu') : null;
+    while (afterRe && (m = afterRe.exec(analysisText)) && issues.length < limit) {
+      const start = bounds.start + m.index;
+      addIssue({ context: makeContext(el, state, start, start + m[0].length, {
+        word: m[0], directSuggestions: [`${m[1]} ${m[2]}`], compareKey: `p:${start}`, rule: 'punctuation-space-after'
+      }), result: null });
+    }
+
+    const duplicateRe = new RegExp(`([${LETTERS}]{2,})\\s+\\1(?=\\s|[.!?,;:]|$)`, 'giu');
+    while ((m = duplicateRe.exec(analysisText)) && issues.length < limit) {
+      const start = bounds.start + m.index;
+      addIssue({ context: makeContext(el, state, start, start + m[0].length, {
+        word: m[0], directSuggestions: [m[1]], compareKey: `d:${start}`, rule: 'duplicate-word'
+      }), result: null });
+    }
+
+    const tokens = tokensInRange(state.text, bounds.start, bounds.end, state.protectedRanges);
+    for (const token of tokens) {
+      if (issues.length >= limit) break;
+      if (activeToken && token.start === activeToken.start && token.end === activeToken.end) continue;
+      const checked = checkToken(el, state, token, bounds);
+      if (checked.error) return { error: true, issues: [] };
+      if (checked.context) addIssue(checked);
+    }
+
+    if (cfg.punctuation && issues.length < limit) {
+      const trimmed = sentenceText.trimEnd();
+      const absoluteTrimmedEnd = bounds.start + trimmed.length;
+      const tokenCount = tokens.length;
+      const caretAtSentenceEnd = state.caret >= absoluteTrimmedEnd && bounds.end >= state.text.length;
+      if (tokenCount >= 2 && caretAtSentenceEnd && trimmed && !/[.!?…]$/u.test(trimmed)) {
+        const questionLike = /\b(?:mı|mi|mu|mü|mısın|misin|musun|müsün|mıyım|miyim|muyum|müyüm|mıyız|miyiz|muyuz|müyüz|mısınız|misiniz|musunuz|müsünüz)\b/iu.test(trimmed);
