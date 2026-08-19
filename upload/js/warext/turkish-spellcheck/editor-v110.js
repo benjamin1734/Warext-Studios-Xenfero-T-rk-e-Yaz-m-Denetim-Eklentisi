@@ -1,10 +1,10 @@
 (() => {
   'use strict';
 
-  if (window.__warextTurkishSpellCheckV300) return;
-  window.__warextTurkishSpellCheckV300 = true;
+  if (window.__warextTurkishSpellCheckV110) return;
+  window.__warextTurkishSpellCheckV110 = true;
 
-  const VERSION = '3.0.0';
+  const VERSION = '1.1.0';
   const states = new WeakMap();
   const stateList = new Set();
   const boolValue = (value, fallback = true) => value == null || value === '' ? fallback : !['0','false','off','no'].includes(String(value).toLowerCase());
@@ -19,6 +19,7 @@
       underline: boolValue(data.underline),
       properNames: boolValue(data.properNames),
       informal: boolValue(data.informal),
+      deepContext: boolValue(data.deepContext),
       maxSuggestions: Math.max(1, Math.min(3, Number(data.maxSuggestions || 3))),
       adminWords: splitConfig(document.getElementById('wtsc-custom-words')?.textContent),
       customProperNames: splitConfig(document.getElementById('wtsc-custom-proper-names')?.textContent)
@@ -32,8 +33,8 @@
   document.documentElement.dataset.wtscVersion = VERSION;
 
   const uid = window.XF?.config?.userId ?? window.XF?.config?.user_id ?? 'guest';
-  const CUSTOM_DICTIONARY_KEY = `warextSpellCustomV300:${location.host}:${uid}`;
-  const IGNORED_KEY = `warextSpellIgnoredV300:${location.host}:${uid}`;
+  const CUSTOM_DICTIONARY_KEY = `warextSpellCustomV110:${location.host}:${uid}`;
+  const IGNORED_KEY = `warextSpellIgnoredV110:${location.host}:${uid}`;
   const ignoredWords = new Set();
   const checkCache = new Map();
   let customWords = new Set();
@@ -101,10 +102,10 @@
   }
 
   function dictionaryDialog(el) {
-    let dialog = document.getElementById('wtsc-dictionary-dialog-v300');
+    let dialog = document.getElementById('wtsc-dictionary-dialog-v110');
     if (!dialog) {
       dialog = document.createElement('dialog');
-      dialog.id = 'wtsc-dictionary-dialog-v300';
+      dialog.id = 'wtsc-dictionary-dialog-v110';
       dialog.className = 'wtsc-dialog';
       document.body.appendChild(dialog);
     }
@@ -153,7 +154,7 @@
   function cachedCheck(rawWord, context) {
     const localEngine = engine();
     if (!localEngine?.check) return null;
-    const key = `${rawWord}\u0000${context?.previousWord || ''}\u0000${context?.sentenceStart ? 1 : 0}\u0000${cfg.properNames ? 1 : 0}\u0000${cfg.informal ? 1 : 0}`;
+    const key = `${rawWord}\u0000${context?.previousWord || ''}\u0000${context?.sentenceStart ? 1 : 0}\u0000${cfg.properNames ? 1 : 0}\u0000${cfg.informal ? 1 : 0}\u0000${String(context?.previousSentence || '').slice(-96)}\u0000${String(context?.nextSentence || '').slice(0,96)}`;
     if (checkCache.has(key)) return checkCache.get(key);
     const result = localEngine.check(rawWord, context || {});
     checkCache.set(key, result);
@@ -170,13 +171,13 @@
   }
 
   function engine() {
-    return window.WarextTurkishSpellEngineV300 || null;
+    return window.WarextTurkishSpellEngineV110 || null;
   }
 
   function installStyle() {
-    if (document.getElementById('wtsc-style-v300')) return;
+    if (document.getElementById('wtsc-style-v110')) return;
     const style = document.createElement('style');
-    style.id = 'wtsc-style-v300';
+    style.id = 'wtsc-style-v110';
     style.textContent = `
       .wtsc-suggestions{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:7px 0 3px;width:100%;box-sizing:border-box}
       .wtsc-suggestions.is-active{display:grid}
@@ -189,7 +190,7 @@
       .wtsc-dialog{border:1px solid rgba(127,127,127,.35);border-radius:10px;padding:0;max-width:min(520px,92vw);width:100%;color:inherit;background:Canvas}
       .wtsc-dialog::backdrop{background:rgba(0,0,0,.35)}
       .wtsc-row{display:flex;justify-content:space-between;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(127,127,127,.14)}
-      ::highlight(wtsc-v300){text-decoration:underline wavy #d33}
+      ::highlight(wtsc-v110){text-decoration:underline wavy #d33}
       @media (max-width:650px){.wtsc-suggestion{padding:8px 6px;font-size:12px}.wtsc-actions{justify-content:center}}
     `;
     document.head.appendChild(style);
@@ -234,6 +235,8 @@
   }
 
   function textualProtectedRanges(text) {
+    const shared = window.WarextTextCoreV110;
+    if (shared?.protectedRanges) return shared.protectedRanges(text);
     const ranges = [];
     const addMatches = re => {
       re.lastIndex = 0;
@@ -432,6 +435,20 @@
     return { start, end };
   }
 
+  function neighborSentences(state, bounds) {
+    if (!cfg.deepContext) return { previousSentence:'', nextSentence:'' };
+    const shared = window.WarextTextCoreV110;
+    if (!shared?.sentenceSegments) return { previousSentence:'', nextSentence:'' };
+    const segments = shared.sentenceSegments(state.text, state.protectedRanges || []);
+    const index = segments.findIndex(segment => segment.start <= bounds.start && segment.end >= bounds.end);
+    if (index < 0) {
+      const nearest = segments.findIndex(segment => bounds.start >= segment.start && bounds.start <= segment.end);
+      if (nearest < 0) return { previousSentence:'', nextSentence:'' };
+      return { previousSentence:segments[nearest - 1]?.text || '', nextSentence:segments[nearest + 1]?.text || '' };
+    }
+    return { previousSentence:segments[index - 1]?.text || '', nextSentence:segments[index + 1]?.text || '' };
+  }
+
   function tokensInRange(text, start, end, protectedRanges = []) {
     const out = [];
     const part = text.slice(start, end);
@@ -553,10 +570,13 @@
     if (ignoredWords.has(normalize(token.word))) return { context: null, result: { correct: true, provider: 'session-ignore' } };
     const prev = previousToken(state.text, token, bounds.start, state.protectedRanges);
     const sentenceStart = isSentenceStart(state.text, token.start, bounds.start);
+    const neighbors = neighborSentences(state, bounds);
     const result = cachedCheck(token.word, {
       previousWord: prev?.word || '',
       sentenceStart,
       before: state.text.slice(0, token.end),
+      previousSentence: neighbors.previousSentence,
+      nextSentence: neighbors.nextSentence,
       properNames: cfg.properNames,
       informal: cfg.informal
     });
@@ -600,7 +620,8 @@
     let m;
 
     if (cfg.grammar && typeof localEngine.analyzeSentence === 'function') {
-      const languageIssues = localEngine.analyzeSentence(analysisText, { properNames: cfg.properNames, punctuation: cfg.punctuation }) || [];
+      const neighbors = neighborSentences(state, bounds);
+      const languageIssues = localEngine.analyzeSentence(analysisText, { properNames: cfg.properNames, punctuation: cfg.punctuation, previousSentence:neighbors.previousSentence, nextSentence:neighbors.nextSentence, longText:false }) || [];
       for (const issue of languageIssues) {
         if (!cfg.punctuation && /^(?:multi-space|sentence-space-after-period|punctuation-|ellipsis-|sentence-terminal)/u.test(issue.rule || '')) continue;
         if (!cfg.properNames && /^(?:proper-|proper-name)/u.test(issue.rule || '')) continue;
@@ -825,8 +846,8 @@
       }
       ranges.push(...(state.ranges || []));
     }
-    if (ranges.length) CSS.highlights.set('wtsc-v300', new Highlight(...ranges));
-    else CSS.highlights.delete('wtsc-v300');
+    if (ranges.length) CSS.highlights.set('wtsc-v110', new Highlight(...ranges));
+    else CSS.highlights.delete('wtsc-v110');
   }
 
   function markHighlights(state, el, issue) {

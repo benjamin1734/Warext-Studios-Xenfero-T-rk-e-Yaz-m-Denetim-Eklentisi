@@ -1,48 +1,31 @@
-Warext Turkish Spell Check 1.0.0
+Warext Turkish Spell Check 1.1.0
 
-XenForo 2.3+ için tamamen yerel Türkçe yazım ve dilbilgisi denetimi.
+XenForo 2.3.0+ için tamamen yerel Türkçe yazım ve dilbilgisi denetimi.
 
-KURULUM
-1. Warext-SpellCheck-1.0.0.zip dosyasını XenForo ACP üzerinden Install/upgrade from archive alanından yükleyin.
-2. Eski sürüm kuruluysa aynı arşiv ile doğrudan yükseltin.
-3. Ek SQL içe aktarma gerekmez.
+Kurulum
+1. XenForo yönetim panelinde Add-ons bölümünü açın.
+2. Warext-SpellCheck-1.1.0.zip dosyasını arşivden yükleyin.
+3. Eklentiyi kurun veya mevcut Warext Turkish Spell Check kurulumunu yükseltin.
+4. Setup > Options > Warext Türkçe Yazım Denetimi bölümünden ayarları yönetin.
 
-YEREL ÇALIŞMA
-- Harici API yok.
-- Docker yok.
-- Python çalışma zamanı yok.
-- Model sunucusu yok.
-- fetch/XHR/WebSocket tabanlı dış servis çağrısı yok.
-- Düzeltmeler otomatik uygulanmaz; kullanıcı öneriyi seçer.
+1.1.0
+- Açık kaynak TDK ve TDD Hunspell kaynakları build aşamasında birleştirilir.
+- Hunspell .aff kuralları çalışma zamanına taşınmadan build aşamasında sınırlı ve doğrulanmış biçimde genişletilir; oluşan kelime/form havuzu tamamen yerel JS sözlüğüne derlenir.
+- Bileşik zamanlı fiiller için yerel morfoloji eklendi: geliyordum, geliyormuşsun, geliyorsanız, gelmeliydim, gelseydim ve benzeri yapılar çözümlenir.
+- Bileşik zamanlarda ben/sen/biz/siz kişi uyumu denetlenir.
+- Zaman bağlamı artık sabit birkaç fiil listesiyle sınırlı değildir; çözümlenebilen düzenli fiillerde kökten geçmiş/gelecek çekimi üretilebilir.
+- Soru eki denetimi genişletildi: geliyormusun, gelecekmiydin, güzelsinmi gibi birleşik yapılar ayrılır ve ses uyumu düzeltilir.
+- Ülke, kurum ve teknoloji özel adları genişletildi; kesme işareti ve ek uyumu denetlenir.
+- Teknik içerik koruması URL, domain, e-posta, IPv4/IPv6, MAC, UUID, hash, sürüm, tarih/saat, dosya yolu, CLI, ortam değişkeni, dotfile, kod sembolü, BBCode, HTML, Markdown, mention, hashtag ve emoji alanlarını kapsar.
+- Büyük mesajlar cümle cümle boş zamanda taranır; önceki/sonraki cümle bağlamı ve değişmeyen cümle önbelleği kullanılır.
+- Cümle başı büyük harf, noktalama çevresi boşlukları, tekrar eden kelimeler ve soru cümlesi sonlandırması genişletildi.
+- Kullanıcı yazarken otomatik düzeltme yapılmaz; en fazla 3 öneriden birini kullanıcı seçer.
+- Kişisel sözlük, oturumluk yok sayma, forum özel sözlüğü ve forum özel isim listesi korunur.
+- Çalışma zamanında harici API, Docker, Python, model sunucusu, fetch/XHR/WebSocket veya başka bir dış servis yoktur.
+- Diğer eklenti arşivinden kod, regex, sözlük, veri dosyası veya kural alınmamıştır.
 
-DİL MOTORU
-- 117.000+ yerel kelime ve form tabanı.
-- Çok aşamalı Türkçe morfoloji.
-- Ek zinciri, ses olayları, fiilimsi ve türetim kontrolleri.
-- de/da, ki, mı/mi/mu/mü ve birleşik-ayrı yazım denetimi.
-- Özne-yüklem kişi ve zaman uyumu.
-- 23 yaygın fiil ailesinde kişi duyarlı geçmiş/gelecek zaman bağlamı.
-- Özel ad, 81 il, kısaltma ve sayı eki denetimi.
-- 50+ teknik kısaltma ve teknoloji adında Türkçe ek/kesme denetimi.
-- Türkçe Q klavye komşuluğunu hesaba katan öneri sıralaması.
-- En fazla 3 kullanıcı seçilebilir öneri.
+Sürüm
+Görünen ürün sürümü 1.1.0'dır. XenForo dahili version_id değeri 4100070'tir.
 
-UZUN METİN
-- Büyük mesajın tamamını cümlelere bölerek arka planda tarar.
-- Önceki ve sonraki cümleyi bağlam anahtarına dahil eder.
-- Değişmeyen cümleleri önbellekten kullanır.
-- URL, domain, e-posta, IPv4, IPv6, MAC, UUID, hash, sürüm, tarih, saat, Windows/Unix yolu, CLI parametresi, ortam değişkeni, dotfile, kod, BBCode, kullanıcı adı, hashtag ve emoji alanlarını korur.
-
-XENFORO
-- Konu başlığı ve mesaj editörü desteği.
-- Zengin editörde hata altı çizimi.
-- Kişisel sözlük.
-- Oturumluk yok sayma.
-- ACP forum özel sözlüğü ve özel isim listesi.
-- Uzun metin ve bağlam ayarları.
-
-SÜRÜM
-Görünen sürüm: 1.0.0
-XenForo dahili version_id: 4000070
-
-Warext Studios
+SQL
+Ek SQL içe aktarma gerekmez.

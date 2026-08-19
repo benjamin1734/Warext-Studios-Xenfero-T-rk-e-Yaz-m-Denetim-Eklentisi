@@ -1,12 +1,15 @@
 global.window = global;
-require('../upload/js/warext/turkish-spellcheck/dictionary-v300.js');
-const e = global.WarextTurkishSpellEngineV300;
-if (!e || e.version !== '3.0.0') process.exit(1);
+require('../upload/js/warext/turkish-spellcheck/dictionary-v110.js');
+require('../upload/js/warext/turkish-spellcheck/corrections-v110.js');
+require('../upload/js/warext/turkish-spellcheck/language-v110.js');
+const e = global.WarextTurkishSpellEngineV110;
+if (!e || e.version !== '1.1.0') process.exit(1);
 if (!e.stats || e.stats.validWords < 117000 || e.stats.externalDependencies !== 0) process.exit(1);
+if (process.env.WAREXT_FULL_BUILD === '1' && (e.stats.validWords < 250000 || e.stats.hunspellDerivedWords < 150000 || e.stats.affixRules < 1000)) throw new Error(`genişletilmiş sözlük istatistikleri: ${JSON.stringify(e.stats)}`);
 const cases = [
   ['yalnış','yanlış'],['herkez','herkes'],['şöför','şoför'],['traş','tıraş'],['klavuz','kılavuz'],
   ['geliyormusun','geliyor musun'],['baktımki','baktım ki'],['kitapı','kitabı'],['renki','rengi'],['burunu','burnu'],
-  ['TBMMye',"TBMM'ye"],['Ankarada',"Ankara'da"],['Türkiyede',"Türkiye'de"]
+  ['TBMMye',"TBMM'ye"],['Ankarada',"Ankara'da"],['Türkiyede',"Türkiye'de"],['APIye',"API'ye"],['JSONda',"JSON'da"]
 ];
 for (const [input, expected] of cases) {
   const result = e.check(input, { properNames:true, informal:true });

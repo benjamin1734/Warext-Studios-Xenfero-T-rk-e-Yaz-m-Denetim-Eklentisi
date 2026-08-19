@@ -1,16 +1,9 @@
 # Değişiklik Geçmişi
 
+## 1.1.0
+
+Hunspell `.aff` kurallarını build aşamasında yerel form havuzuna dönüştüren sözlük genişletme katmanı eklendi. Bileşik zaman morfolojisi, bileşik kişi uyumu, kök tabanlı zaman bağlam düzeltmesi, genişletilmiş soru eki çözümleme, ülke/kurum/teknoloji özel adları, noktalama ve uzun metin bağlam denetimi geliştirildi. Çalışma zamanı harici bağımlılığı sıfır olarak korunur.
+
 ## 1.0.0
 
-- Warext Spell Check sürüm numarası 1.0.0 olarak yeniden düzenlendi.
-- Tamamen yerel çalışma mimarisi korundu.
-- Çok aşamalı morfoloji ve fiilimsi/türetim katmanı genişletildi.
-- 50+ teknik kısaltma ve teknoloji adı için Türkçe ek/kesme denetimi eklendi.
-- Türkçe Q klavye komşuluğuna göre öneri sıralaması eklendi.
-- Kişi duyarlı zaman bağlamı 23 yaygın fiil ailesine genişletildi.
-- Uzun metinde komşu cümle bağlamı geliştirildi.
-- Teknik içerik koruması IPv6, MAC, UUID, hash, sürüm, tarih, saat, CLI, ortam değişkeni, dotfile, dosya adı ve emoji türlerine genişletildi.
-- Uzun metin cümle bölme ve önbellek mimarisi korundu.
-- Kullanıcı seçmeli en fazla üç öneri, kişisel sözlük ve ACP özel sözlüğü korundu.
-- Çalışma zamanı harici ağ bağımlılığı sıfırlandı.
-- Kod yorum satırı kuralı ve regresyon doğrulaması güçlendirildi.
+Warext Turkish Spell Check tamamen yerel nihai v1 mimarisine taşındı. Genişletilmiş morfoloji, teknik kısaltmalar, TDD tabanlı yerel düzeltme haritası, kapsamlı teknik içerik koruması, kişi-zaman bağlamı ve önbellekli uzun metin taraması eklendi. Çalışma zamanı harici bağımlılığı bulunmaz.

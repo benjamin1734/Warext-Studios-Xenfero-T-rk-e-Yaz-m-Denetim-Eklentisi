@@ -1,53 +1,44 @@
-# Warext Studios XenForo Türkçe Yazım Denetimi
+# Warext Turkish Spell Check 1.1.0
 
-Warext Spell Check 1.0.0, XenForo 2.3+ için tamamen yerel çalışan Türkçe yazım, dilbilgisi, noktalama ve bağlam denetimi eklentisidir. Harici API, Docker, Python çalışma zamanı, model sunucusu veya üçüncü taraf servis gerektirmez. Düzeltmeler otomatik uygulanmaz; kullanıcıya en fazla üç öneri sunulur.
+Warext Turkish Spell Check, XenForo 2.3.0+ için tamamen yerel çalışan Türkçe yazım, dilbilgisi, noktalama ve bağlam denetim eklentisidir.
 
-## 1.0.0
+## Yerel mimari
 
-- 117.000+ yerel kelime ve form tabanı
-- Çok aşamalı Türkçe morfoloji, ek zinciri ve ses olayı denetimi
-- Fiilimsi, çatı ve ek türetim katmanı
-- de/da, ki, mı/mi/mu/mü ve birleşik-ayrı yazım kuralları
-- Özne-yüklem kişi ve zaman uyumu kontrolleri
-- Komşu cümle bağlamını kullanan uzun metin analizi
-- 23 yaygın fiil ailesinde kişi duyarlı geçmiş/gelecek zaman kontrolü
-- Özel ad, 81 il, kısaltma ve sayı eki denetimi
-- 50+ teknik kısaltma ve teknoloji adında Türkçe ek/kesme denetimi
-- Türkçe Q klavye komşuluğunu kullanan öneri sıralaması
-- URL, domain, e-posta, IPv4, IPv6, MAC, UUID, hash, sürüm, tarih, saat, dosya yolu, CLI parametresi, ortam değişkeni, dotfile, kod ve emoji koruması
-- Uzun metni cümlelere bölerek arka planda tarama ve değişmeyen cümleleri önbellekten kullanma
-- Zengin editörde hata altı çizimi
-- Kalıcı kişisel sözlük ve oturumluk yok sayma
-- ACP forum özel sözlüğü ve özel isim listesi
-- Kod dosyalarında açıklama/yorum satırı yok
-- Çalışma zamanında dış ağ isteği yok
+Çalışma zamanında harici API, Docker, Python, model sunucusu, WebSocket, fetch/XHR veya başka bir dış servis kullanılmaz. Açık kaynak sözlük kaynakları yalnızca build aşamasında sabitlenmiş sürümlerden işlenir ve kurulum paketine yerel veri olarak derlenir.
+
+## 1.1.0 dil motoru
+
+- TDK kelime havuzu + TDD Hunspell kökleri
+- Hunspell `.aff` kurallarının build aşamasında sınırlı form genişletmesi
+- Büyük yerel kelime/form havuzu ve kompakt dağıtım
+- TDD Türkçe yazım benchmarkından yerel düzeltme haritası
+- İsim/fiil morfolojisi, ek zincirleri, ses olayları ve ek uyumu
+- Bileşik fiil zamanları: geçmiş, rivayet ve şart katmanları
+- Bileşik zamanlarda kişi uyumu
+- Düzenli fiillerde kök tabanlı geçmiş/gelecek zaman bağlam düzeltmesi
+- Genişletilmiş soru eki ayrımı ve ses uyumu
+- de/da, ki, birleşik-ayrı yazım ve noktalama kuralları
+- 81 il, özel adlar, ülkeler, kurumlar, teknik markalar, kısaltmalar ve sayı ekleri
+- Türkçe Q klavye komşuluğu ve düzeltme korpusunu kullanan öneri sıralaması
+
+## Teknik içerik koruması
+
+URL, e-posta, domain, IPv4, IPv6, MAC, UUID, hash, semantik sürüm, tarih, saat, ondalık sayı, Windows/Unix yolu, CLI seçeneği, ortam değişkeni, dotfile, dosya adı, kod sembolü, HTML, BBCode, fenced/inline code, mention, hashtag, biçim kodu, Markdown bağlantısı ve emoji alanları dil denetiminden korunur.
+
+## Uzun metin
+
+Uzun mesajlar cümlelere ayrılır ve boş zamanda parça parça analiz edilir. Önceki ve sonraki cümle bağlamı kullanılır. Değişmeyen cümleler önbellekten alınır; tek bir cümle değiştiğinde tüm metin yeniden hesaplanmaz.
+
+## Kullanım
+
+Eklenti otomatik düzeltme yapmaz. Kullanıcı en fazla üç öneriden birini seçer. Kişisel sözlük, oturumluk yok sayma, forum özel sözlüğü ve özel isim listesi desteklenir.
 
 ## Kurulum
 
-1. `release/Warext-SpellCheck-1.0.0.zip` paketini kullanın.
-2. XenForo ACP içinde **Add-ons → Install/upgrade from archive** alanını açın.
-3. ZIP dosyasını yükleyin.
-4. Eski Warext Spell Check sürümü kuruluysa doğrudan üzerine yükseltin.
-5. Ek SQL içe aktarma gerekmez.
+`release/Warext-SpellCheck-1.1.0.zip` dosyasını XenForo ACP üzerinden **Add-ons → Install/upgrade from archive** alanından yükleyin.
 
-## Gereksinimler
+Ek SQL içe aktarma gerekmez.
 
-- XenForo 2.3.0+
-- XenForo 2.3 ile uyumlu PHP sürümü
-- Modern JavaScript destekli tarayıcı
+## Bağımsız geliştirme
 
-## Doğrulama
-
-```bash
-bash tools/build_release.sh
-```
-
-Komut JavaScript sözdizimini, yerel dil regresyonlarını, PHP sözdizimini, JSON/XML dosyalarını, yorum satırı kuralını ve çalışma zamanı ağ API'lerinin bulunmadığını doğrular; ardından `release/Warext-SpellCheck-1.0.0.zip` paketini üretir.
-
-## Lisans
-
-Proje MPL-2.0 lisansı altında yayımlanmaktadır. Kullanılan açık kaynak sözlük kaynakları `THIRD_PARTY.md` dosyasında belirtilmiştir.
-
-## Geliştirici
-
-Warext Studios
+Karşılaştırma amacıyla sağlanan başka bir eklenti arşivinden kaynak kod, regex, sözlük, veri dosyası veya kural listesi kopyalanmamıştır. Benzer ihtiyaçlar Warext mimarisi içinde bağımsız olarak uygulanmıştır.
