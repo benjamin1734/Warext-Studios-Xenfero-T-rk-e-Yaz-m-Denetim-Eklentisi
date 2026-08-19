@@ -1,5 +1,7 @@
 Warext Turkish Spell Check 3.0.0
 
+Sürüm durumu: Nihai
+
 Kurulum:
 1. ZIP dosyasını XenForo ACP > Add-ons > Install/upgrade from archive alanından yükleyin.
 2. Mevcut Warext Turkish Spell Check kurulumu varsa doğrudan üzerine yükseltin.
