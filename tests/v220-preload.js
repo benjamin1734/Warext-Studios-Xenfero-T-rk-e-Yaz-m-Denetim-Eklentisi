@@ -17,3 +17,4 @@ require('../upload/js/warext/turkish-spellcheck/micro-integration-v200.js');
 require('../upload/js/warext/turkish-spellcheck/quality-v210.js');
 require('../upload/js/warext/turkish-spellcheck/quality-v220.js');
 require('../upload/js/warext/turkish-spellcheck/syntax-v220.js');
+require('../upload/js/warext/turkish-spellcheck/syntax-tuning-v220.js');
