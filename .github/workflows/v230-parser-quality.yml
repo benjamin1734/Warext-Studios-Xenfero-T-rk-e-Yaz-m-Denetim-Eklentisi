@@ -23,6 +23,9 @@ jobs:
       - name: Yerel varlıkları üret
         shell: bash
         run: bash tools/build_release.sh
+      - name: Parser morfoloji tanısı
+        shell: bash
+        run: node tests/v230-diagnostics.js
       - name: UD Turkish BOUN test kümesinde ana yüklem benchmarkı
         shell: bash
         run: |
