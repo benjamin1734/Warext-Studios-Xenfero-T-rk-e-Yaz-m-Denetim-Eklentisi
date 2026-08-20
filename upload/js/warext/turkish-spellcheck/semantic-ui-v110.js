@@ -52,6 +52,13 @@
     return `${warning.rule || ''}:${warning.start || 0}:${warning.end || 0}:${warning.message || ''}`;
   }
 
+  function titleFor(warning) {
+    const rule = String(warning?.rule || '');
+    if (rule.startsWith('v210-punctuation-')) return 'Noktalama denetimi:';
+    if (/valency|case|grammar|agreement/iu.test(rule)) return 'Dilbilgisi denetimi:';
+    return 'Anlam denetimi:';
+  }
+
   function render(el,report) {
     const state=states.get(el);
     const panel = state?.panel;
@@ -68,9 +75,9 @@
       row.className = 'wtsc-semantic-deep-item';
       const title = document.createElement('span');
       title.className = 'wtsc-semantic-deep-title';
-      title.textContent = 'Anlam denetimi:';
+      title.textContent = titleFor(warning);
       const text = document.createElement('span');
-      text.textContent = warning.message || 'Cümlede yüksek güvenli bir anlam uyumsuzluğu bulundu.';
+      text.textContent = warning.message || 'Cümlede yüksek güvenli bir dil uyumsuzluğu bulundu.';
       const meta = document.createElement('span');
       meta.className = 'wtsc-semantic-deep-meta';
       meta.textContent = `%${Math.round(Number(warning.confidence || 0) * 100)}`;
