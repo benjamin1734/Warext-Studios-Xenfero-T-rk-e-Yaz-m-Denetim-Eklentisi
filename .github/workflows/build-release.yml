@@ -34,9 +34,9 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Warext-SpellCheck-2.0.0
+          name: Warext-SpellCheck-2.1.0
           path: |
-            release/Warext-SpellCheck-2.0.0.zip
+            release/Warext-SpellCheck-2.1.0.zip
             SHA256SUMS
           if-no-files-found: error
           retention-days: 30
@@ -51,7 +51,7 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "Warext Spell Check 2.0.0 derleme tanısı"
+          git commit -m "Warext Spell Check 2.1.0 derleme tanısı"
           git push
       - name: Nihai paketi kaydet
         if: success() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
@@ -65,5 +65,5 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "Warext Spell Check 2.0.0 nihai paket"
+          git commit -m "Warext Spell Check 2.1.0 nihai paket"
           git push
