@@ -10,7 +10,7 @@
   const baseMeaning = engine.analyzeMeaning.bind(engine);
   const morphology = typeof engine.analyzeMorphology === 'function' ? engine.analyzeMorphology.bind(engine) : () => null;
   const normalize = value => String(value || '').replace(/I/g,'ı').replace(/İ/g,'i').toLocaleLowerCase('tr-TR').trim();
-  const BLOCKED = new Set(['bir','bu','şu','su','bazı','bazi','her','tüm','tum','bütün','butun','hiçbir','hicbir','hangi','kaç','kac','birçok','bircok','birkaç','birkac','çok','cok','daha','en','ve','ile','için','icin','gibi','olarak','sonra','önce','once','bugün','bugun','dün','dun','yarın','yarin','hemen','sadece','yalnızca','yalnizca','işte','iste','oysa','ancak','fakat','ama','çünkü','cunku']);
+  const BLOCKED = new Set(['bir','bu','şu','su','bazı','bazi','her','tüm','tum','bütün','butun','hiçbir','hicbir','hangi','kaç','kac','birçok','bircok','birkaç','birkac','çok','cok','daha','en','ve','ile','için','icin','gibi','olarak','sonra','önce','once','bugün','bugun','dün','dun','yarın','yarin','hemen','sadece','yalnızca','yalnizca','işte','iste','üstelik','ustelik','adet','oysa','ancak','fakat','ama','çünkü','cunku']);
   const ADVERBIAL = new Set(['tam','yalnız','yalniz','hızla','hizla','yavaşça','yavasca','dikkatlice','birden','artık','artik','yine','tekrar','belki','kesinlikle','muhtemelen','genellikle','çoğunlukla','cogunlukla','özellikle','ozellikle']);
   const TIME_ROOTS = new Set(['yıl','yil','gün','gun','hafta','ay','saat','dakika','sabah','akşam','aksam','gece','zaman']);
   const PRONOUN_SUBJECTS = new Set(['ben','sen','o','biz','siz','onlar','kim','biri','birisi','hepsi','çoğu','cogu']);
@@ -35,7 +35,8 @@
     const root=normalize(token?.root || token?.morphology?.root || '');
     if (!word || !root || word === root || !word.startsWith(root)) return false;
     const suffix=word.slice(root.length).replace(/['’]/gu,'');
-    if (/^(?:y?[ae]|[dt][ae]n|[dt][ae]|y?l[ae]|[ıiuü]n(?:d[ae]|d[ae]n)?|[nsy]?[ıiuü](?:n)?[ae]|l[ae]r(?:d[ae]|d[ae]n))$/u.test(suffix)) return true;
+    if (/^(?:y?[ae]|[dt][ae]n|[dt][ae]|y?l[ae]|[ıiuü]n(?:d[ae]|d[ae]n)?|[nsy]?[ıiuü](?:n)?[ae]|l[ae]r(?:[ae]|d[ae]|d[ae]n)|l[ae]rl[ae])$/u.test(suffix)) return true;
+    if (/(?:larla|lerle|lardan|lerden|larda|lerde)$/u.test(word)) return true;
     return false;
   }
 
@@ -67,6 +68,7 @@
   function subjectCandidateScore(token,index,tokens,predicateIndex,objectIndex,predicateRoot,text) {
     const word=normalize(token?.raw || token?.word || '');
     const root=normalize(token?.root || token?.morphology?.root || word);
+    if (index === predicateIndex) return -100;
     if (!word || finiteLike(token) || derivedCase(token)) return -100;
     if (objectIndex === index) return -100;
     let score=0;
@@ -85,6 +87,9 @@
     if (/^[A-ZÇĞİÖŞÜ]/u.test(raw) && Number(token?.start || 0) > 0) score+=1.25;
     if (/(?:lar|ler)(?:ı|i|u|ü|ın|in|un|ün)?$/u.test(word)) score+=0.75;
     if (punctuationAfter(text,token,',')) score+=1.25;
+    const next=tokens[index + 1];
+    const nextWord=normalize(next?.raw || next?.word || next?.root || '');
+    if (nextWord === 'tarafından' || nextWord === 'tarafindan') score-=4.2;
     if (objectIndex >= 0) {
       if (index < objectIndex) score+=2.2 + Math.max(0,1.4 - (objectIndex - index - 1) * 0.22);
       else if (index < predicateIndex) score+=0.15;
