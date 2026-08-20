@@ -81,8 +81,9 @@
       action.addEventListener('click',() => {
         const start=Math.max(0,Number(warning.start || 0));
         const end=Math.max(start,Number(warning.end || start));
-        const snippet=fullText.slice(start,Math.min(fullText.length,end || start + 80)).trim() || fullText.slice(0,160);
-        engine.learning?.falsePositive?.({rule:warning.rule || 'semantic',text:fullText.slice(Math.max(0,start - 50),Math.min(fullText.length,Math.max(end,start + 1) + 50)),word:snippet,confidence:Number(warning.confidence || 0)});
+        const rawWord=String(warning.word || '').trim();
+        const candidate=/^[A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû'’-]{2,64}$/u.test(rawWord) ? rawWord : '';
+        engine.learning?.falsePositive?.({rule:warning.rule || 'semantic',text:fullText.slice(Math.max(0,start - 50),Math.min(fullText.length,Math.max(end,start + 1) + 50)),word:candidate,confidence:Number(warning.confidence || 0)});
         state.dismissed.add(warningKey(warning));
         state.schedule(20);
       });
