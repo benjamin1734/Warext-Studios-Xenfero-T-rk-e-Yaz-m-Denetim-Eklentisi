@@ -20,7 +20,7 @@ def main():
         raise SystemExit('Editör kaynak parçaları bulunamadı')
     source = ''.join(path.read_text(encoding='utf-8') for path in parts)
     source = source.replace('__warextTurkishSpellCheckV300', '__warextTurkishSpellCheckV110')
-    source = source.replace("const VERSION = '3.0.0';", "const VERSION = '1.3.0';")
+    source = source.replace("const VERSION = '3.0.0';", "const VERSION = '2.0.0';")
     source = source.replace('WarextTurkishSpellEngineV300', 'WarextTurkishSpellEngineV110')
     source = source.replace('warextSpellCustomV300', 'warextSpellCustomV110')
     source = source.replace('warextSpellIgnoredV300', 'warextSpellIgnoredV110')
@@ -65,6 +65,11 @@ def main():
         "    if (cfg.grammar && typeof localEngine.analyzeSentence === 'function') {\n      const neighbors = neighborSentences(state, bounds);\n      const languageIssues = localEngine.analyzeSentence(analysisText, { properNames: cfg.properNames, punctuation: cfg.punctuation, previousSentence:neighbors.previousSentence, nextSentence:neighbors.nextSentence, longText:false, semantic:cfg.semantic, semanticSensitivity:cfg.semanticSensitivity }) || [];",
         'sentence-neighbor-context'
     )
+    old_click = """      button.addEventListener('click', () => {\n        replaceRange(el, context, suggestion);\n        hideBar(bar);\n      });"""
+    new_click = """      button.addEventListener('click', () => {\n        const from = context.word || '';\n        replaceRange(el, context, suggestion);\n        engine()?.learning?.acceptedSuggestion?.({from,to:suggestion,rule:context.rule || ''});\n        hideBar(bar);\n      });"""
+    if source.count(old_click) < 2:
+        raise SystemExit('Öneri kabul geri bildirim noktaları bulunamadı')
+    source = source.replace(old_click,new_click)
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(source, encoding='utf-8')
