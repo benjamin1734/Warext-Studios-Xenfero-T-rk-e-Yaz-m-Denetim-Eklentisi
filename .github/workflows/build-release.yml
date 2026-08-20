@@ -25,6 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
       - name: Doğrula ve paketle
         shell: bash
         run: |
@@ -41,7 +42,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
       - name: Hata tanısını kaydet
-        if: failure() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        if: failure()
         shell: bash
         run: |
           cp /tmp/warext-build.log BUILD_FAILURE.txt || true
@@ -54,7 +55,7 @@ jobs:
           git commit -m "Warext Spell Check 2.0.0 derleme tanısı"
           git push
       - name: Nihai paketi kaydet
-        if: success() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        if: success()
         shell: bash
         run: |
           rm -f BUILD_FAILURE.txt
