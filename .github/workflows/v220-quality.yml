@@ -33,4 +33,5 @@ jobs:
         run: |
           git clone -q https://github.com/UniversalDependencies/UD_Turkish-BOUN.git /tmp/ud-tr-boun
           git -C /tmp/ud-tr-boun checkout -q f828b02872123a8dfb336584eab0767c4e55c5f9
-          node tests/v220-ud-benchmark.js /tmp/ud-tr-boun/tr_boun-ud-dev.conllu
+          cat /tmp/ud-tr-boun/tr_boun-ud-dev.conllu /tmp/ud-tr-boun/tr_boun-ud-test.conllu > /tmp/ud-tr-benchmark.conllu
+          node tests/v220-ud-benchmark.js /tmp/ud-tr-benchmark.conllu
