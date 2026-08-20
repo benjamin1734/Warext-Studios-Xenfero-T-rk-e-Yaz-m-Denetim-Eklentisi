@@ -4,7 +4,7 @@
   if (window.__warextTurkishSpellBootstrapV110) return;
   window.__warextTurkishSpellBootstrapV110 = true;
 
-  const VERSION = '1.2.0';
+  const VERSION = '1.3.0';
   const script = document.currentScript;
   const scriptUrl = script?.src || '';
   const baseDir = scriptUrl ? scriptUrl.slice(0,scriptUrl.lastIndexOf('/') + 1) : '';
@@ -63,6 +63,7 @@
       await loadScript('corrections-v110.js',() => !!window.WarextCorrectionMapV110);
       await loadScript('language-v110.js',() => !!window.__warextLanguageV110);
       await loadScript('semantic-v110.js',() => !!window.__warextSemanticV120);
+      await loadScript('semantic-deep-v110.js',() => !!window.__warextSemanticDeepV130);
       if (!window.WarextTurkishSpellEngineV110) throw new Error('engine');
       await loadScript('editor-v110.js',() => !!window.__warextTurkishSpellCheckV110);
       await loadScript('longtext-v110.js',() => !!window.__warextLongTextV110);
