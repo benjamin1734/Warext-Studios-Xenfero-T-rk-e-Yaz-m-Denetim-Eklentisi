@@ -1,4 +1,4 @@
-Warext Turkish Spell Check 2.1.0 build-time data sources
+Warext Turkish Spell Check 2.2.0 build-time data sources
 
 ekartal/turkce-kelime-database
 Pinned commit: 444dbcc53556618b0977a3d608cbf1402f7e9363
@@ -19,5 +19,9 @@ CC BY 4.0. Used only during build for local n-gram statistics and the natural-la
 GeoNames cities500
 https://www.geonames.org/
 CC BY 4.0. Used only during build to create the bundled local place-name membership index.
+
+UniversalDependencies/UD_Turkish-BOUN
+Pinned commit: f828b02872123a8dfb336584eab0767c4e55c5f9
+CC BY-SA 4.0. Used only during build/test validation for the dependency benchmark. The treebank is not bundled in the release package.
 
 Runtime network dependency: none.
