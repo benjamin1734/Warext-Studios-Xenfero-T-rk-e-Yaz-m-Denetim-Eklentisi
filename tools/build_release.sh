@@ -13,6 +13,8 @@ git clone -q https://github.com/ahakanacar/turkish-dictionary-dataset-and-statis
 git -C "$TMP/idioms" checkout -q 5ef471d903d48010cd15f4d3a0bb18a19ba95137
 git clone -q https://github.com/3nesdeniz/turkish-daily-dialogues-5k.git "$TMP/dialogues"
 git -C "$TMP/dialogues" checkout -q ccd9f05c2f97684bbd9a55d818528da9dfb6bd5a
+git clone -q https://github.com/UniversalDependencies/UD_Turkish-BOUN.git "$TMP/ud-boun"
+git -C "$TMP/ud-boun" checkout -q f828b02872123a8dfb336584eab0767c4e55c5f9
 curl -fsSL https://download.geonames.org/export/dump/cities500.zip -o "$TMP/cities500.zip"
 unzip -q "$TMP/cities500.zip" -d "$TMP/geonames"
 
@@ -89,7 +91,7 @@ cp "$TMP/hunspell/LICENSE" "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Res
 cp "$TMP/idioms/LICENSE" "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources/LICENSE-TURKISH-DICTIONARY-MIT.txt"
 cp "$TMP/dialogues/LICENSE" "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources/LICENSE-TURKISH-DIALOGUES-CC-BY-4.0.txt"
 cat > "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources/THIRD_PARTY_DATA.txt" <<'TXT'
-Warext Turkish Spell Check 2.1.0 build-time data sources
+Warext Turkish Spell Check 2.2.0 build-time data sources
 
 ekartal/turkce-kelime-database
 Pinned commit: 444dbcc53556618b0977a3d608cbf1402f7e9363
@@ -110,6 +112,10 @@ CC BY 4.0. Used only during build for local n-gram statistics and the natural-la
 GeoNames cities500
 https://www.geonames.org/
 CC BY 4.0. Used only during build to create the bundled local place-name membership index.
+
+UniversalDependencies/UD_Turkish-BOUN
+Pinned commit: f828b02872123a8dfb336584eab0767c4e55c5f9
+CC BY-SA 4.0. Used only during build/test validation for the dependency benchmark. The treebank is not bundled in the release package.
 
 Runtime network dependency: none.
 TXT
@@ -135,6 +141,9 @@ for file in \
   micro-integration-v200.js \
   learning-v200.js \
   quality-v210.js \
+  quality-v220.js \
+  syntax-v220.js \
+  syntax-tuning-v220.js \
   semantic-ui-v110.js \
   editor-v110.js \
   longtext-v110.js; do
@@ -151,6 +160,9 @@ WAREXT_FULL_BUILD=1 node "$ROOT/tests/v130-semantic-regression.js"
 WAREXT_FULL_BUILD=1 node "$ROOT/tests/v200-nlp-regression.js"
 WAREXT_FULL_BUILD=1 node "$ROOT/tests/v210-quality-regression.js"
 WAREXT_FULL_BUILD=1 node "$ROOT/tests/v210-corpus-benchmark.js" "$TMP/corpus-benchmark.jsonl"
+NODE_OPTIONS="--require $ROOT/tests/v220-preload.js" node "$ROOT/tests/v220-syntax-quality-regression.js"
+cat "$TMP/ud-boun/tr_boun-ud-dev.conllu" "$TMP/ud-boun/tr_boun-ud-test.conllu" > "$TMP/ud-benchmark.conllu"
+NODE_OPTIONS="--require $ROOT/tests/v220-preload.js" node "$ROOT/tests/v220-ud-benchmark.js" "$TMP/ud-benchmark.conllu"
 
 while IFS= read -r -d '' file; do php -l "$file"; done < <(find "$ROOT/upload/src/addons/Warext/TurkishSpellCheck" -type f -name '*.php' -print0)
 
@@ -161,7 +173,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 root=Path(sys.argv[1])
 addon=json.loads((root/'upload/src/addons/Warext/TurkishSpellCheck/addon.json').read_text(encoding='utf-8'))
-if addon.get('version_string')!='2.1.0' or int(addon.get('version_id',0))!=5100070:
+if addon.get('version_string')!='2.2.0' or int(addon.get('version_id',0))!=5200070:
     raise SystemExit('Sürüm bilgisi geçersiz')
 resources=root/'upload/src/addons/Warext/TurkishSpellCheck/Resources'
 stats=json.loads((resources/'dictionary-stats.json').read_text(encoding='utf-8'))
@@ -182,17 +194,26 @@ if int(micro.get('samples',0))<5000 or float(micro.get('accuracy',0))<0.8:
 for path in sorted((root/'upload/src/addons/Warext/TurkishSpellCheck/_data').rglob('*.xml')):
     ET.parse(path)
 bootstrap=(root/'upload/js/warext/turkish-spellcheck/bootstrap-v110.js').read_text(encoding='utf-8')
-for asset in ['lexicon-v200.js','entities-v200.js','idioms-v200.js','lm-v200.js','micro-model-v200.js','knowledge-v200.js','micro-integration-v200.js','learning-v200.js','quality-v210.js']:
+for asset in ['lexicon-v200.js','entities-v200.js','idioms-v200.js','lm-v200.js','micro-model-v200.js','knowledge-v200.js','micro-integration-v200.js','learning-v200.js','quality-v210.js','quality-v220.js','syntax-v220.js','syntax-tuning-v220.js']:
     if asset not in bootstrap:
         raise SystemExit(f'Varlık yükleyiciye bağlanmadı: {asset}')
-if "const VERSION = '2.1.0';" not in bootstrap:
+if "const VERSION = '2.2.0';" not in bootstrap:
     raise SystemExit('Bootstrap sürümü geçersiz')
 setup=(root/'upload/src/addons/Warext/TurkishSpellCheck/Setup.php').read_text(encoding='utf-8')
 if 'xf_warext_spell_feedback' not in setup:
     raise SystemExit('Yerel öğrenme tablosu eksik')
-quality=(root/'upload/js/warext/turkish-spellcheck/quality-v210.js').read_text(encoding='utf-8')
-if "const VERSION = '2.1.0';" not in quality or 'externalDependencies:0' not in quality:
+quality210=(root/'upload/js/warext/turkish-spellcheck/quality-v210.js').read_text(encoding='utf-8')
+if "const VERSION = '2.1.0';" not in quality210 or 'externalDependencies:0' not in quality210:
     raise SystemExit('2.1 kalite katmanı doğrulanamadı')
+quality220=(root/'upload/js/warext/turkish-spellcheck/quality-v220.js').read_text(encoding='utf-8')
+syntax220=(root/'upload/js/warext/turkish-spellcheck/syntax-v220.js').read_text(encoding='utf-8')
+tuning220=(root/'upload/js/warext/turkish-spellcheck/syntax-tuning-v220.js').read_text(encoding='utf-8')
+if "const VERSION = '2.2.0';" not in quality220 or 'externalDependencies:0' not in quality220:
+    raise SystemExit('2.2 kalite katmanı doğrulanamadı')
+if '__warextSyntaxV220' not in syntax220 or 'externalDependencies:0' not in syntax220:
+    raise SystemExit('2.2 sözdizim katmanı doğrulanamadı')
+if '__warextSyntaxTuningV220' not in tuning220 or 'externalDependencies:0' not in tuning220:
+    raise SystemExit('2.2 sözdizim ayar katmanı doğrulanamadı')
 if (root/'upload/js/warext/turkish-spellcheck/dictionary-v110.js').stat().st_size > 3500000:
     raise SystemExit('Çekirdek sözlük tembel mimariye küçültülemedi')
 PY
@@ -227,6 +248,6 @@ fi
 rm -rf "$ROOT/release"
 mkdir -p "$ROOT/release"
 cd "$ROOT"
-zip -qr "release/Warext-SpellCheck-2.1.0.zip" upload README.txt
-sha256sum "release/Warext-SpellCheck-2.1.0.zip" > SHA256SUMS
-printf '%s\n' "release/Warext-SpellCheck-2.1.0.zip hazırlandı."
+zip -qr "release/Warext-SpellCheck-2.2.0.zip" upload README.txt
+sha256sum "release/Warext-SpellCheck-2.2.0.zip" > SHA256SUMS
+printf '%s\n' "release/Warext-SpellCheck-2.2.0.zip hazırlandı."
