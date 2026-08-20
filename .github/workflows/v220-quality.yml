@@ -1,0 +1,36 @@
+name: Warext 2.2 kalite doğrulama
+
+on:
+  push:
+    branches:
+      - warext-v2.2-syntax-quality
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Yerel varlıkları üret
+        shell: bash
+        run: bash tools/build_release.sh
+      - name: 2.2 çalışma zamanı doğrulaması
+        shell: bash
+        run: |
+          node --check upload/js/warext/turkish-spellcheck/quality-v220.js
+          node tests/v220-syntax-quality-regression.js
+      - name: Gerçek Türkçe dependency benchmarkı
+        shell: bash
+        run: |
+          git clone -q https://github.com/UniversalDependencies/UD_Turkish-BOUN.git /tmp/ud-tr-boun
+          git -C /tmp/ud-tr-boun checkout -q f828b02872123a8dfb336584eab0767c4e55c5f9
+          node tests/v220-ud-benchmark.js /tmp/ud-tr-boun/tr_boun-ud-dev.conllu
