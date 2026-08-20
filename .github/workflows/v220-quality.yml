@@ -27,11 +27,12 @@ jobs:
         shell: bash
         run: |
           node --check upload/js/warext/turkish-spellcheck/quality-v220.js
-          node tests/v220-syntax-quality-regression.js
+          node --check upload/js/warext/turkish-spellcheck/syntax-v220.js
+          NODE_OPTIONS="--require ./tests/v220-preload.js" node tests/v220-syntax-quality-regression.js
       - name: Gerçek Türkçe dependency benchmarkı
         shell: bash
         run: |
           git clone -q https://github.com/UniversalDependencies/UD_Turkish-BOUN.git /tmp/ud-tr-boun
           git -C /tmp/ud-tr-boun checkout -q f828b02872123a8dfb336584eab0767c4e55c5f9
           cat /tmp/ud-tr-boun/tr_boun-ud-dev.conllu /tmp/ud-tr-boun/tr_boun-ud-test.conllu > /tmp/ud-tr-benchmark.conllu
-          node tests/v220-ud-benchmark.js /tmp/ud-tr-benchmark.conllu
+          NODE_OPTIONS="--require ./tests/v220-preload.js" node tests/v220-ud-benchmark.js /tmp/ud-tr-benchmark.conllu
