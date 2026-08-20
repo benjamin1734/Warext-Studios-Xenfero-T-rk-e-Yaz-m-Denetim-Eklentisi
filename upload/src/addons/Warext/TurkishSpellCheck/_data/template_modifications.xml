@@ -10,6 +10,8 @@
  data-proper-names="{$xf.options.warextSpellProperNames}"
  data-informal="{$xf.options.warextSpellInformal}"
  data-deep-context="{$xf.options.warextSpellDeepContext}"
+ data-semantic="{$xf.options.warextSpellSemantic}"
+ data-semantic-sensitivity="{$xf.options.warextSpellSemanticSensitivity}"
  data-max-suggestions="{$xf.options.warextSpellMaxSuggestions}"
  data-long-text="{$xf.options.warextSpellLongText}"
  data-long-text-threshold="{$xf.options.warextSpellLongTextThreshold}"
