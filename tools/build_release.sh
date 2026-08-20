@@ -189,7 +189,7 @@ if (root/'upload/js/warext/turkish-spellcheck/dictionary-v110.js').stat().st_siz
     raise SystemExit('Çekirdek sözlük tembel mimariye küçültülemedi')
 PY
 
-if grep -RInE '^[[:space:]]*(//|/\*|\*)' \
+if grep -RInE --exclude='*.txt' --exclude='*.xml' --exclude='*.json' '^[[:space:]]*(//|/\*|\*)' \
   "$ROOT/source/dictionary" \
   "$ROOT/source/editor" \
   "$ROOT/upload/js/warext/turkish-spellcheck" \
