@@ -1,4 +1,4 @@
-Warext Turkish Spell Check 2.0.0 build-time data sources
+Warext Turkish Spell Check 2.1.0 build-time data sources
 
 ekartal/turkce-kelime-database
 Pinned commit: 444dbcc53556618b0977a3d608cbf1402f7e9363
@@ -14,7 +14,7 @@ MIT. Used only during build for Turkish phrase and idiom data.
 
 3nesdeniz/turkish-daily-dialogues-5k
 Pinned commit: ccd9f05c2f97684bbd9a55d818528da9dfb6bd5a
-CC BY 4.0. Used only during build for local n-gram statistics. Author: Enes Deniz.
+CC BY 4.0. Used only during build for local n-gram statistics and the natural-language false-positive benchmark. Author: Enes Deniz.
 
 GeoNames cities500
 https://www.geonames.org/
