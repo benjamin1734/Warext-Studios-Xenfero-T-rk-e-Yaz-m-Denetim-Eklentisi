@@ -69,6 +69,16 @@ patch(
     "          nextSentence:cfg.deepContext ? nextText : '',\n          semantic:cfg.semantic,\n          longText:true",
     'longtext-semantic-context'
 )
+
+setup_path = root / 'upload/src/addons/Warext/TurkishSpellCheck/Setup.php'
+setup = setup_path.read_text(encoding='utf-8')
+if 'upgrade4200070Step1' not in setup:
+    marker = '\n}\n'
+    if not setup.endswith(marker):
+        raise SystemExit('Setup sınıf sonu bulunamadı')
+    method = "\n    public function upgrade4200070Step1(): void\n    {\n        try\n        {\n            $this->query('TRUNCATE TABLE xf_warext_spell_cache');\n        }\n        catch (\\Throwable $e)\n        {\n        }\n    }\n"
+    setup = setup[:-len(marker)] + method + marker
+    setup_path.write_text(setup, encoding='utf-8')
 PY
 
 find "$ROOT/upload/js/warext/turkish-spellcheck" -maxdepth 1 -type f -name '*-v100.js' -delete
@@ -119,8 +129,11 @@ if "semanticExternalModel:0" not in semantic or "externalDependencies:0" not in 
     raise SystemExit('Yerel anlam motoru bağımlılık doğrulaması başarısız')
 editor = (root / 'upload/js/warext/turkish-spellcheck/editor-v110.js').read_text(encoding='utf-8')
 longtext = (root / 'upload/js/warext/turkish-spellcheck/longtext-v110.js').read_text(encoding='utf-8')
+setup = (root / 'upload/src/addons/Warext/TurkishSpellCheck/Setup.php').read_text(encoding='utf-8')
 if 'semantic:cfg.semantic' not in editor or 'semantic:cfg.semantic' not in longtext:
     raise SystemExit('Anlam denetimi editör bağlamına uygulanmadı')
+if 'upgrade4200070Step1' not in setup:
+    raise SystemExit('1.2 yükseltme adımı bulunamadı')
 PY
 
 if grep -RInE '^[[:space:]]*(//|/\*|\*)' \
