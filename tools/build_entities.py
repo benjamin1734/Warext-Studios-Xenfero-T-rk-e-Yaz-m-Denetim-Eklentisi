@@ -29,6 +29,14 @@ def main():
     args = parser.parse_args()
     names = []
     seen = set()
+    seeds = [
+        'İstanbul','Ankara','İzmir','Bursa','Antalya','Adana','Konya','Gaziantep','Şanlıurfa','Kocaeli','Mersin','Diyarbakır','Hatay','Manisa','Kayseri','Samsun','Balıkesir','Kahramanmaraş','Van','Aydın','Tekirdağ','Sakarya','Denizli','Muğla','Eskişehir','Mardin','Trabzon','Ordu','Afyonkarahisar','Erzurum','Malatya','Sivas','Batman','Tokat','Elazığ','Zonguldak','Çanakkale','Osmaniye','Kütahya','Çorum','Ağrı','Giresun','Isparta','Aksaray','Yozgat','Edirne','Düzce','Kastamonu','Uşak','Kırklareli','Niğde','Rize','Amasya','Bolu','Nevşehir','Yalova','Kırıkkale','Bingöl','Kars','Burdur','Karaman','Karabük','Kırşehir','Erzincan','Bilecik','Sinop','Bartın','Çankırı','Artvin','Kilis','Gümüşhane','Ardahan','Iğdır','Bayburt','Tunceli','Hakkari','Şırnak','Bitlis','Muş','Siirt','Adıyaman'
+    ]
+    for raw in seeds:
+        value = norm(raw)
+        if value and value not in seen:
+            seen.add(value)
+            names.append(value)
     with Path(args.geonames).open(encoding='utf-8', errors='replace') as handle:
         for line in handle:
             columns = line.rstrip('\n').split('\t')
