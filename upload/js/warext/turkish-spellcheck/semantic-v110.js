@@ -186,14 +186,16 @@
     return tokens;
   }
 
-  function clauseIdFor(text,index) {
-    let id = 0;
-    for (let cursor = 0; cursor < index; cursor++) if (/[.!?;:\n]/u.test(text[cursor])) id++;
-    return id;
-  }
-
   function enrichClauses(text,tokens) {
-    for (const token of tokens) token.clause = clauseIdFor(text,token.start);
+    let clause = 0;
+    let cursor = 0;
+    for (const token of tokens) {
+      while (cursor < token.start) {
+        if (/[.!?;:\n]/u.test(text[cursor])) clause++;
+        cursor++;
+      }
+      token.clause = clause;
+    }
     return tokens;
   }
 

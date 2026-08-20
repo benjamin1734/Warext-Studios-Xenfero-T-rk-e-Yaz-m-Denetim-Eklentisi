@@ -4,7 +4,7 @@
   if (window.__warextTurkishSpellCheckV110) return;
   window.__warextTurkishSpellCheckV110 = true;
 
-  const VERSION = '1.1.0';
+  const VERSION = '1.2.0';
   const states = new WeakMap();
   const stateList = new Set();
   const boolValue = (value, fallback = true) => value == null || value === '' ? fallback : !['0','false','off','no'].includes(String(value).toLowerCase());
@@ -20,6 +20,7 @@
       properNames: boolValue(data.properNames),
       informal: boolValue(data.informal),
       deepContext: boolValue(data.deepContext),
+      semantic: boolValue(data.semantic),
       maxSuggestions: Math.max(1, Math.min(3, Number(data.maxSuggestions || 3))),
       adminWords: splitConfig(document.getElementById('wtsc-custom-words')?.textContent),
       customProperNames: splitConfig(document.getElementById('wtsc-custom-proper-names')?.textContent)
@@ -621,7 +622,7 @@
 
     if (cfg.grammar && typeof localEngine.analyzeSentence === 'function') {
       const neighbors = neighborSentences(state, bounds);
-      const languageIssues = localEngine.analyzeSentence(analysisText, { properNames: cfg.properNames, punctuation: cfg.punctuation, previousSentence:neighbors.previousSentence, nextSentence:neighbors.nextSentence, longText:false }) || [];
+      const languageIssues = localEngine.analyzeSentence(analysisText, { properNames: cfg.properNames, punctuation: cfg.punctuation, previousSentence:neighbors.previousSentence, nextSentence:neighbors.nextSentence, longText:false, semantic:cfg.semantic }) || [];
       for (const issue of languageIssues) {
         if (!cfg.punctuation && /^(?:multi-space|sentence-space-after-period|punctuation-|ellipsis-|sentence-terminal)/u.test(issue.rule || '')) continue;
         if (!cfg.properNames && /^(?:proper-|proper-name)/u.test(issue.rule || '')) continue;

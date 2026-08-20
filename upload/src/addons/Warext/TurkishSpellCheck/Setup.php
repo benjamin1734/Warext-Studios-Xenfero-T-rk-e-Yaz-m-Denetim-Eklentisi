@@ -430,4 +430,15 @@ class Setup extends AbstractSetup
         }
     }
 
+    public function upgrade4200070Step1(): void
+    {
+        try
+        {
+            $this->query('TRUNCATE TABLE xf_warext_spell_cache');
+        }
+        catch (\Throwable $e)
+        {
+        }
+    }
+
 }

@@ -4,7 +4,7 @@
   if (window.__warextLongTextV110) return;
   window.__warextLongTextV110 = true;
 
-  const VERSION = '1.1.0';
+  const VERSION = '1.2.0';
   const core = window.WarextTextCoreV110;
   if (!core) return;
 
@@ -24,6 +24,7 @@
     properNames: boolValue(configData.properNames, true),
     informal: boolValue(configData.informal, true),
     deepContext: boolValue(configData.deepContext, true),
+    semantic: boolValue(configData.semantic, true),
     threshold: numberValue(configData.longTextThreshold, 700, 250, 50000),
     maxIssues: numberValue(configData.longTextMaxIssues, 220, 20, 800),
     segmentSize: numberValue(configData.longTextSegmentSize, 1600, 600, 4000)
@@ -194,6 +195,7 @@
           punctuation:cfg.punctuation,
           previousSentence:cfg.deepContext ? previousText : '',
           nextSentence:cfg.deepContext ? nextText : '',
+          semantic:cfg.semantic,
           longText:true
         }) || [];
       } catch (_) {
