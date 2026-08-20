@@ -90,6 +90,7 @@ class Setup extends AbstractSetup
                 'lm-v200.js',
                 'micro-model-v200.js',
                 'knowledge-v200.js',
+                'micro-integration-v200.js',
                 'learning-v200.js',
                 'semantic-ui-v110.js',
                 'editor-v110.js',
