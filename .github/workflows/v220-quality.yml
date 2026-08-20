@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - warext-v2.2-syntax-quality
+      - main
   pull_request:
     branches:
       - main
@@ -28,6 +29,7 @@ jobs:
         run: |
           node --check upload/js/warext/turkish-spellcheck/quality-v220.js
           node --check upload/js/warext/turkish-spellcheck/syntax-v220.js
+          node --check upload/js/warext/turkish-spellcheck/syntax-tuning-v220.js
           NODE_OPTIONS="--require ./tests/v220-preload.js" node tests/v220-syntax-quality-regression.js
       - name: Gerçek Türkçe dependency benchmarkı
         shell: bash
