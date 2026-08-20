@@ -16,6 +16,10 @@
   <phrase title="option_warextSpellInformal_explain" version_id="4000070" version_string="1.0.0"><![CDATA[Gelicem gibi günlük biçimler için standart Türkçe karşılıklarını önerir.]]></phrase>
   <phrase title="option_warextSpellDeepContext" version_id="4000070" version_string="1.0.0"><![CDATA[Komşu cümle bağlamını kullan]]></phrase>
   <phrase title="option_warextSpellDeepContext_explain" version_id="4000070" version_string="1.0.0"><![CDATA[Uzun metinlerde önceki cümleyi zaman ve bağlam denetimine dahil eder.]]></phrase>
+  <phrase title="option_warextSpellSemantic" version_id="4200070" version_string="1.2.0"><![CDATA[Yerel anlam denetimi]]></phrase>
+  <phrase title="option_warextSpellSemantic_explain" version_id="4200070" version_string="1.2.0"><![CDATA[Özne ve nesne anlam uyumunu, fiil-tamlayıcı hâl ilişkilerini, miktar yapılarını, eşdizimleri ve yüksek güvenli çelişkileri harici model kullanmadan denetler.]]></phrase>
+  <phrase title="option_warextSpellSemanticSensitivity" version_id="4200070" version_string="1.2.0"><![CDATA[Anlam denetimi hassasiyeti]]></phrase>
+  <phrase title="option_warextSpellSemanticSensitivity_explain" version_id="4200070" version_string="1.2.0"><![CDATA[Anlam uyarılarının gösterilmesi için gereken minimum güven yüzdesidir. Varsayılan 88, daha yüksek değer daha az uyarı üretir.]]></phrase>
   <phrase title="option_warextSpellMaxSuggestions" version_id="4000070" version_string="1.0.0"><![CDATA[Maksimum öneri sayısı]]></phrase>
   <phrase title="option_warextSpellMaxSuggestions_explain" version_id="4000070" version_string="1.0.0"><![CDATA[Öneri alanında aynı anda gösterilecek düzeltme sayısı.]]></phrase>
   <phrase title="option_warextSpellLongText" version_id="4000070" version_string="1.0.0"><![CDATA[Uzun metin taramasını etkinleştir]]></phrase>
