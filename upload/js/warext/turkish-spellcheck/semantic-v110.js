@@ -442,12 +442,12 @@
   function collocationIssues(text) {
     const issues = [];
     const rules = [
-      [/\bkarar[ \t]+(?:yapmak|yaptı|yaptım|yaptın|yaptık|yaptınız)\b/giu, value => value.replace(/yapmak/iu,'vermek').replace(/yaptı/iu,'verdi').replace(/yaptım/iu,'verdim').replace(/yaptın/iu,'verdin').replace(/yaptık/iu,'verdik').replace(/yaptınız/iu,'verdiniz')],
-      [/\bsoru[ \t]+(?:yapmak|yaptı|yaptım|yaptın|yaptık|yaptınız)\b/giu, value => value.replace(/yapmak/iu,'sormak').replace(/yaptı/iu,'sordu').replace(/yaptım/iu,'sordum').replace(/yaptın/iu,'sordun').replace(/yaptık/iu,'sorduk').replace(/yaptınız/iu,'sordunuz')],
-      [/\bcevap[ \t]+(?:yapmak|yaptı|yaptım|yaptın|yaptık|yaptınız)\b/giu, value => value.replace(/yapmak/iu,'vermek').replace(/yaptı/iu,'verdi').replace(/yaptım/iu,'verdim').replace(/yaptın/iu,'verdin').replace(/yaptık/iu,'verdik').replace(/yaptınız/iu,'verdiniz')],
-      [/\byardım[ \t]+(?:yapmak|yaptı|yaptım|yaptın|yaptık|yaptınız)\b/giu, value => value.replace(/yapmak/iu,'etmek').replace(/yaptı/iu,'etti').replace(/yaptım/iu,'ettim').replace(/yaptın/iu,'ettin').replace(/yaptık/iu,'ettik').replace(/yaptınız/iu,'ettiniz')],
-      [/\bteşekkür[ \t]+(?:yapmak|yaptı|yaptım|yaptın|yaptık|yaptınız)\b/giu, value => value.replace(/yapmak/iu,'etmek').replace(/yaptı/iu,'etti').replace(/yaptım/iu,'ettim').replace(/yaptın/iu,'ettin').replace(/yaptık/iu,'ettik').replace(/yaptınız/iu,'ettiniz')],
-      [/\bfotoğraf[ \t]+(?:yapmak|yaptı|yaptım|yaptın|yaptık|yaptınız)\b/giu, value => value.replace(/yapmak/iu,'çekmek').replace(/yaptı/iu,'çekti').replace(/yaptım/iu,'çektim').replace(/yaptın/iu,'çektin').replace(/yaptık/iu,'çektik').replace(/yaptınız/iu,'çektiniz')]
+      [/\bkarar[ \t]+(?:yaptınız|yaptık|yaptım|yaptın|yapmak|yaptı)(?=\s|[.!?,;:]|$)/giu, value => value.replace(/yapmak/iu,'vermek').replace(/yaptı/iu,'verdi').replace(/yaptım/iu,'verdim').replace(/yaptın/iu,'verdin').replace(/yaptık/iu,'verdik').replace(/yaptınız/iu,'verdiniz')],
+      [/\bsoru[ \t]+(?:yaptınız|yaptık|yaptım|yaptın|yapmak|yaptı)(?=\s|[.!?,;:]|$)/giu, value => value.replace(/yapmak/iu,'sormak').replace(/yaptı/iu,'sordu').replace(/yaptım/iu,'sordum').replace(/yaptın/iu,'sordun').replace(/yaptık/iu,'sorduk').replace(/yaptınız/iu,'sordunuz')],
+      [/\bcevap[ \t]+(?:yaptınız|yaptık|yaptım|yaptın|yapmak|yaptı)(?=\s|[.!?,;:]|$)/giu, value => value.replace(/yapmak/iu,'vermek').replace(/yaptı/iu,'verdi').replace(/yaptım/iu,'verdim').replace(/yaptın/iu,'verdin').replace(/yaptık/iu,'verdik').replace(/yaptınız/iu,'verdiniz')],
+      [/\byardım[ \t]+(?:yaptınız|yaptık|yaptım|yaptın|yapmak|yaptı)(?=\s|[.!?,;:]|$)/giu, value => value.replace(/yapmak/iu,'etmek').replace(/yaptı/iu,'etti').replace(/yaptım/iu,'ettim').replace(/yaptın/iu,'ettin').replace(/yaptık/iu,'ettik').replace(/yaptınız/iu,'ettiniz')],
+      [/\bteşekkür[ \t]+(?:yaptınız|yaptık|yaptım|yaptın|yapmak|yaptı)(?=\s|[.!?,;:]|$)/giu, value => value.replace(/yapmak/iu,'etmek').replace(/yaptı/iu,'etti').replace(/yaptım/iu,'ettim').replace(/yaptın/iu,'ettin').replace(/yaptık/iu,'ettik').replace(/yaptınız/iu,'ettiniz')],
+      [/\bfotoğraf[ \t]+(?:yaptınız|yaptık|yaptım|yaptın|yapmak|yaptı)(?=\s|[.!?,;:]|$)/giu, value => value.replace(/yapmak/iu,'çekmek').replace(/yaptı/iu,'çekti').replace(/yaptım/iu,'çektim').replace(/yaptın/iu,'çektin').replace(/yaptık/iu,'çektik').replace(/yaptınız/iu,'çektiniz')]
     ];
     for (const [re,transform] of rules) {
       re.lastIndex = 0;
