@@ -54,6 +54,12 @@ patch(
     "  function enrichClauses(text,tokens) {\n    let clause = 0;\n    let cursor = 0;\n    for (const token of tokens) {\n      while (cursor < token.start) {\n        if (/[.!?;:\\n]/u.test(text[cursor])) clause++;\n        cursor++;\n      }\n      token.clause = clause;\n    }\n    return tokens;\n  }",
     'semantic-linear-clause-scan'
 )
+patch(
+    semantic_path,
+    "      const morphology = baseAnalyzeMorphology(raw) || baseAnalyzeMorphology(clean) || null;\n      const root = normalize(morphology?.root || clean);\n      tokens.push({raw,start,end,root,morphology,classes:classesForRoot(root)});",
+    "      const morphology = baseAnalyzeMorphology(raw) || baseAnalyzeMorphology(clean) || null;\n      const analyzedRoot = normalize(morphology?.root || '');\n      const surfaceRoot = normalize(clean);\n      let root = analyzedRoot || surfaceRoot;\n      const analyzedSemantic = LEXICAL_CLASSES.has(root) || VERB_FRAMES.has(root) || CASE_FRAMES.has(root);\n      const surfaceSemantic = LEXICAL_CLASSES.has(surfaceRoot) || VERB_FRAMES.has(surfaceRoot) || CASE_FRAMES.has(surfaceRoot);\n      if (surfaceSemantic && !analyzedSemantic) root = surfaceRoot;\n      tokens.push({raw,start,end,root,morphology,classes:classesForRoot(root)});",
+    'semantic-surface-root-fallback'
+)
 
 longtext_path = root / 'upload/js/warext/turkish-spellcheck/longtext-v110.js'
 patch(longtext_path, "  const VERSION = '1.1.0';", "  const VERSION = '1.2.0';", 'longtext-version')
