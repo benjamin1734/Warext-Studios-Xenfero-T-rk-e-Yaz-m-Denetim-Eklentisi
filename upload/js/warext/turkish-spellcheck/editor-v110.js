@@ -4,7 +4,7 @@
   if (window.__warextTurkishSpellCheckV110) return;
   window.__warextTurkishSpellCheckV110 = true;
 
-  const VERSION = '1.3.0';
+  const VERSION = '2.0.0';
   const states = new WeakMap();
   const stateList = new Set();
   const boolValue = (value, fallback = true) => value == null || value === '' ? fallback : !['0','false','off','no'].includes(String(value).toLowerCase());
@@ -762,7 +762,9 @@
       button.setAttribute('role', 'option');
       button.addEventListener('mousedown', event => event.preventDefault());
       button.addEventListener('click', () => {
+        const from = context.word || '';
         replaceRange(el, context, suggestion);
+        engine()?.learning?.acceptedSuggestion?.({from,to:suggestion,rule:context.rule || ''});
         hideBar(bar);
       });
       bar.appendChild(button);
@@ -823,7 +825,9 @@
       button.setAttribute('role', 'option');
       button.addEventListener('mousedown', event => event.preventDefault());
       button.addEventListener('click', () => {
+        const from = context.word || '';
         replaceRange(el, context, suggestion);
+        engine()?.learning?.acceptedSuggestion?.({from,to:suggestion,rule:context.rule || ''});
         hideBar(bar);
       });
       bar.appendChild(button);

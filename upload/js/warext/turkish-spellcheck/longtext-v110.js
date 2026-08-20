@@ -4,7 +4,7 @@
   if (window.__warextLongTextV110) return;
   window.__warextLongTextV110 = true;
 
-  const VERSION = '1.3.0';
+  const VERSION = '2.0.0';
   const core = window.WarextTextCoreV110;
   if (!core) return;
 
@@ -25,6 +25,7 @@
     informal: boolValue(configData.informal, true),
     deepContext: boolValue(configData.deepContext, true),
     semantic: boolValue(configData.semantic, true),
+    semanticSensitivity: numberValue(configData.semanticSensitivity, 88, 70, 99),
     threshold: numberValue(configData.longTextThreshold, 700, 250, 50000),
     maxIssues: numberValue(configData.longTextMaxIssues, 220, 20, 800),
     segmentSize: numberValue(configData.longTextSegmentSize, 1600, 600, 4000)
@@ -196,6 +197,7 @@
           previousSentence:cfg.deepContext ? previousText : '',
           nextSentence:cfg.deepContext ? nextText : '',
           semantic:cfg.semantic,
+          semanticSensitivity:cfg.semanticSensitivity,
           longText:true
         }) || [];
       } catch (_) {

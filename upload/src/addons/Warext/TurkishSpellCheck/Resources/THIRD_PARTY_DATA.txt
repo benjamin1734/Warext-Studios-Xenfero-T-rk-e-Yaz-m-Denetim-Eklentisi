@@ -1,0 +1,23 @@
+Warext Turkish Spell Check 2.0.0 build-time data sources
+
+ekartal/turkce-kelime-database
+Pinned commit: 444dbcc53556618b0977a3d608cbf1402f7e9363
+Used only during build to produce the bundled local dictionary.
+
+tdd-ai/hunspell-tr
+Pinned commit: 7302eca5f3652fe7ae3d3ec06c44697c97342b4e
+MPL-2.0. Used only during build for Turkish Hunspell roots, affixes and spelling corrections.
+
+ahakanacar/turkish-dictionary-dataset-and-statistics
+Pinned commit: 5ef471d903d48010cd15f4d3a0bb18a19ba95137
+MIT. Used only during build for Turkish phrase and idiom data.
+
+3nesdeniz/turkish-daily-dialogues-5k
+Pinned commit: ccd9f05c2f97684bbd9a55d818528da9dfb6bd5a
+CC BY 4.0. Used only during build for local n-gram statistics. Author: Enes Deniz.
+
+GeoNames cities500
+https://www.geonames.org/
+CC BY 4.0. Used only during build to create the bundled local place-name membership index.
+
+Runtime network dependency: none.

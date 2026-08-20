@@ -7,7 +7,7 @@
   const engine = window.WarextTurkishSpellEngineV110 || window.WarextTurkishSpellEngineV300;
   if (!engine?.check || !engine?.analyzeSentence || !engine?.isValid) return;
 
-  const VERSION = '1.1.0';
+  const VERSION = '2.0.0';
   const baseCheck = engine.check.bind(engine);
   const baseAnalyzeSentence = engine.analyzeSentence.bind(engine);
   const baseIsValid = engine.isValid.bind(engine);
@@ -175,11 +175,10 @@
 
   function rootLooksVerb(root) {
     if (!root || chars(root).length < 2) return false;
-    if (!baseIsValid(root)) return false;
     const h2 = harmony2(root);
     if (h2 && baseIsValid(`${root}m${h2}k`)) return true;
     if (baseIsValid(`${root}mak`) || baseIsValid(`${root}mek`)) return true;
-    return false;
+    return baseIsValid(root);
   }
 
   function validateGerundStem(stem, suffix) {

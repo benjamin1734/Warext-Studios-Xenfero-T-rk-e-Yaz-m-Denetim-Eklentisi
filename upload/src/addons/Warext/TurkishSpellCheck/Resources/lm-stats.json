@@ -1,0 +1,7 @@
+{
+  "version": "2.0.0",
+  "sentences": 48517,
+  "bigrams": 6775,
+  "trigrams": 7061,
+  "runtimeExternalDependencies": 0
+}

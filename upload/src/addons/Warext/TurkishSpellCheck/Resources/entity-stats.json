@@ -1,0 +1,8 @@
+{
+  "version": "2.0.0",
+  "locationNames": 220000,
+  "bloomBits": 8388608,
+  "hashes": 7,
+  "source": "GeoNames cities500",
+  "runtimeExternalDependencies": 0
+}

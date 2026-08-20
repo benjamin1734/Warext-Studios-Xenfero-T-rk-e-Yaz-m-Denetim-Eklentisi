@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "2.0.0",
   "tdkWords": 60711,
   "hunspellRoots": 75909,
   "hunspellDerivedWords": 420000,
@@ -9,5 +9,8 @@
   "flagMode": "num",
   "perRootLimit": 72,
   "maxDepth": 2,
-  "maxGenerated": 420000
+  "maxGenerated": 420000,
+  "lexiconBits": 16777216,
+  "lexiconHashes": 10,
+  "dictionaryArchitecture": "lazy-bloom"
 }

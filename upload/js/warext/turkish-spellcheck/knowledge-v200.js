@@ -125,6 +125,9 @@
   frame(['dinle'],['human'],['media','human']);
   frame(['giy'],['human'],['clothing']);
   frame(['sür','sur'],['human'],['vehicle']);
+  frame(['al'],['human'],['entity']);
+  frame(['ver'],['human'],['entity']);
+  frame(['getir','götür'],['human'],['entity']);
   frame(['kullan'],['human'],['tool','device','software','vehicle','file','service'],{objectCase:'accusative'});
   frame(['yükle','yukle'],['human'],['file','software','data']);
   frame(['indir'],['human'],['file','software','data']);
