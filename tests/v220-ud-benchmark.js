@@ -64,6 +64,8 @@ let objectTotal=0;
 let objectHit=0;
 let objectCoverage=0;
 let crashes=0;
+const subjectMisses=[];
+const objectMisses=[];
 for (const raw of blocks(fs.readFileSync(input,'utf8'))) {
   const row = parseBlock(raw);
   if (!row.text || !row.root || !['VERB','AUX'].includes(row.root.upos)) continue;
@@ -77,12 +79,14 @@ for (const raw of blocks(fs.readFileSync(input,'utf8'))) {
     const predicted=predictedForms(parsed,'subject');
     if (predicted.size) subjectCoverage++;
     if (predicted.has(normalize(row.subject.form))) subjectHit++;
+    else if (subjectMisses.length < 24) subjectMisses.push({text:row.text,gold:row.subject.form,predicted:[...predicted],root:row.root.form,object:row.object?.form || ''});
   }
   if (row.object) {
     objectTotal++;
     const predicted=predictedForms(parsed,'object');
     if (predicted.size) objectCoverage++;
     if (predicted.has(normalize(row.object.form))) objectHit++;
+    else if (objectMisses.length < 16) objectMisses.push({text:row.text,gold:row.object.form,predicted:[...predicted],root:row.root.form,subject:row.subject?.form || ''});
   }
   if (eligible >= 2500) break;
 }
@@ -92,6 +96,7 @@ const subjectAccuracy=subjectTotal ? subjectHit / subjectTotal : 0;
 const objectAccuracy=objectTotal ? objectHit / objectTotal : 0;
 const subjectCoverageRate=subjectTotal ? subjectCoverage / subjectTotal : 0;
 const objectCoverageRate=objectTotal ? objectCoverage / objectTotal : 0;
+console.log(JSON.stringify({diagnostic:true,eligible,subjectTotal,subjectHit,subjectAccuracy,subjectCoverageRate,objectTotal,objectHit,objectAccuracy,objectCoverageRate,subjectMisses,objectMisses}));
 if (subjectTotal >= 100 && subjectCoverageRate < 0.5) throw new Error(`Özne kapsaması düşük: ${subjectCoverage}/${subjectTotal}`);
 if (objectTotal >= 100 && objectCoverageRate < 0.5) throw new Error(`Nesne kapsaması düşük: ${objectCoverage}/${objectTotal}`);
 if (subjectTotal >= 100 && subjectAccuracy < 0.32) throw new Error(`Özne doğruluğu düşük: ${subjectHit}/${subjectTotal}`);
