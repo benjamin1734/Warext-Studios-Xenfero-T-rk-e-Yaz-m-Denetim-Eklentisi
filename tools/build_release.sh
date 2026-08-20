@@ -51,6 +51,26 @@ longtext.write_text(text,encoding='utf-8')
 language=root/'upload/js/warext/turkish-spellcheck/language-v110.js'
 language_text=language.read_text(encoding='utf-8')
 language_text=re.sub(r"const VERSION = '[^']+';","const VERSION = '2.0.0';",language_text,count=1)
+old="""  function rootLooksVerb(root) {
+    if (!root || chars(root).length < 2) return false;
+    if (!baseIsValid(root)) return false;
+    const h2 = harmony2(root);
+    if (h2 && baseIsValid(`${root}m${h2}k`)) return true;
+    if (baseIsValid(`${root}mak`) || baseIsValid(`${root}mek`)) return true;
+    return false;
+  }
+"""
+new="""  function rootLooksVerb(root) {
+    if (!root || chars(root).length < 2) return false;
+    const h2 = harmony2(root);
+    if (h2 && baseIsValid(`${root}m${h2}k`)) return true;
+    if (baseIsValid(`${root}mak`) || baseIsValid(`${root}mek`)) return true;
+    return baseIsValid(root);
+  }
+"""
+if old not in language_text:
+    raise SystemExit('Fiil kökü doğrulama noktası bulunamadı')
+language_text=language_text.replace(old,new,1)
 language.write_text(language_text,encoding='utf-8')
 PY
 
