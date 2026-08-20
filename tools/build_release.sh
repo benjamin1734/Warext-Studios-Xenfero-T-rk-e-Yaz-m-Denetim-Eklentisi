@@ -69,9 +69,10 @@ new="""  function rootLooksVerb(root) {
     return baseIsValid(root);
   }
 """
-if old not in language_text:
+if old in language_text:
+    language_text=language_text.replace(old,new,1)
+elif new not in language_text:
     raise SystemExit('Fiil kökü doğrulama noktası bulunamadı')
-language_text=language_text.replace(old,new,1)
 language.write_text(language_text,encoding='utf-8')
 knowledge=root/'upload/js/warext/turkish-spellcheck/knowledge-v200.js'
 knowledge_text=knowledge.read_text(encoding='utf-8')
