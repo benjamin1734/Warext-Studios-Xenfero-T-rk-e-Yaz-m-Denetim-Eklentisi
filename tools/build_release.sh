@@ -35,7 +35,7 @@ from pathlib import Path
 root = Path(sys.argv[1])
 stats_path = root / 'upload/src/addons/Warext/TurkishSpellCheck/Resources/dictionary-stats.json'
 stats = json.loads(stats_path.read_text(encoding='utf-8'))
-stats['version'] = '1.2.0'
+stats['version'] = '1.3.0'
 stats_path.write_text(json.dumps(stats, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 def patch(path, old, new, label):
@@ -70,7 +70,14 @@ elif new_collocation not in semantic:
     raise SystemExit('Derleme dönüşümü bulunamadı: semantic-collocation-boundary')
 
 longtext_path = root / 'upload/js/warext/turkish-spellcheck/longtext-v110.js'
-patch(longtext_path, "  const VERSION = '1.1.0';", "  const VERSION = '1.2.0';", 'longtext-version')
+longtext = longtext_path.read_text(encoding='utf-8')
+for old_version in ["  const VERSION = '1.1.0';", "  const VERSION = '1.2.0';"]:
+    if old_version in longtext:
+        longtext = longtext.replace(old_version, "  const VERSION = '1.3.0';", 1)
+        break
+if "  const VERSION = '1.3.0';" not in longtext:
+    raise SystemExit('Derleme dönüşümü bulunamadı: longtext-version')
+longtext_path.write_text(longtext, encoding='utf-8')
 patch(
     longtext_path,
     "    deepContext: boolValue(configData.deepContext, true),\n    threshold:",
@@ -86,12 +93,13 @@ patch(
 
 setup_path = root / 'upload/src/addons/Warext/TurkishSpellCheck/Setup.php'
 setup = setup_path.read_text(encoding='utf-8')
-if 'upgrade4200070Step1' not in setup:
-    marker = '\n}\n'
-    if not setup.endswith(marker):
+if 'upgrade4300070Step1' not in setup:
+    marker = '\n}'
+    position = setup.rfind(marker)
+    if position < 0:
         raise SystemExit('Setup sınıf sonu bulunamadı')
-    method = "\n    public function upgrade4200070Step1(): void\n    {\n        try\n        {\n            $this->query('TRUNCATE TABLE xf_warext_spell_cache');\n        }\n        catch (\\Throwable $e)\n        {\n        }\n    }\n"
-    setup = setup[:-len(marker)] + method + marker
+    method = "\n    public function upgrade4300070Step1(): void\n    {\n        try\n        {\n            $this->query('TRUNCATE TABLE xf_warext_spell_cache');\n        }\n        catch (\\Throwable $e)\n        {\n        }\n    }\n"
+    setup = setup[:position] + method + setup[position:]
     setup_path.write_text(setup, encoding='utf-8')
 PY
 
@@ -106,6 +114,8 @@ for file in \
   corrections-v110.js \
   language-v110.js \
   semantic-v110.js \
+  semantic-deep-v110.js \
+  semantic-ui-v110.js \
   editor-v110.js \
   longtext-v110.js; do
   node --check "$ROOT/upload/js/warext/turkish-spellcheck/$file"
@@ -117,6 +127,7 @@ WAREXT_FULL_BUILD=1 node "$ROOT/tests/v1-language-regression.js"
 node "$ROOT/tests/v1-textcore-regression.js"
 node "$ROOT/tests/v110-advanced-regression.js"
 WAREXT_FULL_BUILD=1 node "$ROOT/tests/v120-semantic-regression.js"
+WAREXT_FULL_BUILD=1 node "$ROOT/tests/v130-semantic-regression.js"
 php -l "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Setup.php"
 
 python3 - "$ROOT" <<'PY'
@@ -126,28 +137,34 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 root = Path(sys.argv[1])
 addon = json.load((root / 'upload/src/addons/Warext/TurkishSpellCheck/addon.json').open(encoding='utf-8'))
-if addon.get('version_string') != '1.2.0' or int(addon.get('version_id', 0)) != 4200070:
+if addon.get('version_string') != '1.3.0' or int(addon.get('version_id', 0)) != 4300070:
     raise SystemExit('Sürüm bilgisi geçersiz')
 stats = json.load((root / 'upload/src/addons/Warext/TurkishSpellCheck/Resources/dictionary-stats.json').open(encoding='utf-8'))
-if stats.get('version') != '1.2.0':
+if stats.get('version') != '1.3.0':
     raise SystemExit('Sözlük sürümü geçersiz')
 if int(stats.get('estimatedValidWords', 0)) < 250000 or int(stats.get('hunspellDerivedWords', 0)) < 150000:
     raise SystemExit(f'Genişletilmiş sözlük hedefi karşılanamadı: {stats}')
 for path in sorted((root / 'upload/src/addons/Warext/TurkishSpellCheck/_data').glob('*.xml')):
     ET.parse(path)
 bootstrap = (root / 'upload/js/warext/turkish-spellcheck/bootstrap-v110.js').read_text(encoding='utf-8')
-if "semantic-v110.js" not in bootstrap or "const VERSION = '1.2.0';" not in bootstrap:
-    raise SystemExit('Anlam motoru yükleyiciye bağlanmadı')
+for asset in ['semantic-v110.js','semantic-deep-v110.js','semantic-ui-v110.js']:
+    if asset not in bootstrap:
+        raise SystemExit(f'Anlam motoru varlığı yükleyiciye bağlanmadı: {asset}')
+if "const VERSION = '1.3.0';" not in bootstrap:
+    raise SystemExit('Bootstrap sürümü geçersiz')
 semantic = (root / 'upload/js/warext/turkish-spellcheck/semantic-v110.js').read_text(encoding='utf-8')
+deep = (root / 'upload/js/warext/turkish-spellcheck/semantic-deep-v110.js').read_text(encoding='utf-8')
 if "semanticExternalModel:0" not in semantic or "externalDependencies:0" not in semantic:
-    raise SystemExit('Yerel anlam motoru bağımlılık doğrulaması başarısız')
+    raise SystemExit('Temel anlam motoru bağımlılık doğrulaması başarısız')
+if "semanticExternalModel:0" not in deep or "externalDependencies:0" not in deep or "v130-local-deep-symbolic-discourse" not in deep:
+    raise SystemExit('Derin anlam motoru bağımlılık doğrulaması başarısız')
 editor = (root / 'upload/js/warext/turkish-spellcheck/editor-v110.js').read_text(encoding='utf-8')
 longtext = (root / 'upload/js/warext/turkish-spellcheck/longtext-v110.js').read_text(encoding='utf-8')
 setup = (root / 'upload/src/addons/Warext/TurkishSpellCheck/Setup.php').read_text(encoding='utf-8')
-if 'semantic:cfg.semantic' not in editor or 'semantic:cfg.semantic' not in longtext:
-    raise SystemExit('Anlam denetimi editör bağlamına uygulanmadı')
-if 'upgrade4200070Step1' not in setup:
-    raise SystemExit('1.2 yükseltme adımı bulunamadı')
+if 'semantic:cfg.semantic' not in editor or 'semanticSensitivity' not in editor or 'semantic:cfg.semantic' not in longtext:
+    raise SystemExit('Anlam denetimi editör/uzun metin bağlamına uygulanmadı')
+if 'upgrade4300070Step1' not in setup:
+    raise SystemExit('1.3 yükseltme adımı bulunamadı')
 PY
 
 if grep -RInE '^[[:space:]]*(//|/\*|\*)' \
@@ -174,6 +191,6 @@ fi
 rm -rf "$ROOT/release"
 mkdir -p "$ROOT/release"
 cd "$ROOT"
-zip -qr "release/Warext-SpellCheck-1.2.0.zip" upload README.txt
-sha256sum "release/Warext-SpellCheck-1.2.0.zip" > SHA256SUMS
-printf '%s\n' "release/Warext-SpellCheck-1.2.0.zip hazırlandı."
+zip -qr "release/Warext-SpellCheck-1.3.0.zip" upload README.txt
+sha256sum "release/Warext-SpellCheck-1.3.0.zip" > SHA256SUMS
+printf '%s\n' "release/Warext-SpellCheck-1.3.0.zip hazırlandı."
