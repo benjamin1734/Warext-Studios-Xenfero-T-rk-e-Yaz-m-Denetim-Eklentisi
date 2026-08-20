@@ -4,7 +4,7 @@
   if (window.__warextTurkishSpellBootstrapV110) return;
   window.__warextTurkishSpellBootstrapV110 = true;
 
-  const VERSION = '2.1.0';
+  const VERSION = '2.2.0';
   const script = document.currentScript;
   const scriptUrl = script?.src || '';
   const baseDir = scriptUrl ? scriptUrl.slice(0,scriptUrl.lastIndexOf('/') + 1) : '';
