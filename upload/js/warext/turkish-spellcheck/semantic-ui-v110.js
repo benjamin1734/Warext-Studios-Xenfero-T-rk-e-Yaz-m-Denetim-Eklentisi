@@ -32,7 +32,7 @@
     if (document.getElementById('wtsc-semantic-ui-v130')) return;
     const style = document.createElement('style');
     style.id = 'wtsc-semantic-ui-v130';
-    style.textContent = '.wtsc-semantic-panel{display:none!important}.wtsc-semantic-deep-panel{margin:6px 0 3px;padding:8px 10px;border:1px solid rgba(190,140,40,.42);border-radius:8px;background:rgba(190,140,40,.07);font-size:12px;line-height:1.4}.wtsc-semantic-deep-panel[hidden]{display:none}.wtsc-semantic-deep-item+.wtsc-semantic-deep-item{margin-top:6px;padding-top:6px;border-top:1px solid rgba(127,127,127,.14)}.wtsc-semantic-deep-title{font-weight:650;margin-right:5px}.wtsc-semantic-deep-meta{opacity:.58;margin-left:6px;font-size:11px}';
+    style.textContent = '.wtsc-semantic-panel{display:none!important}.wtsc-semantic-deep-panel{margin:6px 0 3px;padding:8px 10px;border:1px solid rgba(190,140,40,.42);border-radius:8px;background:rgba(190,140,40,.07);font-size:12px;line-height:1.4}.wtsc-semantic-deep-panel[hidden]{display:none}.wtsc-semantic-deep-item+.wtsc-semantic-deep-item{margin-top:6px;padding-top:6px;border-top:1px solid rgba(127,127,127,.14)}.wtsc-semantic-deep-title{font-weight:650;margin-right:5px}.wtsc-semantic-deep-meta{opacity:.58;margin-left:6px;font-size:11px}.wtsc-semantic-deep-action{appearance:none;border:0;background:transparent;color:inherit;opacity:.7;padding:2px 5px;margin-left:6px;font:inherit;font-size:11px;cursor:pointer}.wtsc-semantic-deep-action:hover,.wtsc-semantic-deep-action:focus{opacity:1;text-decoration:underline;outline:none}';
     document.head.appendChild(style);
   }
 
@@ -48,15 +48,21 @@
     return panel;
   }
 
+  function warningKey(warning) {
+    return `${warning.rule || ''}:${warning.start || 0}:${warning.end || 0}:${warning.message || ''}`;
+  }
+
   function render(el,report) {
-    const panel = states.get(el)?.panel;
+    const state=states.get(el);
+    const panel = state?.panel;
     if (!panel) return;
     panel.textContent = '';
-    const warnings = (report?.warnings || []).filter(item => Number(item.confidence || 0) >= sensitivity).slice(0,4);
+    const warnings = (report?.warnings || []).filter(item => Number(item.confidence || 0) >= sensitivity && !state.dismissed.has(warningKey(item))).slice(0,5);
     if (!warnings.length) {
       panel.hidden = true;
       return;
     }
+    const fullText=editorText(el);
     for (const warning of warnings) {
       const row = document.createElement('div');
       row.className = 'wtsc-semantic-deep-item';
@@ -68,7 +74,20 @@
       const meta = document.createElement('span');
       meta.className = 'wtsc-semantic-deep-meta';
       meta.textContent = `%${Math.round(Number(warning.confidence || 0) * 100)}`;
-      row.append(title,text,meta);
+      const action=document.createElement('button');
+      action.type='button';
+      action.className='wtsc-semantic-deep-action';
+      action.textContent='Bu doğru';
+      action.addEventListener('click',() => {
+        const start=Math.max(0,Number(warning.start || 0));
+        const end=Math.max(start,Number(warning.end || start));
+        const rawWord=String(warning.word || '').trim();
+        const candidate=/^[A-Za-zÇĞİÖŞÜçğıöşüÂÎÛâîû'’-]{2,64}$/u.test(rawWord) ? rawWord : '';
+        engine.learning?.falsePositive?.({rule:warning.rule || 'semantic',text:fullText.slice(Math.max(0,start - 50),Math.min(fullText.length,Math.max(end,start + 1) + 50)),word:candidate,confidence:Number(warning.confidence || 0)});
+        state.dismissed.add(warningKey(warning));
+        state.schedule(20);
+      });
+      row.append(title,text,meta,action);
       panel.appendChild(row);
     }
     panel.hidden = false;
@@ -104,8 +123,8 @@
       clearTimeout(timer);
       timer = window.setTimeout(() => analyze(el),delay);
     };
-    states.set(el,{panel,schedule});
-    el.addEventListener('input',() => schedule(700),{passive:true});
+    states.set(el,{panel,schedule,dismissed:new Set()});
+    el.addEventListener('input',() => { states.get(el)?.dismissed.clear(); schedule(700); },{passive:true});
     el.addEventListener('focus',() => schedule(180),{passive:true});
     schedule(320);
   }

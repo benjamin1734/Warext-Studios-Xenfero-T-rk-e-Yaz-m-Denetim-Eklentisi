@@ -4,7 +4,7 @@
   if (window.__warextTurkishSpellBootstrapV110) return;
   window.__warextTurkishSpellBootstrapV110 = true;
 
-  const VERSION = '1.3.0';
+  const VERSION = '2.0.0';
   const script = document.currentScript;
   const scriptUrl = script?.src || '';
   const baseDir = scriptUrl ? scriptUrl.slice(0,scriptUrl.lastIndexOf('/') + 1) : '';
@@ -59,12 +59,20 @@
     document.documentElement.dataset.wtscStatus = 'assets-loading';
     try {
       await loadScript('text-core-v110.js',() => !!window.WarextTextCoreV110);
+      await loadScript('lexicon-v200.js',() => !!window.WarextLexiconV200);
       await loadScript('dictionary-v110.js',() => !!window.WarextTurkishSpellEngineV110);
       await loadScript('corrections-v110.js',() => !!window.WarextCorrectionMapV110);
       await loadScript('language-v110.js',() => !!window.__warextLanguageV110);
       await loadScript('semantic-v110.js',() => !!window.__warextSemanticV120);
       await loadScript('semantic-deep-v110.js',() => !!window.__warextSemanticDeepV130);
       await loadScript('semantic-context-v110.js',() => !!window.__warextSemanticContextV130);
+      await loadScript('entities-v200.js',() => !!window.WarextEntitiesV200);
+      await loadScript('idioms-v200.js',() => !!window.WarextIdiomsV200);
+      await loadScript('lm-v200.js',() => !!window.WarextLmV200);
+      await loadScript('micro-model-v200.js',() => !!window.WarextMicroModelV200);
+      await loadScript('knowledge-v200.js',() => !!window.__warextKnowledgeV200);
+      await loadScript('micro-integration-v200.js',() => !!window.__warextMicroIntegrationV200);
+      await loadScript('learning-v200.js',() => !!window.__warextLearningV200);
       await loadScript('semantic-ui-v110.js',() => !!window.__warextSemanticUiV130);
       if (!window.WarextTurkishSpellEngineV110) throw new Error('engine');
       await loadScript('editor-v110.js',() => !!window.__warextTurkishSpellCheckV110);

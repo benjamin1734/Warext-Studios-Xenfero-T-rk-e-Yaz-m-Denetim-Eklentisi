@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<template title="warext_spell_learning"><![CDATA[<xf:title>Warext Türkçe Denetimi Öğrenme Merkezi</xf:title>
+
+<xf:pageaction>
+	<xf:button href="{{ link('options/groups/warextSpell') }}" icon="cog">Ayarlar</xf:button>
+	<xf:form action="{{ link('warext-spell-learning/clear') }}" ajax="true">
+		<xf:button type="submit" icon="delete">Raporları temizle</xf:button>
+	</xf:form>
+</xf:pageaction>
+
+<div class="block">
+	<div class="block-container">
+		<h2 class="block-header">Sözlük adayları</h2>
+		<div class="block-body">
+			<xf:if is="$candidates is not empty">
+				<table class="dataList-table">
+					<thead><tr><th>Kelime</th><th>Rapor</th><th>Kullanıcı</th><th>Son bildirim</th><th></th></tr></thead>
+					<tbody>
+					<xf:foreach loop="$candidates" value="$candidate">
+						<tr>
+							<td>{$candidate.word}</td><td>{$candidate.report_count}</td><td>{$candidate.user_count}</td><td><xf:date time="$candidate.last_date" /></td>
+							<td>
+								<xf:form action="{{ link('warext-spell-learning/approve') }}" ajax="true">
+									<xf:hiddenval name="word" value="{$candidate.word}" />
+									<xf:button type="submit" class="button--small">Sözlüğe onayla</xf:button>
+								</xf:form>
+							</td>
+						</tr>
+					</xf:foreach>
+					</tbody>
+				</table>
+			<xf:else />
+				<div class="block-row">Henüz yanlış pozitif kelime raporu yok.</div>
+			</xf:if>
+		</div>
+	</div>
+</div>
+
+<div class="block">
+	<div class="block-container">
+		<h2 class="block-header">En çok reddedilen kurallar</h2>
+		<div class="block-body">
+			<table class="dataList-table">
+				<thead><tr><th>Kural</th><th>Rapor</th><th>Kullanıcı</th><th>Son bildirim</th></tr></thead>
+				<tbody>
+				<xf:foreach loop="$rules" value="$rule">
+					<tr><td>{$rule.rule_key}</td><td>{$rule.report_count}</td><td>{$rule.user_count}</td><td><xf:date time="$rule.last_date" /></td></tr>
+				</xf:foreach>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+<div class="block">
+	<div class="block-container">
+		<h2 class="block-header">Kabul edilen öneriler</h2>
+		<div class="block-body">
+			<table class="dataList-table">
+				<thead><tr><th>Kaynak</th><th>Öneri</th><th>Kural</th><th>Kabul</th><th>Kullanıcı</th></tr></thead>
+				<tbody>
+				<xf:foreach loop="$accepted" value="$item">
+					<tr><td>{$item.word}</td><td>{$item.target}</td><td>{$item.rule_key}</td><td>{$item.accept_count}</td><td>{$item.user_count}</td></tr>
+				</xf:foreach>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+<div class="block">
+	<div class="block-container">
+		<h2 class="block-header">Onaylı forum sözlüğü</h2>
+		<div class="block-body"><div class="block-row">{{ implode(', ', $approved) }}</div></div>
+	</div>
+</div>]]></template>
