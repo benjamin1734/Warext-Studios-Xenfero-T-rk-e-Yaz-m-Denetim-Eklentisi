@@ -1,5 +1,9 @@
 # Değişiklik Geçmişi
 
+## 2.1.0
+
+Noktalama, sözcük anlamı ayrıştırma ve yanlış pozitif kontrolüne odaklanan kalite katmanı eklendi. Giriş ve hitap yapıları için yüksek güvenli noktalama denetimleri, çok anlamlı sözcüklerde bağlamsal WSD genişletmesi, semantik uyarılarda deyim, teknik metin yoğunluğu, cümle karmaşıklığı ve kullanıcı yanlış-pozitif geri bildirimlerini dikkate alan güven kalibrasyonu ile dependency rol adaylarının hâl ve yakınlık bilgisine göre sıralanması eklendi. Build zinciri, doğal günlük Türkçe diyaloglardan seçilen en az 5.000 temiz cümlede yüksek güvenli semantik yanlış-pozitif oranını ölçen corpus benchmarkıyla genişletildi. Çalışma zamanı harici API/model/servis bağımlılığı sıfır olarak korunur.
+
 ## 2.0.0
 
 Tamamen yerel v2 NLP mimarisi eklendi. Sözlük lazy Bloom indeksine taşındı; Hunspell kök ve ek kuralları build aşamasında genişletilerek yerel form havuzuna derlenir. Yerel bilgi grafiği, semantik sınıflar, fiil istemi, özne-nesne seçilim uyumu, bağımlılık çözümleme, zamir/gönderim takibi, zaman çizgisi, neden-sonuç, koşul, karşıtlık, olumsuzluk ve kapsam denetimleri eklendi. Açık veri kaynaklarından build aşamasında yerel deyim bilgisi, 100.000+ yer adı hedefli kompakt özel ad indeksi ve Türkçe n-gram dil modeli üretilir. 12.000+ örnekle oluşturulan gömülü mikro model sembolik motorla birleştirildi. Kullanıcı geri bildirimi ve kabul edilen öneriler için yalnızca aynı XenForo kurulumu içinde çalışan yerel öğrenme altyapısı ile ACP yönetim ekranı eklendi. Uzun metin taraması parçalı ve önbellekli yapıda geliştirildi. Otomatik düzeltme yapılmaz; öneriler yalnızca kullanıcı tıklamasıyla uygulanır. Çalışma zamanı harici API/model/servis bağımlılığı bulunmaz.
