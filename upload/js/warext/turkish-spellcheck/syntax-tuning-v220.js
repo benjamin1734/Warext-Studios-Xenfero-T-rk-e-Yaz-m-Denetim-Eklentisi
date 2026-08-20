@@ -10,20 +10,11 @@
   const baseMeaning=engine.analyzeMeaning.bind(engine);
   const morphology=typeof engine.analyzeMorphology === 'function' ? engine.analyzeMorphology.bind(engine) : () => null;
   const normalize=value => String(value || '').replace(/I/g,'ı').replace(/İ/g,'i').toLocaleLowerCase('tr-TR').trim();
-  const PRONOUNS=new Set(['ben','sen','o','biz','siz','onlar','bunlar','şunlar','sunlar','kim','biri','birisi','hepsi','çoğu','cogu']);
-  const BLOCKED=new Set(['bir','bu','şu','su','bazı','bazi','her','tüm','tum','bütün','butun','hiçbir','hicbir','hangi','kaç','kac','çok','cok','daha','en','ve','ile','için','icin','gibi','olarak','sonra','önce','once','bugün','bugun','dün','dun','yarın','yarin','hemen','sadece','yalnızca','yalnizca','işte','iste','ancak','fakat','ama','çünkü','cunku','adet','tane','ya','yada','ya da']);
+  const PRONOUNS=new Set(['ben','sen','o','biz','siz','onlar','bunlar','şunlar','sunlar']);
+  const BLOCKED=new Set(['bir','bu','şu','su','bazı','bazi','her','tüm','tum','bütün','butun','hiçbir','hicbir','hangi','kaç','kac','çok','cok','daha','en','ve','ile','için','icin','gibi','olarak','sonra','önce','once','bugün','bugun','dün','dun','yarın','yarin','hemen','sadece','yalnızca','yalnizca','işte','iste','ancak','fakat','ama','çünkü','cunku','adet','tane','ya','yada']);
 
   function raw(token) { return String(token?.raw || token?.word || ''); }
   function root(token) { return normalize(token?.root || morphology(raw(token))?.root || raw(token)); }
-  function caseLike(token) {
-    const value=normalize(raw(token).replace(/['’]/gu,''));
-    const base=root(token);
-    const explicit=normalize(token?.case || token?.morphology?.case || token?.morphology?.nounCase || '');
-    if (/acc|dat|abl|loc|ins|gen|belirtme|yonelme|ayrilma|bulunma|tamlayan|accusative|dative|ablative|locative|instrumental|genitive/u.test(explicit)) return true;
-    if (!value || !base || value === base || !value.startsWith(base)) return false;
-    const suffix=value.slice(base.length);
-    return /^(?:y?[ae]|[dt][ae](?:n)?|y?l[ae]|l[ae]r(?:[ae]|d[ae](?:n)?|l[ae])|[ıiuü]n(?:d[ae](?:n)?)?|[nsy]?[ıiuü](?:n)?[ae]|l[ae]r[ıiuü]n|l[ae]rl[ae])$/u.test(suffix);
-  }
   function finite(token) {
     const analysis=token?.morphology || morphology(raw(token));
     return !!(analysis?.valid && analysis?.mode === 'verb');
@@ -33,58 +24,58 @@
     const valuesA=new Set([normalize(raw(a)),root(a)]);
     return valuesA.has(normalize(raw(b))) || valuesA.has(root(b));
   }
-  function eligible(token) {
-    const word=normalize(raw(token));
-    if (!word || BLOCKED.has(word) || BLOCKED.has(root(token)) || finite(token) || caseLike(token)) return false;
-    if (/^(?:mi|mı|mu|mü|de|da|ki)$/u.test(word)) return false;
-    if (/^(?:\d+|[.,;:!?]+)$/u.test(word)) return false;
-    return true;
-  }
   function indexOfToken(tokens,target) {
     if (!target) return -1;
     let index=tokens.indexOf(target);
     if (index >= 0) return index;
-    index=tokens.findIndex(token => same(token,target));
-    return index;
+    return tokens.findIndex(token => same(token,target));
+  }
+  function obviousOblique(token) {
+    const word=normalize(raw(token).replace(/['’]/gu,''));
+    if (!word) return false;
+    if (/(?:lere|lara|lerde|larda|lerden|lardan|lerle|larla|dan|den|tan|ten|nda|nde|yla|yle)$/u.test(word)) return true;
+    const explicit=normalize(token?.case || token?.morphology?.case || token?.morphology?.nounCase || '');
+    return /dat|abl|loc|ins|gen|yonelme|ayrilma|bulunma|tamlayan|dative|ablative|locative|instrumental|genitive/u.test(explicit);
+  }
+  function eligible(token) {
+    const word=normalize(raw(token));
+    if (!word || BLOCKED.has(word) || BLOCKED.has(root(token)) || finite(token) || obviousOblique(token)) return false;
+    if (/^(?:mi|mı|mu|mü|de|da|ki|\d+)$/u.test(word)) return false;
+    return true;
   }
   function cloneSubject(token,source,score) {
-    if (!token) return null;
     return {...token,raw:raw(token),word:raw(token),root:root(token),role:'subject',source,score};
+  }
+  function followedByComma(text,token) {
+    const end=Number(token?.end);
+    if (!Number.isFinite(end)) return false;
+    return /^\s*,/u.test(String(text || '').slice(end,end + 4));
   }
   function subjectOverride(sentence,text) {
     const tokens=Array.isArray(sentence?.tokens) ? sentence.tokens : [];
     if (!tokens.length) return null;
     const predicateIndex=indexOfToken(tokens,sentence.predicate);
     const objectIndex=indexOfToken(tokens,sentence.object);
+
     for (let i=0;i<tokens.length;i++) {
+      if (i === objectIndex) continue;
       const word=normalize(raw(tokens[i]));
-      if (!PRONOUNS.has(word) || i === objectIndex) continue;
-      if (caseLike(tokens[i])) continue;
-      return cloneSubject(tokens[i],'v220-pronoun-subject',0.96);
+      if (PRONOUNS.has(word) && followedByComma(text,tokens[i])) return cloneSubject(tokens[i],'v220-pronoun-comma-subject',0.97);
     }
-    if (predicateIndex >= 0) {
-      const current=sentence.subject;
-      const currentOblique=current && caseLike(current);
-      const after=tokens.slice(predicateIndex + 1).find(token => eligible(token));
-      if (after && currentOblique) return cloneSubject(after,'v220-inverted-subject',0.92);
-      for (let i=predicateIndex - 1;i>=0;i--) {
-        const token=tokens[i];
-        const word=normalize(raw(token));
-        if (word === 'de' || word === 'da') continue;
-        if (!eligible(token) || i === objectIndex) continue;
-        const between=tokens.slice(i + 1,predicateIndex).map(item => normalize(raw(item)));
-        if (between.length <= 2 && between.every(value => value === 'de' || value === 'da' || value === 'da' || value === 'bile')) {
-          if (!current || currentOblique || indexOfToken(tokens,current) < i - 3) return cloneSubject(token,'v220-near-predicate-subject',0.91);
-        }
-        break;
-      }
-    }
-    const agent=tokens.findIndex(token => normalize(raw(token)) === 'tarafından' || normalize(raw(token)) === 'tarafindan');
+
+    const agent=tokens.findIndex(token => ['tarafından','tarafindan'].includes(normalize(raw(token))));
     if (agent >= 0 && predicateIndex > agent) {
       for (let i=predicateIndex - 1;i>agent;i--) {
         if (i === objectIndex || !eligible(tokens[i])) continue;
-        return cloneSubject(tokens[i],'v220-passive-subject',0.93);
+        return cloneSubject(tokens[i],'v220-passive-subject',0.95);
       }
+    }
+
+    if (predicateIndex >= 0 && sentence.subject && obviousOblique(sentence.subject)) {
+      const before=predicateIndex > 0 ? tokens[predicateIndex - 1] : null;
+      if (before && before !== sentence.object && eligible(before)) return cloneSubject(before,'v220-oblique-recovery-subject',0.94);
+      const after=predicateIndex + 1 < tokens.length ? tokens[predicateIndex + 1] : null;
+      if (after && after !== sentence.object && eligible(after)) return cloneSubject(after,'v220-inverted-subject',0.94);
     }
     return null;
   }
