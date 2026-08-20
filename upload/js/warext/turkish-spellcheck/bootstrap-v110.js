@@ -75,6 +75,7 @@
       await loadScript('learning-v200.js',() => !!window.__warextLearningV200);
       await loadScript('quality-v210.js',() => !!window.__warextQualityV210);
       await loadScript('quality-v220.js',() => !!window.__warextQualityV220);
+      await loadScript('syntax-v220.js',() => !!window.__warextSyntaxV220);
       await loadScript('semantic-ui-v110.js',() => !!window.__warextSemanticUiV130);
       if (!window.WarextTurkishSpellEngineV110) throw new Error('engine');
       await loadScript('editor-v110.js',() => !!window.__warextTurkishSpellCheckV110);
