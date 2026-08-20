@@ -1,5 +1,9 @@
 # Değişiklik Geçmişi
 
+## 1.3.0
+
+Tamamen yerel derin anlam katmanı eklendi. Çok anlamlı sözcükler için bağlamsal sözcük anlamı ayrıştırma, genişletilmiş semantik sınıflar, özne-nesne semantik rol çerçeveleri, özellik-varlık uyumu, fiil istemi ve hâl ilişkileri, kişi/zaman biçimini koruyan eşdizim düzeltmeleri, cümleler arası durum tutarlılığı, kapsam/kesinlik ve zaman çapası çelişkileri geliştirildi. Anlam raporu sözcük anlamları, semantik roller ve tutarlılık değeri üretebilir. Yüksek güvenli uyarılar yeni yerel anlam arayüzünde gösterilir. Çalışma zamanı harici model, API veya servis bağımlılığı sıfırdır.
+
 ## 1.2.0
 
 Tamamen yerel sembolik anlam motoru eklendi. Morfolojik köklerden anlam sınıflandırması, fiil özne/nesne seçim kısıtları, fiil-tamlayıcı hâl ilişkileri, sayı-miktar tekillik denetimi, karşılaştırma yığılması, Türkçe eşdizim düzeltmeleri, karşıt anlam ve kesinlik çelişkisi uyarıları ile komşu cümle zaman tutarlılığı geliştirildi. Anlam uyumsuzlukları otomatik düzeltilmez; yüksek güvenli durumlar ayrı uyarı panelinde gösterilir. ACP üzerinden anlam denetimi ve hassasiyet ayarı eklenmiştir. Çalışma zamanı harici model/API bağımlılığı sıfır olarak korunur.
