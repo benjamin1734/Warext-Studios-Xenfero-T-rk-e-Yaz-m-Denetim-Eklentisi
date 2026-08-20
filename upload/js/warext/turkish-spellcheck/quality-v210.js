@@ -83,7 +83,8 @@
 
   function senseReport(text) {
     const list = tokens(text);
-    const words = list.map(item => item.word);
+    const words = new Set(list.flatMap(item => [item.word,item.root]).filter(Boolean));
+    const normalizedText = normalize(text);
     const out = [];
     for (const token of list) {
       const key = SENSES.has(token.root) ? token.root : SENSES.has(token.word) ? token.word : '';
@@ -95,8 +96,8 @@
         let score = 0;
         for (const cue of option.cues) {
           const normalizedCue = normalize(cue);
-          if (words.includes(normalizedCue)) score += 1;
-          if (normalize(text).includes(normalizedCue) && normalizedCue.includes(' ')) score += 1;
+          if (words.has(normalizedCue)) score += 1;
+          if (normalizedCue.includes(' ') && normalizedText.includes(normalizedCue)) score += 1;
         }
         if (!best || score > best.score) {
           second = best?.score || 0;
