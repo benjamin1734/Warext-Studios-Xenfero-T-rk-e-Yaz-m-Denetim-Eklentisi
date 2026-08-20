@@ -5,6 +5,7 @@ require('../upload/js/warext/turkish-spellcheck/corrections-v110.js');
 require('../upload/js/warext/turkish-spellcheck/language-v110.js');
 require('../upload/js/warext/turkish-spellcheck/semantic-v110.js');
 require('../upload/js/warext/turkish-spellcheck/semantic-deep-v110.js');
+require('../upload/js/warext/turkish-spellcheck/semantic-context-v110.js');
 const e = global.WarextTurkishSpellEngineV110;
 
 function report(text,context = {}) {
@@ -51,4 +52,4 @@ const clean = report('Çocuk kitabı okudu.');
 if (hasSelectionRule(clean.warnings,'subject') || hasSelectionRule(clean.warnings,'object')) throw new Error(`Doğal cümle yanlış işaretlendi: ${JSON.stringify(clean)}`);
 
 if (e.stats.semanticExternalModel !== 0 || e.stats.externalDependencies !== 0) throw new Error('Harici anlam bağımlılığı bulundu');
-if (e.stats.semanticSenseFamilies < 15 || e.stats.semanticDeepFrames < 45 || e.stats.semanticDeepLexicon < 150) throw new Error(`Derin anlam kapsamı yetersiz: ${JSON.stringify(e.stats)}`);
+if (e.stats.semanticSenseFamilies < 15 || e.stats.semanticDeepFrames < 45 || e.stats.semanticDeepLexicon < 150 || e.stats.semanticContextCollocations < 15) throw new Error(`Derin anlam kapsamı yetersiz: ${JSON.stringify(e.stats)}`);
