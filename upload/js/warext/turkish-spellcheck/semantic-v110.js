@@ -180,7 +180,12 @@
       const raw = match[0];
       const clean = raw.replace(/['’].*$/u,'');
       const morphology = baseAnalyzeMorphology(raw) || baseAnalyzeMorphology(clean) || null;
-      const root = normalize(morphology?.root || clean);
+      const analyzedRoot = normalize(morphology?.root || '');
+      const surfaceRoot = normalize(clean);
+      let root = analyzedRoot || surfaceRoot;
+      const analyzedSemantic = LEXICAL_CLASSES.has(root) || VERB_FRAMES.has(root) || CASE_FRAMES.has(root);
+      const surfaceSemantic = LEXICAL_CLASSES.has(surfaceRoot) || VERB_FRAMES.has(surfaceRoot) || CASE_FRAMES.has(surfaceRoot);
+      if (surfaceSemantic && !analyzedSemantic) root = surfaceRoot;
       tokens.push({raw,start,end,root,morphology,classes:classesForRoot(root)});
     }
     return tokens;
