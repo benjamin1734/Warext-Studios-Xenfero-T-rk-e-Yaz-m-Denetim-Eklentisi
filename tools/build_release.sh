@@ -60,6 +60,14 @@ patch(
     "      const morphology = baseAnalyzeMorphology(raw) || baseAnalyzeMorphology(clean) || null;\n      const analyzedRoot = normalize(morphology?.root || '');\n      const surfaceRoot = normalize(clean);\n      let root = analyzedRoot || surfaceRoot;\n      const analyzedSemantic = LEXICAL_CLASSES.has(root) || VERB_FRAMES.has(root) || CASE_FRAMES.has(root);\n      const surfaceSemantic = LEXICAL_CLASSES.has(surfaceRoot) || VERB_FRAMES.has(surfaceRoot) || CASE_FRAMES.has(surfaceRoot);\n      if (surfaceSemantic && !analyzedSemantic) root = surfaceRoot;\n      tokens.push({raw,start,end,root,morphology,classes:classesForRoot(root)});",
     'semantic-surface-root-fallback'
 )
+semantic = semantic_path.read_text(encoding='utf-8')
+old_collocation = "(?:yapmak|yaptı|yaptım|yaptın|yaptık|yaptınız)\\b"
+new_collocation = "(?:yaptınız|yaptık|yaptım|yaptın|yapmak|yaptı)(?=\\s|[.!?,;:]|$)"
+if old_collocation in semantic:
+    semantic = semantic.replace(old_collocation, new_collocation)
+    semantic_path.write_text(semantic, encoding='utf-8')
+elif new_collocation not in semantic:
+    raise SystemExit('Derleme dönüşümü bulunamadı: semantic-collocation-boundary')
 
 longtext_path = root / 'upload/js/warext/turkish-spellcheck/longtext-v110.js'
 patch(longtext_path, "  const VERSION = '1.1.0';", "  const VERSION = '1.2.0';", 'longtext-version')
