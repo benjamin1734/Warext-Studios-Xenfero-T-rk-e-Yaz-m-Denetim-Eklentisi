@@ -1,4 +1,4 @@
-# Warext Turkish Spell Check 2.1.0
+# Warext Turkish Spell Check 2.2.0
 
 XenForo 2.3.0+ için tamamen yerel çalışan gelişmiş Türkçe yazım, dilbilgisi, morfoloji, noktalama ve anlam denetim eklentisi.
 
@@ -11,11 +11,12 @@ Warext Turkish Spell Check; forum mesajları, konu içerikleri ve XenForo editö
 | Yazım denetimi | Türkçe yazım hatalarının tespiti ve bağlama uygun düzeltme adayları |
 | Morfolojik analiz | Kök, ek, kişi, zaman, kip, hâl, olumsuzluk ve çekim yapılarının analizi |
 | Dilbilgisi | de/da, ki, soru eki, birleşik-ayrı yazım, kişi uyumu ve Türkçe gramer kuralları |
-| Noktalama | Noktalama işaretleri, boşluk kullanımı, giriş ifadeleri, hitap yapıları ve cümle biçimi kontrolleri |
-| Bağlam analizi | Cümle içi ve komşu cümlelerden yararlanarak bağlama duyarlı denetim |
+| Noktalama | Noktalama işaretleri, boşluk kullanımı, giriş ifadeleri, hitap yapıları, resmî hitaplar ve cümle biçimi kontrolleri |
+| Bağlam analizi | Cümle içi, cümlecik içi ve komşu cümlelerden yararlanarak bağlama duyarlı denetim |
 | Anlam denetimi | Özne-yüklem, nesne-fiil ve sözcük sınıfı ilişkilerinin değerlendirilmesi |
 | Fiil istemi | Fiillerin beklediği özne, nesne ve hâl ilişkilerinin kontrolü |
-| Çok anlamlı kelimeler | Sözcük anlamının çevresindeki bağlama göre ayrıştırılması ve belirsizliğin uyarı güvenine yansıtılması |
+| Çok anlamlı kelimeler | Sözcük anlamının daha geniş bağlam penceresinde ayrıştırılması ve belirsizliğin uyarı güvenine yansıtılması |
+| Sözdizim | Cümlecik sınırları, yüklem, özne, nesne ve tamlayıcı adaylarının yerel olarak sıralanması |
 | Gönderim çözümleme | Zamir ve önceki öğeler arasındaki ilişkinin bağlam içinde izlenmesi |
 | Söylem analizi | Zaman, koşul, karşıtlık, neden-sonuç, olumsuzluk ve mantıksal tutarlılık denetimi |
 | Deyim ve kalıplar | Türkçe deyimlerin ve kalıplaşmış ifadelerin yerel olarak tanınması |
@@ -30,7 +31,7 @@ Warext Turkish Spell Check; forum mesajları, konu içerikleri ve XenForo editö
 
 | Teknik alan | Mevcut yapı |
 |---|---:|
-| Sürüm | 2.1.0 |
+| Sürüm | 2.2.0 |
 | XenForo desteği | 2.3.0+ |
 | Çalışma modeli | Tamamen yerel / local-first |
 | Tahmini geçerli Türkçe kelime ve biçim kapsamı | 528.281 |
@@ -43,9 +44,18 @@ Warext Turkish Spell Check; forum mesajları, konu içerikleri ve XenForo editö
 | Bigram | 6.775 |
 | Trigram | 7.061 |
 | Gömülü mikro model örneği | 12.020 |
-| Doğal Türkçe corpus benchmarkı | 5.000+ cümle |
+| Doğal Türkçe false-positive benchmarkı | 5.000+ cümle |
+| UD Turkish BOUN dependency benchmarkı | 981 uygun cümle |
 | Sözlük mimarisi | Lazy Bloom |
 | Harici runtime bağımlılığı | Yok |
+
+## 2.2 kalite geliştirmeleri
+
+2.2 sürümü sözdizim, çok anlamlı kelime çözümleme ve gerçek corpus doğrulamasına odaklanır. Bağlam pencereli WSD genişletildi; cümlecik sınırlarını dikkate alan yerel sözdizim raporu, özne/nesne rol sıralaması ve yüksek güvenli özne toparlama kuralları eklendi.
+
+Noktalama katmanı söylem girişleri ve resmî hitap yapılarıyla genişletildi. Semantik güven kalibrasyonu; kelime ve kural bazlı yanlış pozitif geçmişini, teknik metin yoğunluğunu, bağlamsal anlam belirsizliğini ve cümle karmaşıklığını birlikte değerlendirebilir.
+
+Dependency geliştirmeleri yalnız sentetik örneklerle ölçülmez. CI zinciri sabitlenmiş UD Turkish BOUN verisinin geliştirme ve test kümelerini yalnız doğrulama amacıyla kullanır. Bu veri eklentinin çalışma zamanına veya dağıtım paketine eklenmez. 2.2 doğrulama turunda 981 uygun gerçek Türkçe cümlede parser çalışma hatası üretmeden benchmarkı tamamlamıştır.
 
 ## 2.1 kalite geliştirmeleri
 
@@ -59,6 +69,7 @@ Build sürecinde gerçek günlük diyaloglardan seçilen en az 5.000 temiz Türk
 
 - Yazım, dilbilgisi, morfoloji ve anlam denetiminin tek XenForo eklentisinde birleşmesi
 - Cümlenin yalnızca kelime doğruluğunu değil, özne-nesne-fiil ilişkilerini de değerlendiren yerel semantik katman
+- Cümlecik sınırları ve sözcük sırasını dikkate alan hafif yerel sözdizim çözümleme
 - Çok anlamlı kelimeler, fiil istemleri, zamir/gönderim ilişkileri ve cümleler arası bağlam desteği
 - 220 bin yer adı ile 18 binden fazla deyim ve kalıp içeren yerel veri katmanı
 - Sembolik Türkçe dil kuralları, yerel n-gram istatistikleri ve gömülü mikro modelin birlikte kullanılması
@@ -77,4 +88,4 @@ Dil motoru çalışma zamanında harici API, uzak model sunucusu, Python, Java, 
 
 ## Kurulum
 
-`Warext-SpellCheck-2.1.0.zip` paketini XenForo ACP üzerindeki **Add-ons → Install/upgrade from archive** bölümünden yükleyebilirsiniz. Gerekli veritabanı yapıları eklenti kurulumu veya yükseltmesi sırasında oluşturulur.
+`Warext-SpellCheck-2.2.0.zip` paketini XenForo ACP üzerindeki **Add-ons → Install/upgrade from archive** bölümünden yükleyebilirsiniz. Gerekli veritabanı yapıları eklenti kurulumu veya yükseltmesi sırasında oluşturulur.
