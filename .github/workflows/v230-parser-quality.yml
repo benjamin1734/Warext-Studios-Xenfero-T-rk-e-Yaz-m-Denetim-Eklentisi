@@ -1,0 +1,31 @@
+name: Warext 2.3 parser kalite doğrulama
+
+on:
+  push:
+    branches:
+      - warext-v2.3-parser-quality
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parser-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Yerel varlıkları üret
+        shell: bash
+        run: bash tools/build_release.sh
+      - name: UD Turkish BOUN test kümesinde ana yüklem benchmarkı
+        shell: bash
+        run: |
+          git clone -q https://github.com/UniversalDependencies/UD_Turkish-BOUN.git /tmp/ud-tr-boun
+          git -C /tmp/ud-tr-boun checkout -q f828b02872123a8dfb336584eab0767c4e55c5f9
+          node tests/v230-ud-root-benchmark.js /tmp/ud-tr-boun/tr_boun-ud-test.conllu
