@@ -48,6 +48,10 @@ if 'semanticSensitivity:' not in text:
     text=text.replace("    semantic: boolValue(configData.semantic, true),\n    threshold:","    semantic: boolValue(configData.semantic, true),\n    semanticSensitivity: numberValue(configData.semanticSensitivity, 88, 70, 99),\n    threshold:",1)
 text=text.replace("          semantic:cfg.semantic,\n          longText:true","          semantic:cfg.semantic,\n          semanticSensitivity:cfg.semanticSensitivity,\n          longText:true")
 longtext.write_text(text,encoding='utf-8')
+language=root/'upload/js/warext/turkish-spellcheck/language-v110.js'
+language_text=language.read_text(encoding='utf-8')
+language_text=re.sub(r"const VERSION = '[^']+';","const VERSION = '2.0.0';",language_text,count=1)
+language.write_text(language_text,encoding='utf-8')
 PY
 
 cp "$TMP/hunspell/LICENSE" "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources/LICENSE-MPL-2.0.txt"
