@@ -15,17 +15,21 @@ function rules(items) {
   return (items || []).map(item => item.rule || '');
 }
 
+function hasSelectionRule(items,kind) {
+  return rules(items).some(rule => rule === `v130-semantic-${kind}-frame` || rule === `v120-semantic-${kind}-selection`);
+}
+
 const badSubject = report('Masa koştu.');
-if (!rules(badSubject.warnings).includes('v130-semantic-subject-frame')) throw new Error(`Cansız özne uyumsuzluğu bulunamadı: ${JSON.stringify(badSubject)}`);
+if (!hasSelectionRule(badSubject.warnings,'subject')) throw new Error(`Cansız özne uyumsuzluğu bulunamadı: ${JSON.stringify(badSubject)}`);
 
 const badObject = report('Çocuk kitabı içti.');
-if (!rules(badObject.warnings).includes('v130-semantic-object-frame')) throw new Error(`Fiil-nesne anlam uyumsuzluğu bulunamadı: ${JSON.stringify(badObject)}`);
+if (!hasSelectionRule(badObject.warnings,'object')) throw new Error(`Fiil-nesne anlam uyumsuzluğu bulunamadı: ${JSON.stringify(badObject)}`);
 
 const goodObject = report('Çocuk suyu içti.');
-if (rules(goodObject.warnings).includes('v130-semantic-object-frame')) throw new Error(`Geçerli fiil-nesne ilişkisi yanlış işaretlendi: ${JSON.stringify(goodObject)}`);
+if (hasSelectionRule(goodObject.warnings,'object')) throw new Error(`Geçerli fiil-nesne ilişkisi yanlış işaretlendi: ${JSON.stringify(goodObject)}`);
 
 const deviceSubject = report('Bilgisayar acıktı.');
-if (!rules(deviceSubject.warnings).includes('v130-semantic-subject-frame')) throw new Error(`Cihaz-canlı uyumsuzluğu bulunamadı: ${JSON.stringify(deviceSubject)}`);
+if (!hasSelectionRule(deviceSubject.warnings,'subject')) throw new Error(`Cihaz-canlı uyumsuzluğu bulunamadı: ${JSON.stringify(deviceSubject)}`);
 
 const collocation = e.analyzeSentence('Ben karar yapıyorum.',{semantic:true});
 const collocationSuggestions = collocation.flatMap(item => item.suggestions || []);
@@ -44,7 +48,7 @@ const explainedTransition = report('Sunucu kapalı. Ancak şimdi sunucu açık.'
 if (rules(explainedTransition.warnings).includes('v130-semantic-discourse-state-conflict')) throw new Error(`Açıklanmış durum geçişi yanlış işaretlendi: ${JSON.stringify(explainedTransition)}`);
 
 const clean = report('Çocuk kitabı okudu.');
-if (rules(clean.warnings).some(rule => /^v130-semantic-(?:subject|object)-frame$/u.test(rule))) throw new Error(`Doğal cümle yanlış işaretlendi: ${JSON.stringify(clean)}`);
+if (hasSelectionRule(clean.warnings,'subject') || hasSelectionRule(clean.warnings,'object')) throw new Error(`Doğal cümle yanlış işaretlendi: ${JSON.stringify(clean)}`);
 
 if (e.stats.semanticExternalModel !== 0 || e.stats.externalDependencies !== 0) throw new Error('Harici anlam bağımlılığı bulundu');
 if (e.stats.semanticSenseFamilies < 15 || e.stats.semanticDeepFrames < 45 || e.stats.semanticDeepLexicon < 150) throw new Error(`Derin anlam kapsamı yetersiz: ${JSON.stringify(e.stats)}`);
