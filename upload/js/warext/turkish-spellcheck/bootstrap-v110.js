@@ -64,6 +64,7 @@
       await loadScript('language-v110.js',() => !!window.__warextLanguageV110);
       await loadScript('semantic-v110.js',() => !!window.__warextSemanticV120);
       await loadScript('semantic-deep-v110.js',() => !!window.__warextSemanticDeepV130);
+      await loadScript('semantic-context-v110.js',() => !!window.__warextSemanticContextV130);
       await loadScript('semantic-ui-v110.js',() => !!window.__warextSemanticUiV130);
       if (!window.WarextTurkishSpellEngineV110) throw new Error('engine');
       await loadScript('editor-v110.js',() => !!window.__warextTurkishSpellCheckV110);
