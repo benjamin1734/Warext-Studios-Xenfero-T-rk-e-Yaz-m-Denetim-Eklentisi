@@ -28,14 +28,47 @@ python3 "$ROOT/tools/build_corrections.py" \
   --csv "$TMP/hunspell/trspell10.csv" \
   --output "$ROOT/upload/js/warext/turkish-spellcheck/corrections-v110.js"
 
-python3 - "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources/dictionary-stats.json" <<'PY'
+python3 - "$ROOT" <<'PY'
 import json
 import sys
 from pathlib import Path
-path = Path(sys.argv[1])
-data = json.loads(path.read_text(encoding='utf-8'))
-data['version'] = '1.2.0'
-path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+root = Path(sys.argv[1])
+stats_path = root / 'upload/src/addons/Warext/TurkishSpellCheck/Resources/dictionary-stats.json'
+stats = json.loads(stats_path.read_text(encoding='utf-8'))
+stats['version'] = '1.2.0'
+stats_path.write_text(json.dumps(stats, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+def patch(path, old, new, label):
+    text = path.read_text(encoding='utf-8')
+    if old in text:
+        text = text.replace(old, new, 1)
+        path.write_text(text, encoding='utf-8')
+        return
+    if new not in text:
+        raise SystemExit(f'Derleme dönüşümü bulunamadı: {label}')
+
+semantic_path = root / 'upload/js/warext/turkish-spellcheck/semantic-v110.js'
+patch(
+    semantic_path,
+    "  function clauseIdFor(text,index) {\n    let id = 0;\n    for (let cursor = 0; cursor < index; cursor++) if (/[.!?;:\\n]/u.test(text[cursor])) id++;\n    return id;\n  }\n\n  function enrichClauses(text,tokens) {\n    for (const token of tokens) token.clause = clauseIdFor(text,token.start);\n    return tokens;\n  }",
+    "  function enrichClauses(text,tokens) {\n    let clause = 0;\n    let cursor = 0;\n    for (const token of tokens) {\n      while (cursor < token.start) {\n        if (/[.!?;:\\n]/u.test(text[cursor])) clause++;\n        cursor++;\n      }\n      token.clause = clause;\n    }\n    return tokens;\n  }",
+    'semantic-linear-clause-scan'
+)
+
+longtext_path = root / 'upload/js/warext/turkish-spellcheck/longtext-v110.js'
+patch(longtext_path, "  const VERSION = '1.1.0';", "  const VERSION = '1.2.0';", 'longtext-version')
+patch(
+    longtext_path,
+    "    deepContext: boolValue(configData.deepContext, true),\n    threshold:",
+    "    deepContext: boolValue(configData.deepContext, true),\n    semantic: boolValue(configData.semantic, true),\n    threshold:",
+    'longtext-semantic-config'
+)
+patch(
+    longtext_path,
+    "          nextSentence:cfg.deepContext ? nextText : '',\n          longText:true",
+    "          nextSentence:cfg.deepContext ? nextText : '',\n          semantic:cfg.semantic,\n          longText:true",
+    'longtext-semantic-context'
+)
 PY
 
 find "$ROOT/upload/js/warext/turkish-spellcheck" -maxdepth 1 -type f -name '*-v100.js' -delete
@@ -84,6 +117,10 @@ if "semantic-v110.js" not in bootstrap or "const VERSION = '1.2.0';" not in boot
 semantic = (root / 'upload/js/warext/turkish-spellcheck/semantic-v110.js').read_text(encoding='utf-8')
 if "semanticExternalModel:0" not in semantic or "externalDependencies:0" not in semantic:
     raise SystemExit('Yerel anlam motoru bağımlılık doğrulaması başarısız')
+editor = (root / 'upload/js/warext/turkish-spellcheck/editor-v110.js').read_text(encoding='utf-8')
+longtext = (root / 'upload/js/warext/turkish-spellcheck/longtext-v110.js').read_text(encoding='utf-8')
+if 'semantic:cfg.semantic' not in editor or 'semantic:cfg.semantic' not in longtext:
+    raise SystemExit('Anlam denetimi editör bağlamına uygulanmadı')
 PY
 
 if grep -RInE '^[[:space:]]*(//|/\*|\*)' \
