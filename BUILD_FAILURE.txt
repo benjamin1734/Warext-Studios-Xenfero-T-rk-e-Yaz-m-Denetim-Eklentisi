@@ -1,0 +1,17 @@
+{"version":"1.1.0","tdkWords":60711,"hunspellRoots":75909,"hunspellDerivedWords":420000,"extraValidWords":467570,"estimatedValidWords":528281,"affixRules":59266,"flagMode":"num","perRootLimit":72,"maxDepth":2,"maxGenerated":420000}
+8037
+/home/runner/work/Warext-Studios-Xenfero-T-rk-e-Yaz-m-Denetim-Eklentisi/Warext-Studios-Xenfero-T-rk-e-Yaz-m-Denetim-Eklentisi/tests/v130-semantic-regression.js:19
+if (!rules(badSubject.warnings).includes('v130-semantic-subject-frame')) throw new Error(`Cansız özne uyumsuzluğu bulunamadı: ${JSON.stringify(badSubject)}`);
+                                                                         ^
+
+Error: Cansız özne uyumsuzluğu bulunamadı: {"version":"1.3.0","tokens":2,"classifiedTokens":1,"coverage":0.5,"fixes":[],"warnings":[{"start":0,"end":10,"rule":"v120-semantic-subject-selection","confidence":0.94,"category":"semantic","severity":"warning","message":"“Masa” öznesi ile “koşmak” yüklemi arasında güçlü bir anlam uyumsuzluğu var."}],"externalDependencies":0,"senses":[],"roles":[{"predicate":"koş","subject":"","object":"","sentence":0}],"coherence":0.9525,"semanticExternalModel":0}
+    at Object.<anonymous> (/home/runner/work/Warext-Studios-Xenfero-T-rk-e-Yaz-m-Denetim-Eklentisi/Warext-Studios-Xenfero-T-rk-e-Yaz-m-Denetim-Eklentisi/tests/v130-semantic-regression.js:19:80)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49
+
+Node.js v22.23.2
