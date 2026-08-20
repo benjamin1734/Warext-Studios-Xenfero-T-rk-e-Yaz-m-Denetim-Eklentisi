@@ -72,6 +72,15 @@ if old not in language_text:
     raise SystemExit('Fiil kökü doğrulama noktası bulunamadı')
 language_text=language_text.replace(old,new,1)
 language.write_text(language_text,encoding='utf-8')
+knowledge=root/'upload/js/warext/turkish-spellcheck/knowledge-v200.js'
+knowledge_text=knowledge.read_text(encoding='utf-8')
+anchor="  frame(['sür','sur'],['human'],['vehicle']);"
+addition="  frame(['al'],['human'],['entity']);\n  frame(['ver'],['human'],['entity']);\n  frame(['getir','götür'],['human'],['entity']);"
+if addition not in knowledge_text:
+    if anchor not in knowledge_text:
+        raise SystemExit('Gönderim fiil çerçevesi bağlantı noktası bulunamadı')
+    knowledge_text=knowledge_text.replace(anchor,anchor+'\n'+addition,1)
+knowledge.write_text(knowledge_text,encoding='utf-8')
 PY
 
 cp "$TMP/hunspell/LICENSE" "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources/LICENSE-MPL-2.0.txt"
