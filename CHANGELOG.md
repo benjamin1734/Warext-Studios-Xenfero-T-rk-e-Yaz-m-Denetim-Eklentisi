@@ -1,5 +1,9 @@
 # Değişiklik Geçmişi
 
+## 2.2.0
+
+Sözdizim ve gerçek corpus kalite turu eklendi. Bağlam pencereli WSD genişletildi; cümlecik farkındalıklı yerel sözdizim raporu, özne/nesne rol sıralaması, ters dizilim ve edilgen yapılarda yüksek güvenli özne toparlama kuralları geliştirildi. Söylem girişleri ve resmî hitaplar için noktalama kontrolleri genişletildi. Semantik güven kalibrasyonu kelime+kural yanlış-pozitif geçmişiyle güçlendirildi. CI zincirine sabitlenmiş UD Turkish BOUN geliştirme ve test kümeleri üzerinde gerçek dependency benchmarkı eklendi. 981 uygun cümlede çalışma hatası olmadan doğrulama tamamlandı; özne doğruluğu %32,34, nesne doğruluğu %44,01, her iki rol için kapsama %98'in üzerindedir. UD verisi yalnız build/test doğrulamasında kullanılır ve dağıtım paketine eklenmez. Çalışma zamanı harici API/model/servis bağımlılığı sıfır olarak korunur.
+
 ## 2.1.0
 
 Noktalama, sözcük anlamı ayrıştırma ve yanlış pozitif kontrolüne odaklanan kalite katmanı eklendi. Giriş ve hitap yapıları için yüksek güvenli noktalama denetimleri, çok anlamlı sözcüklerde bağlamsal WSD genişletmesi, semantik uyarılarda deyim, teknik metin yoğunluğu, cümle karmaşıklığı ve kullanıcı yanlış-pozitif geri bildirimlerini dikkate alan güven kalibrasyonu ile dependency rol adaylarının hâl ve yakınlık bilgisine göre sıralanması eklendi. Build zinciri, doğal günlük Türkçe diyaloglardan seçilen en az 5.000 temiz cümlede yüksek güvenli semantik yanlış-pozitif oranını ölçen corpus benchmarkıyla genişletildi. Çalışma zamanı harici API/model/servis bağımlılığı sıfır olarak korunur.

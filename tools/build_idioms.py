@@ -111,7 +111,7 @@ def main():
         index[phrase.split()[0]].append(phrase)
 
     payload = json.dumps(dict(index), ensure_ascii=False, separators=(',', ':'))
-    js = f"""(() => {{
+    js = rf"""(() => {{
   'use strict';
   if (window.WarextIdiomsV200) return;
   const index = {payload};
