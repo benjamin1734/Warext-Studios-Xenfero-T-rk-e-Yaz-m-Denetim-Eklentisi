@@ -70,40 +70,13 @@ class Setup extends AbstractSetup
         catch (\Throwable $e)
         {
         }
+    }
 
+    public function upgrade5300070Step1(): void
+    {
         try
         {
-            $root = \XF::getRootDirectory();
-            $directory = $root . '/js/warext/turkish-spellcheck';
-            $keep = [
-                'bootstrap-v110.js',
-                'text-core-v110.js',
-                'dictionary-v110.js',
-                'lexicon-v200.js',
-                'corrections-v110.js',
-                'language-v110.js',
-                'semantic-v110.js',
-                'semantic-deep-v110.js',
-                'semantic-context-v110.js',
-                'entities-v200.js',
-                'idioms-v200.js',
-                'lm-v200.js',
-                'micro-model-v200.js',
-                'knowledge-v200.js',
-                'micro-integration-v200.js',
-                'learning-v200.js',
-                'semantic-ui-v110.js',
-                'editor-v110.js',
-                'longtext-v110.js'
-            ];
-            $allowed = array_fill_keys($keep, true);
-            foreach (glob($directory . '/*.js') ?: [] as $file)
-            {
-                if (!isset($allowed[basename($file)]) && is_file($file))
-                {
-                    @unlink($file);
-                }
-            }
+            $this->createFeedbackTable();
         }
         catch (\Throwable $e)
         {
