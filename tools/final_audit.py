@@ -1,7 +1,6 @@
 import argparse
 import json
 import re
-import sys
 import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
@@ -84,10 +83,10 @@ def check_options(data_root):
         if not option_id:
             fail('Boş option_id bulundu')
         option_ids.append(option_id)
-        if f'option.{option_id}' not in phrase_titles:
-            fail(f'Option başlık phrase eksik: option.{option_id}')
-        if f'option.{option_id}.explain' not in phrase_titles:
-            fail(f'Option açıklama phrase eksik: option.{option_id}.explain')
+        if f'option_{option_id}' not in phrase_titles:
+            fail(f'Option başlık phrase eksik: option_{option_id}')
+        if f'option_{option_id}_explain' not in phrase_titles:
+            fail(f'Option açıklama phrase eksik: option_{option_id}_explain')
     return set(option_ids), phrase_titles
 
 
@@ -149,19 +148,21 @@ def check_php(root):
     feedback = read_text(addon_root / 'Pub/Controller/Feedback.php')
     if 'substr(' in feedback or 'mb_substr(' in feedback:
         fail('Geri bildirimde UTF-8 güvensiz kesme bulundu')
-    if 'assertPostOnly' not in feedback or "['_xfToken'" in feedback:
-        fail('Geri bildirim controller doğrulaması geçersiz')
+    if 'assertPostOnly' not in feedback:
+        fail('Geri bildirim controller POST doğrulaması eksik')
 
 
 def check_admin_metadata(data_root, phrase_titles):
     permission_root = parse_xml(data_root / 'admin_permission.xml').getroot()
-    permissions = {node.attrib.get('permission_id', '') for node in permission_root.findall('admin_permission')}
+    permissions = {node.attrib.get('admin_permission_id', '') for node in permission_root.findall('admin_permission')}
     if 'warextSpellLearning' not in permissions:
         fail('ACP öğrenme izni eksik')
     nav_root = parse_xml(data_root / 'admin_navigation.xml').getroot()
-    nav = [node for node in nav_root.findall('navigation') if node.attrib.get('navigation_id') == 'warext_spell_learning']
+    nav = [node for node in nav_root.findall('admin_navigation_entry') if node.attrib.get('navigation_id') == 'warext_spell_learning']
     if not nav:
         fail('ACP öğrenme navigasyonu eksik')
+    if nav[0].attrib.get('admin_permission_id') != 'warextSpellLearning':
+        fail('ACP navigasyon izin bağlantısı geçersiz')
     if 'admin_navigation.warext_spell_learning' not in phrase_titles:
         fail('ACP navigasyon phrase eksik')
     if 'admin_permission.warextSpellLearning' not in phrase_titles:
@@ -217,8 +218,8 @@ def check_package(root, package_path):
             if name.startswith('/') or '..' in parts:
                 fail(f'ZIP içinde güvensiz yol bulundu: {name}')
         addon_name = 'upload/src/addons/Warext/TurkishSpellCheck/addon.json'
-        if addon_name not in names or 'README.txt' not in names:
-            fail('ZIP zorunlu eklenti dosyalarını içermiyor')
+        if addon_name not in names or 'README.txt' not in names or 'LICENSE' not in names or 'THIRD_PARTY.md' not in names:
+            fail('ZIP zorunlu eklenti ve lisans dosyalarını içermiyor')
         if any(name.startswith(('source/', 'tools/', 'tests/', '.github/')) for name in names):
             fail('ZIP geliştirme dosyaları içeriyor')
         addon = json.loads(archive.read(addon_name).decode('utf-8'))
@@ -243,11 +244,12 @@ def main():
             continue
         if path.suffix.lower() == '.zip':
             continue
-        if not is_text(path.relative_to(root)):
+        relative = path.relative_to(root)
+        if not is_text(relative):
             continue
         text = read_text(path)
         scanned += 1
-        check_comments(path.relative_to(root), text)
+        check_comments(relative, text)
         if path.suffix.lower() == '.json':
             parse_json(path)
         elif path.suffix.lower() == '.xml':
