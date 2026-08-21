@@ -6,6 +6,24 @@ use XF\Admin\Controller\AbstractController;
 
 class Learning extends AbstractController
 {
+    protected function normalizeWord($value): string
+    {
+        $value = trim((string)$value);
+        $value = strtr($value, [
+            'I' => 'ı',
+            'İ' => 'i',
+            'Ç' => 'ç',
+            'Ğ' => 'ğ',
+            'Ö' => 'ö',
+            'Ş' => 'ş',
+            'Ü' => 'ü',
+            'Â' => 'â',
+            'Î' => 'î',
+            'Û' => 'û'
+        ]);
+        return strtolower($value);
+    }
+
     public function actionIndex()
     {
         $this->assertAdminPermission('warextSpellLearning');
@@ -65,18 +83,14 @@ class Learning extends AbstractController
         }
 
         $current = preg_split('/[\r\n,;]+/u', (string)$option->option_value, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        $normalized = static function ($value)
-        {
-            return mb_strtolower(str_replace(['I', 'İ'], ['ı', 'i'], trim((string)$value)), 'UTF-8');
-        };
-        $key = $normalized($word);
+        $key = $this->normalizeWord($word);
         $map = [];
         foreach ($current as $item)
         {
             $item = trim($item);
             if ($item !== '')
             {
-                $map[$normalized($item)] = $item;
+                $map[$this->normalizeWord($item)] = $item;
             }
         }
         $map[$key] = $word;
