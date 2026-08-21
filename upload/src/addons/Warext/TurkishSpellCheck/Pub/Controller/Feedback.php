@@ -6,6 +6,20 @@ use XF\Pub\Controller\AbstractController;
 
 class Feedback extends AbstractController
 {
+    protected function limitText($value, int $limit): string
+    {
+        $value = str_replace("\0", '', (string)$value);
+        if ($value === '' || $limit < 1)
+        {
+            return '';
+        }
+        if (!preg_match_all('/./us', $value, $matches))
+        {
+            return '';
+        }
+        return implode('', array_slice($matches[0], 0, $limit));
+    }
+
     public function actionIndex()
     {
         $this->assertPostOnly();
@@ -23,16 +37,16 @@ class Feedback extends AbstractController
             return $this->error('Geçersiz geri bildirim.');
         }
 
-        $type = substr((string)($payload['type'] ?? ''), 0, 32);
+        $type = $this->limitText($payload['type'] ?? '', 32);
         if (!in_array($type, ['false_positive', 'accepted'], true))
         {
             return $this->error('Geçersiz geri bildirim türü.');
         }
 
-        $rule = substr((string)($payload['rule'] ?? ''), 0, 96);
-        $word = substr((string)($payload['word'] ?? $payload['from'] ?? ''), 0, 96);
-        $target = substr((string)($payload['to'] ?? ''), 0, 128);
-        $text = substr((string)($payload['text'] ?? ''), 0, 320);
+        $rule = $this->limitText($payload['rule'] ?? '', 96);
+        $word = $this->limitText($payload['word'] ?? $payload['from'] ?? '', 96);
+        $target = $this->limitText($payload['to'] ?? '', 128);
+        $text = $this->limitText($payload['text'] ?? '', 320);
         $confidence = max(0, min(1000, (int)round(((float)($payload['confidence'] ?? 0)) * 1000)));
         $now = \XF::$time;
 
