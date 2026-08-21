@@ -1,53 +1,39 @@
-Warext Turkish Spell Check 2.2.0
+Warext Turkish Spell Check V1
 
-XenForo 2.3.0+ için tamamen yerel Türkçe yazım, dilbilgisi, noktalama, morfoloji ve anlam denetimi.
+XenForo 2.3.0+ için tamamen yerel Türkçe yazım, dilbilgisi, noktalama, morfoloji, bağlam ve anlam denetimi.
 
 Kurulum
 1. XenForo yönetim panelinde Add-ons bölümünü açın.
-2. Warext-SpellCheck-2.2.0.zip dosyasını arşivden yükleyin.
+2. Warext-SpellCheck-V1.zip dosyasını arşivden yükleyin.
 3. Eklentiyi kurun veya mevcut Warext Turkish Spell Check kurulumunu yükseltin.
 4. Setup > Options > Warext Türkçe Yazım Denetimi bölümünden ayarları yönetin.
 
 Temel teknik bilgiler
-- Sürüm: 2.2.0
-- XenForo version_id: 5200070
+- Sürüm: V1
 - XenForo: 2.3.0+
 - Harici runtime API: Yok
 - Harici model sunucusu: Yok
 - Python / Java / Docker runtime gereksinimi: Yok
-- Otomatik düzeltme: Yok
-- Öneri sayısı: En fazla 3
-- Uzun metin: Var
+- Uzun metin analizi: Var
 - Kişisel sözlük: Var
 - Forum özel sözlüğü: Var
 - Yerel öğrenme: Var
 - ACP yönetimi: Var
 
 Dil motoru
-- Yaklaşık 528.281 geçerli Türkçe kelime/biçim kapsamı
-- 75.909 Hunspell kökü
-- 420.000 build aşamasında türetilmiş Hunspell biçimi
-- 59.266 affix kuralı
-- 220.000 yer adı indeksi
-- 18.017 deyim ve kalıp girdisi
-- 48.517 cümlelik yerel dil modeli kaynağı
-- 6.775 bigram
-- 7.061 trigram
-- 12.020 örnekli 256 özellikli gömülü mikro model
-
-2.2 geliştirmeleri
-- Cümlecik farkındalıklı yerel sözdizim analizi
-- Özne, nesne ve tamlayıcı adaylarında yeni rol sıralaması
-- Ters dizilim ve edilgen yapılarda yüksek güvenli özne toparlama
-- Bağlam penceresi genişletilmiş çok anlamlı kelime çözümleme
-- Söylem girişleri ve resmî hitaplar için ek noktalama kontrolleri
-- Kelime+kural bazlı yanlış pozitif geçmişini kullanan güven kalibrasyonu
-- UD Turkish BOUN geliştirme ve test kümeleriyle gerçek dependency benchmarkı
-- 981 uygun gerçek Türkçe cümlede çalışma hatasız benchmark
-- Runtime dış bağımlılığı sıfır
+- Yaklaşık 528 bin Türkçe kelime ve biçim kapsamı
+- 75 binden fazla Hunspell kökü
+- 220 bin yer adı indeksi
+- 18 binden fazla deyim ve kalıp
+- Yerel n-gram dil modeli
+- Yerel bilgi grafiği ve semantik sınıflar
+- Fiil istemi ve hâl ilişkileri
+- Cümlecik farkındalıklı hafif sözdizim çözümleme
+- Bağlamsal sözcük anlamı ayrıştırma
+- Yanlış pozitif güven kalibrasyonu
 
 Denetim kapsamı
-- Yazım hatası ve öneri üretimi
+- Yazım hatası ve düzeltme adayları
 - Türkçe morfoloji ve ek zinciri
 - Bileşik zaman ve kişi uyumu
 - de/da, ki ve soru eki
@@ -56,10 +42,10 @@ Denetim kapsamı
 - Özne-yüklem ve nesne-fiil anlam uyumu
 - Fiil istemi ve hâl ilişkileri
 - Çok anlamlı kelime çözümleme
-- Hafif bağımlılık çözümleme
+- Hafif dependency çözümleme
 - Zamir ve gönderim çözümleme
 - Cümleler arası bağlam
-- Zaman çizgisi, neden-sonuç, koşul, karşıtlık ve olumsuzluk
+- Zaman, neden-sonuç, koşul, karşıtlık ve olumsuzluk
 - Deyim ve mecaz farkındalığı
 - Yer adı ve özel isim koruması
 
