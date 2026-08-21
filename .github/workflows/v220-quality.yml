@@ -1,9 +1,8 @@
-name: Warext 2.2 kalite doğrulama
+name: Warext V1 dil motoru kalite doğrulama
 
 on:
   push:
     branches:
-      - warext-v2.2-syntax-quality
       - main
   pull_request:
     branches:
@@ -21,17 +20,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: Yerel varlıkları üret
+      - name: V1 yerel varlıklarını üret ve denetle
         shell: bash
         run: bash tools/build_release.sh
-      - name: 2.2 çalışma zamanı doğrulaması
+      - name: Sözdizim katmanını yeniden doğrula
         shell: bash
         run: |
           node --check upload/js/warext/turkish-spellcheck/quality-v220.js
           node --check upload/js/warext/turkish-spellcheck/syntax-v220.js
           node --check upload/js/warext/turkish-spellcheck/syntax-tuning-v220.js
           NODE_OPTIONS="--require ./tests/v220-preload.js" node tests/v220-syntax-quality-regression.js
-      - name: Gerçek Türkçe dependency benchmarkı
+      - name: Gerçek Türkçe dependency benchmarkını yeniden doğrula
         shell: bash
         run: |
           git clone -q https://github.com/UniversalDependencies/UD_Turkish-BOUN.git /tmp/ud-tr-boun
