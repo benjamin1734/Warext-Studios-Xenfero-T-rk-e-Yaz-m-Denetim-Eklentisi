@@ -1,4 +1,4 @@
-Warext Turkish Spell Check 2.2.0 build-time data sources
+Warext Turkish Spell Check V1 build-time data sources
 
 ekartal/turkce-kelime-database
 Pinned commit: 444dbcc53556618b0977a3d608cbf1402f7e9363
