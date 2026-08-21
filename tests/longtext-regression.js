@@ -1,9 +1,10 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const core = require('../upload/js/warext/turkish-spellcheck/longtext-core-v310.js');
+global.window = global;
+const core = require('../upload/js/warext/turkish-spellcheck/text-core-v110.js');
 
-assert.equal(core.VERSION, '3.1.0');
+assert.equal(core.VERSION, '1.1.0');
 
 const protectedText = 'Merhaba. [CODE]const x = "yanlıs";[/CODE] Sonra devam ettim. https://example.com/test Yanlıs yazdım.';
 const protectedRanges = core.protectedRanges(protectedText);
