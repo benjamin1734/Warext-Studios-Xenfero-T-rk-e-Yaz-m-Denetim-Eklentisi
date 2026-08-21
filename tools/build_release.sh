@@ -91,7 +91,7 @@ cp "$TMP/hunspell/LICENSE" "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Res
 cp "$TMP/idioms/LICENSE" "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources/LICENSE-TURKISH-DICTIONARY-MIT.txt"
 cp "$TMP/dialogues/LICENSE" "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources/LICENSE-TURKISH-DIALOGUES-CC-BY-4.0.txt"
 cat > "$ROOT/upload/src/addons/Warext/TurkishSpellCheck/Resources/THIRD_PARTY_DATA.txt" <<'TXT'
-Warext Turkish Spell Check 2.2.0 build-time data sources
+Warext Turkish Spell Check V1 build-time data sources
 
 ekartal/turkce-kelime-database
 Pinned commit: 444dbcc53556618b0977a3d608cbf1402f7e9363
@@ -123,32 +123,11 @@ TXT
 find "$ROOT/upload/js/warext/turkish-spellcheck" -maxdepth 1 -type f -name '*-v100.js' -delete
 find "$ROOT/upload/js/warext/turkish-spellcheck" -maxdepth 1 -type f \( -name '*-v300.js' -o -name '*-v310.js' -o -name '*-v160.js' \) -delete
 
-for file in \
-  bootstrap-v110.js \
-  text-core-v110.js \
-  lexicon-v200.js \
-  dictionary-v110.js \
-  corrections-v110.js \
-  language-v110.js \
-  semantic-v110.js \
-  semantic-deep-v110.js \
-  semantic-context-v110.js \
-  entities-v200.js \
-  idioms-v200.js \
-  lm-v200.js \
-  micro-model-v200.js \
-  knowledge-v200.js \
-  micro-integration-v200.js \
-  learning-v200.js \
-  quality-v210.js \
-  quality-v220.js \
-  syntax-v220.js \
-  syntax-tuning-v220.js \
-  semantic-ui-v110.js \
-  editor-v110.js \
-  longtext-v110.js; do
-  node --check "$ROOT/upload/js/warext/turkish-spellcheck/$file"
-done
+while IFS= read -r -d '' file; do node --check "$file"; done < <(find "$ROOT/upload/js/warext/turkish-spellcheck" -type f -name '*.js' -print0 | sort -z)
+while IFS= read -r -d '' file; do php -l "$file"; done < <(find "$ROOT/upload/src/addons/Warext/TurkishSpellCheck" -type f -name '*.php' -print0 | sort -z)
+while IFS= read -r -d '' file; do bash -n "$file"; done < <(find "$ROOT" -type f -name '*.sh' -not -path '*/.git/*' -print0 | sort -z)
+while IFS= read -r -d '' file; do python3 -m py_compile "$file"; done < <(find "$ROOT/tools" -type f -name '*.py' -print0 | sort -z)
+find "$ROOT" -type d -name '__pycache__' -prune -exec rm -rf {} +
 
 WAREXT_FULL_BUILD=1 node "$ROOT/tests/dictionary-smoke.js"
 node "$ROOT/tests/rules-regression.js"
@@ -163,8 +142,7 @@ WAREXT_FULL_BUILD=1 node "$ROOT/tests/v210-corpus-benchmark.js" "$TMP/corpus-ben
 NODE_OPTIONS="--require $ROOT/tests/v220-preload.js" node "$ROOT/tests/v220-syntax-quality-regression.js"
 cat "$TMP/ud-boun/tr_boun-ud-dev.conllu" "$TMP/ud-boun/tr_boun-ud-test.conllu" > "$TMP/ud-benchmark.conllu"
 NODE_OPTIONS="--require $ROOT/tests/v220-preload.js" node "$ROOT/tests/v220-ud-benchmark.js" "$TMP/ud-benchmark.conllu"
-
-while IFS= read -r -d '' file; do php -l "$file"; done < <(find "$ROOT/upload/src/addons/Warext/TurkishSpellCheck" -type f -name '*.php' -print0)
+node "$ROOT/tests/longtext-regression.js"
 
 python3 - "$ROOT" <<'PY'
 import json
@@ -173,7 +151,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 root=Path(sys.argv[1])
 addon=json.loads((root/'upload/src/addons/Warext/TurkishSpellCheck/addon.json').read_text(encoding='utf-8'))
-if addon.get('version_string')!='2.2.0' or int(addon.get('version_id',0))!=5200070:
+if addon.get('version_string')!='1.0.0' or int(addon.get('version_id',0))!=5300070:
     raise SystemExit('Sürüm bilgisi geçersiz')
 resources=root/'upload/src/addons/Warext/TurkishSpellCheck/Resources'
 stats=json.loads((resources/'dictionary-stats.json').read_text(encoding='utf-8'))
@@ -181,7 +159,7 @@ entities=json.loads((resources/'entity-stats.json').read_text(encoding='utf-8'))
 idioms=json.loads((resources/'idiom-stats.json').read_text(encoding='utf-8'))
 lm=json.loads((resources/'lm-stats.json').read_text(encoding='utf-8'))
 micro=json.loads((resources/'micro-model-stats.json').read_text(encoding='utf-8'))
-if stats.get('version')!='2.0.0' or stats.get('dictionaryArchitecture')!='lazy-bloom' or int(stats.get('estimatedValidWords',0))<250000:
+if stats.get('dictionaryArchitecture')!='lazy-bloom' or int(stats.get('estimatedValidWords',0))<250000:
     raise SystemExit('Sözlük mimarisi doğrulanamadı')
 if int(entities.get('locationNames',0))<100000:
     raise SystemExit('100K yer adı hedefi karşılanamadı')
@@ -197,23 +175,25 @@ bootstrap=(root/'upload/js/warext/turkish-spellcheck/bootstrap-v110.js').read_te
 for asset in ['lexicon-v200.js','entities-v200.js','idioms-v200.js','lm-v200.js','micro-model-v200.js','knowledge-v200.js','micro-integration-v200.js','learning-v200.js','quality-v210.js','quality-v220.js','syntax-v220.js','syntax-tuning-v220.js']:
     if asset not in bootstrap:
         raise SystemExit(f'Varlık yükleyiciye bağlanmadı: {asset}')
-if "const VERSION = '2.2.0';" not in bootstrap:
+if "const VERSION = '1.0.0';" not in bootstrap:
     raise SystemExit('Bootstrap sürümü geçersiz')
 setup=(root/'upload/src/addons/Warext/TurkishSpellCheck/Setup.php').read_text(encoding='utf-8')
-if 'xf_warext_spell_feedback' not in setup:
-    raise SystemExit('Yerel öğrenme tablosu eksik')
+if 'xf_warext_spell_feedback' not in setup or 'upgrade5300070Step1' not in setup:
+    raise SystemExit('V1 kurulum/yükseltme yapısı eksik')
+if '@unlink' in setup or 'glob($directory' in setup:
+    raise SystemExit('Yükseltmede runtime dosyası silen kod bulundu')
 quality210=(root/'upload/js/warext/turkish-spellcheck/quality-v210.js').read_text(encoding='utf-8')
 if "const VERSION = '2.1.0';" not in quality210 or 'externalDependencies:0' not in quality210:
-    raise SystemExit('2.1 kalite katmanı doğrulanamadı')
+    raise SystemExit('Kalite katmanı doğrulanamadı')
 quality220=(root/'upload/js/warext/turkish-spellcheck/quality-v220.js').read_text(encoding='utf-8')
 syntax220=(root/'upload/js/warext/turkish-spellcheck/syntax-v220.js').read_text(encoding='utf-8')
 tuning220=(root/'upload/js/warext/turkish-spellcheck/syntax-tuning-v220.js').read_text(encoding='utf-8')
-if "const VERSION = '2.2.0';" not in quality220 or 'externalDependencies:0' not in quality220:
-    raise SystemExit('2.2 kalite katmanı doğrulanamadı')
+if 'externalDependencies:0' not in quality220:
+    raise SystemExit('Bağlam kalite katmanı doğrulanamadı')
 if '__warextSyntaxV220' not in syntax220 or 'externalDependencies:0' not in syntax220:
-    raise SystemExit('2.2 sözdizim katmanı doğrulanamadı')
+    raise SystemExit('Sözdizim katmanı doğrulanamadı')
 if '__warextSyntaxTuningV220' not in tuning220 or 'externalDependencies:0' not in tuning220:
-    raise SystemExit('2.2 sözdizim ayar katmanı doğrulanamadı')
+    raise SystemExit('Sözdizim ayar katmanı doğrulanamadı')
 if (root/'upload/js/warext/turkish-spellcheck/dictionary-v110.js').stat().st_size > 3500000:
     raise SystemExit('Çekirdek sözlük tembel mimariye küçültülemedi')
 PY
@@ -245,9 +225,14 @@ if ! grep -q "credentials:'same-origin'" "$ROOT/upload/js/warext/turkish-spellch
   exit 1
 fi
 
+python3 "$ROOT/tools/final_audit.py" "$ROOT"
+
 rm -rf "$ROOT/release"
 mkdir -p "$ROOT/release"
 cd "$ROOT"
-zip -qr "release/Warext-SpellCheck-2.2.0.zip" upload README.txt
-sha256sum "release/Warext-SpellCheck-2.2.0.zip" > SHA256SUMS
-printf '%s\n' "release/Warext-SpellCheck-2.2.0.zip hazırlandı."
+zip -qr "release/Warext-SpellCheck-V1.zip" upload README.txt LICENSE THIRD_PARTY.md CHANGELOG.md
+unzip -tq "release/Warext-SpellCheck-V1.zip"
+sha256sum "release/Warext-SpellCheck-V1.zip" > SHA256SUMS
+sha256sum -c SHA256SUMS
+python3 "$ROOT/tools/final_audit.py" "$ROOT" --package "release/Warext-SpellCheck-V1.zip"
+printf '%s\n' "release/Warext-SpellCheck-V1.zip hazırlandı."
