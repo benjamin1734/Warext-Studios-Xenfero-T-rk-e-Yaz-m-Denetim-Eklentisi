@@ -86,12 +86,13 @@
       await loadScript('semantic-model-v300.js',() => !!window.WarextSemanticModelV300);
       await loadScript('runtime-v240.js',() => !!window.__warextRuntimeV240);
       await loadScript('semantic-document-v300.js',() => !!window.__warextSemanticDocumentV300);
+      await loadScript('semantic-tuning-v301.js',() => !!window.__warextSemanticTuningV301);
       if (!window.WarextTurkishSpellEngineV110) throw new Error('engine');
       await loadScript('editor-v110.js',() => !!window.__warextTurkishSpellCheckV110);
       await loadScript('longtext-v110.js',() => !!window.__warextLongTextV110);
       await loadScript('document-v300.js',() => !!window.__warextDocumentV300);
       document.documentElement.dataset.wtscStatus = 'assets-ready';
-      document.documentElement.dataset.wtscSemantic = 'v300';
+      document.documentElement.dataset.wtscSemantic = 'v301';
       observer?.disconnect();
     } catch (_) {
       showAssetError();
