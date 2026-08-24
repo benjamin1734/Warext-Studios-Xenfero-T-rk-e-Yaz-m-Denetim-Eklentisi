@@ -5,7 +5,7 @@
   window.__warextTurkishSpellBootstrapV110 = true;
 
   const VERSION = '1.0.2';
-  const ASSET_VERSION = '3002';
+  const ASSET_VERSION = '3003';
   const script = document.currentScript;
   const scriptUrl = script?.src || '';
   const baseDir = scriptUrl ? scriptUrl.slice(0,scriptUrl.lastIndexOf('/') + 1) : '';
@@ -87,12 +87,13 @@
       await loadScript('runtime-v240.js',() => !!window.__warextRuntimeV240);
       await loadScript('semantic-document-v300.js',() => !!window.__warextSemanticDocumentV300);
       await loadScript('semantic-tuning-v301.js',() => !!window.__warextSemanticTuningV301);
+      await loadScript('semantic-tuning-v302.js',() => !!window.__warextSemanticTuningV302);
       if (!window.WarextTurkishSpellEngineV110) throw new Error('engine');
       await loadScript('editor-v110.js',() => !!window.__warextTurkishSpellCheckV110);
       await loadScript('longtext-v110.js',() => !!window.__warextLongTextV110);
       await loadScript('document-v300.js',() => !!window.__warextDocumentV300);
       document.documentElement.dataset.wtscStatus = 'assets-ready';
-      document.documentElement.dataset.wtscSemantic = 'v301';
+      document.documentElement.dataset.wtscSemantic = 'v302';
       observer?.disconnect();
     } catch (_) {
       showAssetError();
