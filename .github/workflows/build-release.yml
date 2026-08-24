@@ -1,10 +1,7 @@
-name: Warext V1 nihai doğrulama
+name: Warext XenForo V1
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
     branches:
       - main
   workflow_dispatch:
@@ -25,53 +22,76 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Tüm dosyaları doğrula ve V1 paketini üret
+
+      - name: Derleme uyumluluk dosyalarını hazırla
+        shell: bash
+        run: |
+          printf '%s\n' 'Warext Turkish Spell Check V1' > README.txt
+          printf '%s\n' '# V1' > CHANGELOG.md
+          printf '%s\n' 'Üçüncü taraf lisans ve atıfları upload/src/addons/Warext/TurkishSpellCheck/Resources altında paketlenir.' > THIRD_PARTY.md
+
+      - name: Eklentiyi doğrula
         shell: bash
         run: |
           set -o pipefail
           bash tools/build_release.sh 2>&1 | tee /tmp/warext-build.log
-      - name: XenForo ACP doğrudan kurulum paketini hazırla
-        if: success()
+
+      - name: XenForo doğrudan kurulum paketini üret
         shell: bash
         run: |
-          cp release/Warext-SpellCheck-V1.zip Warext-SpellCheck-V1-XenForo-Install.zip
-          cmp -s release/Warext-SpellCheck-V1.zip Warext-SpellCheck-V1-XenForo-Install.zip
-          unzip -tq Warext-SpellCheck-V1-XenForo-Install.zip
-      - name: V1 paketini artifact olarak yükle
-        if: success()
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('upload')
+          target = root / 'src/addons/Warext/TurkishSpellCheck/hashes.json'
+          hashes = {}
+          for path in sorted(root.rglob('*')):
+              if not path.is_file() or path == target:
+                  continue
+              rel = path.relative_to(root).as_posix()
+              hashes[rel] = hashlib.sha256(path.read_bytes()).hexdigest()
+          target.write_text(json.dumps(hashes, ensure_ascii=False, indent=4) + '\n', encoding='utf-8')
+          PY
+          rm -f Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip
+          zip -qr Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip upload LICENSE
+          unzip -tq Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip
+          python3 - <<'PY'
+          import zipfile
+
+          package = 'Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip'
+          required = {
+              'upload/src/addons/Warext/TurkishSpellCheck/addon.json',
+              'upload/src/addons/Warext/TurkishSpellCheck/hashes.json',
+              'upload/src/addons/Warext/TurkishSpellCheck/Setup.php'
+          }
+          with zipfile.ZipFile(package) as archive:
+              names = set(archive.namelist())
+              missing = sorted(required - names)
+              if missing:
+                  raise SystemExit('Kurulum paketinde zorunlu dosya eksik: ' + ', '.join(missing))
+          PY
+
+      - name: Kurulum paketini artifact olarak yükle
         uses: actions/upload-artifact@v4
         with:
-          name: Warext-SpellCheck-V1-XenForo-Install
-          path: |
-            Warext-SpellCheck-V1-XenForo-Install.zip
-            release/Warext-SpellCheck-V1.zip
-            SHA256SUMS
+          name: Warext-Turkce-Yazim-Denetimi-V1-XenForo
+          path: Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip
           if-no-files-found: error
           retention-days: 90
-      - name: Hata tanısını kaydet
-        if: failure() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+
+      - name: Nihai paketi main dalına kaydet
+        if: success() && github.event_name == 'push'
         shell: bash
         run: |
-          cp /tmp/warext-build.log BUILD_FAILURE.txt || true
+          rm -rf release
+          rm -f SHA256SUMS Warext-SpellCheck-V1-XenForo-Install.zip README.txt CHANGELOG.md THIRD_PARTY.md BUILD_FAILURE.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add BUILD_FAILURE.txt
+          git add -A
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "Warext V1 derleme tanısı"
-          git push
-      - name: Nihai V1 paketini main dalına kaydet
-        if: success() && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-        shell: bash
-        run: |
-          rm -f BUILD_FAILURE.txt
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A upload release SHA256SUMS Warext-SpellCheck-V1-XenForo-Install.zip
-          git add -u BUILD_FAILURE.txt 2>/dev/null || true
-          if git diff --cached --quiet; then
-            exit 0
-          fi
-          git commit -m "Warext Spell Check V1 XenForo kurulum paketi"
+          git commit -m "XenForo doğrudan kurulum paketini güncelle"
           git push
