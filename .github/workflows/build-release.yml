@@ -1,4 +1,4 @@
-name: Warext XenForo V1
+name: Warext XenForo V1.0.1
 
 on:
   push:
@@ -17,28 +17,46 @@ jobs:
   validate:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Derleme uyumluluk dosyalarını hazırla
+      - name: Kaynakları doğrula
         shell: bash
         run: |
-          printf '%s\n' 'Warext Turkish Spell Check V1' > README.txt
-          printf '%s\n' '# V1' > CHANGELOG.md
-          printf '%s\n' 'Üçüncü taraf lisans ve atıfları upload/src/addons/Warext/TurkishSpellCheck/Resources altında paketlenir.' > THIRD_PARTY.md
+          set -euo pipefail
+          while IFS= read -r -d '' file; do node --check "$file"; done < <(find upload/js/warext/turkish-spellcheck -type f -name '*.js' -print0 | sort -z)
+          while IFS= read -r -d '' file; do php -l "$file"; done < <(find upload/src/addons/Warext/TurkishSpellCheck -type f -name '*.php' -print0 | sort -z)
+          node tests/v110-advanced-regression.js
+          node tests/longtext-regression.js
+          python3 - <<'PY'
+          import json
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
 
-      - name: Eklentiyi doğrula
-        shell: bash
-        run: |
-          set -o pipefail
-          bash tools/build_release.sh 2>&1 | tee /tmp/warext-build.log
+          root = Path('upload')
+          addon = json.loads((root / 'src/addons/Warext/TurkishSpellCheck/addon.json').read_text(encoding='utf-8'))
+          if addon.get('version_string') != '1.0.1' or int(addon.get('version_id', 0)) != 5300071:
+              raise SystemExit('Sürüm doğrulaması başarısız')
+          bootstrap = (root / 'js/warext/turkish-spellcheck/bootstrap-v110.js').read_text(encoding='utf-8')
+          for asset in ['runtime-v240.js', 'document-v240.js', 'context-v230.js', 'context-tuning-v231.js', 'editor-v110.js', 'longtext-v110.js']:
+              if asset not in bootstrap:
+                  raise SystemExit('Bootstrap varlığı eksik: ' + asset)
+          if "const VERSION = '1.0.1';" not in bootstrap or "const ASSET_VERSION = '2401';" not in bootstrap:
+              raise SystemExit('Önbellek sürüm anahtarı geçersiz')
+          template = (root / 'src/addons/Warext/TurkishSpellCheck/_data/template_modifications.xml').read_text(encoding='utf-8')
+          if '?wtsc=2401' not in template:
+              raise SystemExit('Template önbellek kırıcı eksik')
+          for path in (root / 'src/addons/Warext/TurkishSpellCheck/_data').rglob('*.xml'):
+              ET.parse(path)
+          PY
 
-      - name: XenForo doğrudan kurulum paketini üret
+      - name: XenForo kurulum paketini üret
         shell: bash
         run: |
+          set -euo pipefail
           python3 - <<'PY'
           import hashlib
           import json
@@ -54,44 +72,52 @@ jobs:
               hashes[rel] = hashlib.sha256(path.read_bytes()).hexdigest()
           target.write_text(json.dumps(hashes, ensure_ascii=False, indent=4) + '\n', encoding='utf-8')
           PY
-          rm -f Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip
-          zip -qr Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip upload LICENSE
-          unzip -tq Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip
+          rm -rf release
+          rm -f Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo.zip
+          zip -qr Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo.zip upload LICENSE
+          unzip -tq Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo.zip
           python3 - <<'PY'
+          import json
           import zipfile
 
-          package = 'Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip'
+          package = 'Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo.zip'
           required = {
               'upload/src/addons/Warext/TurkishSpellCheck/addon.json',
               'upload/src/addons/Warext/TurkishSpellCheck/hashes.json',
-              'upload/src/addons/Warext/TurkishSpellCheck/Setup.php'
+              'upload/src/addons/Warext/TurkishSpellCheck/Setup.php',
+              'upload/js/warext/turkish-spellcheck/runtime-v240.js',
+              'upload/js/warext/turkish-spellcheck/document-v240.js'
           }
           with zipfile.ZipFile(package) as archive:
               names = set(archive.namelist())
               missing = sorted(required - names)
               if missing:
                   raise SystemExit('Kurulum paketinde zorunlu dosya eksik: ' + ', '.join(missing))
+              addon = json.loads(archive.read('upload/src/addons/Warext/TurkishSpellCheck/addon.json').decode('utf-8'))
+              if addon.get('version_string') != '1.0.1' or int(addon.get('version_id', 0)) != 5300071:
+                  raise SystemExit('ZIP sürümü geçersiz')
           PY
 
       - name: Kurulum paketini artifact olarak yükle
         uses: actions/upload-artifact@v4
         with:
-          name: Warext-Turkce-Yazim-Denetimi-V1-XenForo
-          path: Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip
+          name: Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo
+          path: Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo.zip
           if-no-files-found: error
           retention-days: 90
 
-      - name: Nihai paketi main dalına kaydet
+      - name: Paketi main dalına kaydet
         if: success() && github.event_name == 'push'
         shell: bash
         run: |
+          set -euo pipefail
           rm -rf release
-          rm -f SHA256SUMS Warext-SpellCheck-V1-XenForo-Install.zip README.txt CHANGELOG.md THIRD_PARTY.md BUILD_FAILURE.txt
+          rm -f SHA256SUMS Warext-SpellCheck-V1-XenForo-Install.zip README.txt CHANGELOG.md THIRD_PARTY.md BUILD_FAILURE.txt Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "V1.0.0"
+          git commit -m "V1.0.1"
           git push
