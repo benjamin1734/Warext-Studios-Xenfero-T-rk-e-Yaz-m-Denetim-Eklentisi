@@ -4,7 +4,8 @@
   if (window.__warextTurkishSpellBootstrapV110) return;
   window.__warextTurkishSpellBootstrapV110 = true;
 
-  const VERSION = '1.0.0';
+  const VERSION = '1.0.1';
+  const ASSET_VERSION = '2401';
   const script = document.currentScript;
   const scriptUrl = script?.src || '';
   const baseDir = scriptUrl ? scriptUrl.slice(0,scriptUrl.lastIndexOf('/') + 1) : '';
@@ -22,7 +23,8 @@
     return new Promise((resolve,reject) => {
       if (readyCheck?.()) return resolve();
       const full = baseDir ? baseDir + file : file;
-      const existing = Array.from(document.scripts).find(el => el.src === full || el.dataset.wtscAsset === file);
+      const versioned = `${full}${full.includes('?') ? '&' : '?'}wtsc=${ASSET_VERSION}`;
+      const existing = Array.from(document.scripts).find(el => el.dataset.wtscAsset === file);
       if (existing) {
         if (existing.dataset.wtscLoaded === '1' || readyCheck?.()) return resolve();
         existing.addEventListener('load',resolve,{once:true});
@@ -30,9 +32,10 @@
         return;
       }
       const el = document.createElement('script');
-      el.src = full;
+      el.src = versioned;
       el.async = false;
       el.dataset.wtscAsset = file;
+      el.dataset.wtscAssetVersion = ASSET_VERSION;
       el.addEventListener('load',() => {
         el.dataset.wtscLoaded = '1';
         resolve();
@@ -80,10 +83,12 @@
       await loadScript('semantic-ui-v110.js',() => !!window.__warextSemanticUiV130);
       await loadScript('context-v230.js',() => !!window.__warextContextV230);
       await loadScript('context-tuning-v231.js',() => !!window.__warextContextTuningV231);
+      await loadScript('runtime-v240.js',() => !!window.__warextRuntimeV240);
       if (!window.WarextTurkishSpellEngineV110) throw new Error('engine');
       await loadScript('editor-v110.js',() => !!window.__warextTurkishSpellCheckV110);
       await loadScript('longtext-v110.js',() => !!window.__warextLongTextV110);
       await loadScript('paragraph-v230.js',() => !!window.__warextParagraphV230);
+      await loadScript('document-v240.js',() => !!window.__warextDocumentV240);
       document.documentElement.dataset.wtscStatus = 'assets-ready';
       observer?.disconnect();
     } catch (_) {
