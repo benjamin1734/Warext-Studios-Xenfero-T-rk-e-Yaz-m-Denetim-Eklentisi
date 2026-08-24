@@ -4,6 +4,7 @@ require('../upload/js/warext/turkish-spellcheck/dictionary-v110.js');
 require('../upload/js/warext/turkish-spellcheck/corrections-v110.js');
 require('../upload/js/warext/turkish-spellcheck/language-v110.js');
 require('../upload/js/warext/turkish-spellcheck/context-v230.js');
+require('../upload/js/warext/turkish-spellcheck/context-tuning-v231.js');
 const e = global.WarextTurkishSpellEngineV110;
 const validCompound = ['geliyordum','geliyormuşsun','geliyorsanız','gelmeliydim','gelseydim','gelmiştim'];
 for (const word of validCompound) {
@@ -52,11 +53,11 @@ if (cleanParagraphIssues.some(issue => cleanParagraphSentence.slice(issue.start,
 }
 const personShiftSentence = 'Günün sonunda bunun faydalı olduğunu düşündüm ve düzenli olarak gitmeye karar verdiler.';
 const personShiftIssues = e.analyzeSentence(personShiftSentence,{properNames:true,punctuation:true,longText:true,semantic:true});
-if (!personShiftIssues.some(issue => issue.rule === 'v230-paragraph-person-continuity' && (issue.suggestions || []).includes('verdim'))) {
+if (!personShiftIssues.some(issue => /v23[01]-paragraph-person-continuity/u.test(issue.rule || '') && (issue.suggestions || []).includes('verdim'))) {
   throw new Error(`Kişi sürekliliği yakalanamadı: ${JSON.stringify(personShiftIssues)}`);
 }
 const paragraphReport = e.analyzeParagraph('Kütüphane kapalıydı çünkü o gün açık olduğu için içeri giremedik. Bu durumun nedenini daha sonra araştırdık.',{semantic:true,longText:true});
-if (!paragraphReport.warnings.some(issue => issue.rule === 'v230-paragraph-causal-stack')) {
+if (!paragraphReport.warnings.some(issue => /v23[01]-paragraph-causal-stack/u.test(issue.rule || ''))) {
   throw new Error(`Paragraf neden-sonuç uyarısı üretilemedi: ${JSON.stringify(paragraphReport)}`);
 }
-if (e.stats.externalDependencies !== 0 || e.stats.compoundFinitePatterns < 3 || e.stats.expandedProperNames < 60 || e.stats.paragraphContext !== true || e.stats.nominalInflectionRules < 7) throw new Error('v110/v230 istatistikleri');
+if (e.stats.externalDependencies !== 0 || e.stats.compoundFinitePatterns < 3 || e.stats.expandedProperNames < 60 || e.stats.paragraphContext !== true || e.stats.nominalInflectionRules < 7 || e.stats.contextTuningLayer !== 'v231-unicode-boundary') throw new Error('v110/v230/v231 istatistikleri');
