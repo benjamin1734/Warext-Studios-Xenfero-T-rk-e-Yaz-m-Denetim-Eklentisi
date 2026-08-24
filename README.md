@@ -1,14 +1,16 @@
 # Warext Studios | Türkçe Yazım Denetimi
 
-XenForo 2.3+ için yerel çalışan Türkçe yazım ve dil denetimi eklentisi.
+XenForo 2.3+ için tamamen yerel çalışan Türkçe yazım, dilbilgisi, noktalama ve bağlam denetimi eklentisi.
 
 ## Doğrudan kurulum
 
 Kurulum dosyası:
 
-`Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip`
+`Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo.zip`
 
 ZIP dosyasını çıkarmadan XenForo yönetim panelindeki **Add-ons → Install/upgrade from archive** alanına yükleyin.
+
+V1.0.1, önceki V1.0.0 kurulumunun üzerine doğrudan yükseltilebilir. Statik JavaScript dosyalarında sürüm anahtarlı önbellek kırma kullanıldığı için eski tarayıcı önbelleğinin yeni dil motorunu engellemesi önlenir.
 
 XenForo arşiv kurucusu kapalıysa `src/config.php` içine aşağıdaki ayarın eklenmesi gerekir:
 
