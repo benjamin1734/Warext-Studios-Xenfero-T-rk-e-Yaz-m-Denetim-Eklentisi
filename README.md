@@ -4,6 +4,16 @@ XenForo 2.3.0+ için tamamen yerel çalışan Türkçe yazım, dilbilgisi, morfo
 
 Warext Turkish Spell Check; konu, mesaj ve editör metinlerini yerel dil motoruyla analiz eder. Çalışma zamanında harici NLP API'si, uzak model sunucusu veya üçüncü taraf dil servisi kullanmaz.
 
+## XenForo doğrudan kurulum paketi
+
+**Kurulum için repo kökündeki `Warext-SpellCheck-V1-XenForo-Install.zip` dosyasını indirin. ZIP'i açmayın.**
+
+Bu dosya XenForo ACP içindeki **Add-ons → Install/upgrade from archive** alanına doğrudan yüklenmek üzere hazırlanır. FTP'ye manuel dosya atma veya SQL içe aktarma gerekmez.
+
+[Warext-SpellCheck-V1-XenForo-Install.zip](./Warext-SpellCheck-V1-XenForo-Install.zip)
+
+Aynı doğrulanmış paket `release/Warext-SpellCheck-V1.zip` altında da tutulur. GitHub Actions her nihai derlemede iki dosyayı aynı ZIP içeriğiyle yeniden senkronize eder ve arşiv bütünlüğünü doğrular.
+
 ## Eklenti içeriği
 
 | Alan | İçerik |
@@ -56,7 +66,11 @@ URL, e-posta, domain, IPv4, IPv6, host:port, MAC, UUID, hash, sürüm numarası,
 
 ## Kurulum
 
-`Warext-SpellCheck-V1.zip` dosyasını XenForo ACP içindeki **Add-ons → Install/upgrade from archive** bölümünden yükleyin. Eklentinin kullandığı veritabanı yapıları kurulum veya yükseltme sırasında otomatik oluşturulur; manuel SQL içe aktarma gerekmez.
+1. `Warext-SpellCheck-V1-XenForo-Install.zip` dosyasını indirin.
+2. XenForo ACP içinden **Add-ons → Install/upgrade from archive** bölümünü açın.
+3. ZIP dosyasını olduğu gibi yükleyin ve kurulumu başlatın.
+
+ZIP dosyasını çıkarmanız gerekmez. Veritabanı tabloları kurulum veya yükseltme sırasında otomatik oluşturulur; manuel SQL içe aktarma gerekmez.
 
 ## Lisans ve veri kaynakları
 
