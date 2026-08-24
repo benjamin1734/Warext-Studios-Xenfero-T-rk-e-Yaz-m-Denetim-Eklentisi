@@ -78,9 +78,11 @@
       await loadScript('syntax-v220.js',() => !!window.__warextSyntaxV220);
       await loadScript('syntax-tuning-v220.js',() => !!window.__warextSyntaxTuningV220);
       await loadScript('semantic-ui-v110.js',() => !!window.__warextSemanticUiV130);
+      await loadScript('context-v230.js',() => !!window.__warextContextV230);
       if (!window.WarextTurkishSpellEngineV110) throw new Error('engine');
       await loadScript('editor-v110.js',() => !!window.__warextTurkishSpellCheckV110);
       await loadScript('longtext-v110.js',() => !!window.__warextLongTextV110);
+      await loadScript('paragraph-v230.js',() => !!window.__warextParagraphV230);
       document.documentElement.dataset.wtscStatus = 'assets-ready';
       observer?.disconnect();
     } catch (_) {
