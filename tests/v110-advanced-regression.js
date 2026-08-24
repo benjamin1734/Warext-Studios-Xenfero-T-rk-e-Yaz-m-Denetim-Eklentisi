@@ -5,6 +5,7 @@ require('../upload/js/warext/turkish-spellcheck/corrections-v110.js');
 require('../upload/js/warext/turkish-spellcheck/language-v110.js');
 require('../upload/js/warext/turkish-spellcheck/context-v230.js');
 require('../upload/js/warext/turkish-spellcheck/context-tuning-v231.js');
+require('../upload/js/warext/turkish-spellcheck/runtime-v240.js');
 const e = global.WarextTurkishSpellEngineV110;
 const validCompound = ['geliyordum','geliyormuşsun','geliyorsanız','gelmeliydim','gelseydim','gelmiştim'];
 for (const word of validCompound) {
@@ -57,7 +58,22 @@ if (!personShiftIssues.some(issue => /v23[01]-paragraph-person-continuity/u.test
   throw new Error(`Kişi sürekliliği yakalanamadı: ${JSON.stringify(personShiftIssues)}`);
 }
 const paragraphReport = e.analyzeParagraph('Kütüphane kapalıydı çünkü o gün açık olduğu için içeri giremedik. Bu durumun nedenini daha sonra araştırdık.',{semantic:true,longText:true});
-if (!paragraphReport.warnings.some(issue => /v23[01]-paragraph-causal-stack/u.test(issue.rule || ''))) {
+if (!paragraphReport.warnings.some(issue => /v23[01]-paragraph-causal-stack|v240-paragraph-semantic-contrast/u.test(issue.rule || ''))) {
   throw new Error(`Paragraf neden-sonuç uyarısı üretilemedi: ${JSON.stringify(paragraphReport)}`);
 }
-if (e.stats.externalDependencies !== 0 || e.stats.compoundFinitePatterns < 3 || e.stats.expandedProperNames < 60 || e.stats.paragraphContext !== true || e.stats.nominalInflectionRules < 7 || e.stats.contextTuningLayer !== 'v231-unicode-boundary') throw new Error('v110/v230/v231 istatistikleri');
+const correctLongParagraph = 'Geçen hafta arkadaşlarımla kütüphaneye gittim. Kütüphanenin yerini önceden öğrendiğim için doğrudan oraya ulaştım. Günün sonunda bu etkinliğin oldukça faydalı olduğunu düşündüm ve eve döndüm.';
+const correctLongReport = e.analyzeParagraph(correctLongParagraph,{semantic:true,punctuation:true,properNames:true,longText:true});
+const correctLongItems = [...(correctLongReport.fixes || []),...(correctLongReport.warnings || [])];
+if (correctLongItems.some(issue => correctLongParagraph.slice(issue.start,issue.end).trim() === 'etkinliğin' && (issue.category || 'spelling') === 'spelling')) {
+  throw new Error(`Uzun paragrafta etkinliğin yanlış pozitif: ${JSON.stringify(correctLongItems)}`);
+}
+const flawedLongParagraph = 'Kütüphane kapalıydı çünkü o gün açık olduğu için içeri giremedik. Günün sonunda bunun faydalı olduğunu düşündüm. Daha sonra düzenli olarak gitmeye karar verdiler.';
+const flawedLongReport = e.analyzeParagraph(flawedLongParagraph,{semantic:true,punctuation:true,properNames:true,longText:true});
+const flawedLongItems = [...(flawedLongReport.fixes || []),...(flawedLongReport.warnings || [])];
+if (!flawedLongItems.some(issue => /v240-paragraph-cross-sentence-person/u.test(issue.rule || '') && (issue.suggestions || []).includes('verdim'))) {
+  throw new Error(`Uzun paragraf kişi sürekliliği yakalanamadı: ${JSON.stringify(flawedLongItems)}`);
+}
+if (!flawedLongItems.some(issue => /v23[01]-paragraph-causal-stack|v240-paragraph-semantic-contrast/u.test(issue.rule || ''))) {
+  throw new Error(`Uzun paragraf anlam bağlantısı yakalanamadı: ${JSON.stringify(flawedLongItems)}`);
+}
+if (e.stats.externalDependencies !== 0 || e.stats.compoundFinitePatterns < 3 || e.stats.expandedProperNames < 60 || e.stats.paragraphContext !== true || e.stats.nominalInflectionRules < 7 || e.stats.contextTuningLayer !== 'v231-unicode-boundary' || e.stats.runtimeSafetyLayer !== 'v240-validity-reconcile' || e.stats.fullParagraphScan !== true) throw new Error('v110/v230/v231/v240 istatistikleri');
