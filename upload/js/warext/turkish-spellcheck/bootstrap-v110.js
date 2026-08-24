@@ -79,6 +79,7 @@
       await loadScript('syntax-tuning-v220.js',() => !!window.__warextSyntaxTuningV220);
       await loadScript('semantic-ui-v110.js',() => !!window.__warextSemanticUiV130);
       await loadScript('context-v230.js',() => !!window.__warextContextV230);
+      await loadScript('context-tuning-v231.js',() => !!window.__warextContextTuningV231);
       if (!window.WarextTurkishSpellEngineV110) throw new Error('engine');
       await loadScript('editor-v110.js',() => !!window.__warextTurkishSpellCheckV110);
       await loadScript('longtext-v110.js',() => !!window.__warextLongTextV110);
