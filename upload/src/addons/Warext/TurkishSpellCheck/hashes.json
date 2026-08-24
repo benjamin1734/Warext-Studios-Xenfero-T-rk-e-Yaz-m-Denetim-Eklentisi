@@ -1,5 +1,7 @@
 {
-    "js/warext/turkish-spellcheck/bootstrap-v110.js": "4f4ffdf20ed3b79473a8199c8cdf88a8ce6216341308c87ad7749adf4a0120e1",
+    "js/warext/turkish-spellcheck/bootstrap-v110.js": "9f4c1301a98bfa8456e1a9761704c5b9acb89e673654ce4bfc93280a052109c3",
+    "js/warext/turkish-spellcheck/context-tuning-v231.js": "0a9ba5ada265744845d5c954de060249de12b33ce99fd7546afd0d626c59b17c",
+    "js/warext/turkish-spellcheck/context-v230.js": "3605e6d81526711a57043e2b8e81eae9d0caf1dba59f6822c197bb9788da078f",
     "js/warext/turkish-spellcheck/corrections-v110.js": "9311793c16dd7c13a519bb3126240759540f32ceb6871940216fc399b57a27c2",
     "js/warext/turkish-spellcheck/dictionary-v110.js": "8bf76e09ee11e93ad6b3a930fa3f390751bd7b16b6dd9bf9cfb3f19fdb54fca5",
     "js/warext/turkish-spellcheck/editor-v110.js": "6dd2fced6d60d5e249735aeb82d82ee38e4ad954e27c15640f07aa6494beb904",
@@ -13,6 +15,7 @@
     "js/warext/turkish-spellcheck/longtext-v110.js": "17143bc70507f184f50e0051ceafdbb11f879c962d954e6a7216a2705aa0ecf7",
     "js/warext/turkish-spellcheck/micro-integration-v200.js": "6de0ea56707cd2d474b9150775f7bb091934160729f2235a66f075f622479b4c",
     "js/warext/turkish-spellcheck/micro-model-v200.js": "36bb1b19cd408b7615692f31078db57abd658cf30da5885c0fda2c6853769707",
+    "js/warext/turkish-spellcheck/paragraph-v230.js": "d3c4303be9dc481ea1f8ca3050fdbcc5ee84fd2d0f900e8a52c27dd81101a9fb",
     "js/warext/turkish-spellcheck/quality-v210.js": "f04c288754c80f2d02a913fc66e13ec2d6585dd2e1e458e346116987119439e7",
     "js/warext/turkish-spellcheck/quality-v220.js": "5e08213ffb9225d862069ede6c6720401b178556015cb4b7b887f08efe520436",
     "js/warext/turkish-spellcheck/semantic-context-v110.js": "9ed85b2bfa28c817ba7765b82a49b78c00a4d238b192b87d62646d565b7b5ecb",
