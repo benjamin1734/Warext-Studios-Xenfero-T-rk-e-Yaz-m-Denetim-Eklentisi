@@ -93,6 +93,7 @@
       await loadScript('semantic-reasoning-tuning-v311.js',() => !!window.__warextSemanticReasoningTuningV311);
       await loadScript('contextual-orthography-v312.js',() => !!window.__warextContextualOrthographyV312);
       await loadScript('contextual-orthography-rerank-v312.js',() => !!window.__warextContextualOrthographyRerankV312);
+      await loadScript('contextual-orthography-guard-v312.js',() => !!window.__warextContextualOrthographyGuardV312);
       if (!window.WarextTurkishSpellEngineV110) throw new Error('engine');
       await loadScript('editor-v110.js',() => !!window.__warextTurkishSpellCheckV110);
       await loadScript('longtext-v110.js',() => !!window.__warextLongTextV110);

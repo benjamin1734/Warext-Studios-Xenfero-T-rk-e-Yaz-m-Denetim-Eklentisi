@@ -5,6 +5,7 @@ require('../upload/js/warext/turkish-spellcheck/corrections-v110.js');
 require('../upload/js/warext/turkish-spellcheck/lm-v200.js');
 require('../upload/js/warext/turkish-spellcheck/contextual-orthography-v312.js');
 require('../upload/js/warext/turkish-spellcheck/contextual-orthography-rerank-v312.js');
+require('../upload/js/warext/turkish-spellcheck/contextual-orthography-guard-v312.js');
 
 const engine = global.WarextTurkishSpellEngineV110;
 if (!engine?.contextualOrthographyV312) throw new Error('V3.1.2 bağlamsal yazım motoru yüklenemedi');
@@ -12,6 +13,7 @@ if (engine.stats?.externalDependencies !== 0) throw new Error('Harici çalışma
 if (engine.stats?.contextualDoubleVowelRepair !== true) throw new Error('Çift ünlü onarım katmanı etkin değil');
 if (engine.stats?.genitivePossessiveRepair !== true) throw new Error('Tamlayan-tamlanan onarım katmanı etkin değil');
 if (engine.stats?.contextualSuggestionReranking !== true) throw new Error('Bağlamsal öneri yeniden sıralaması etkin değil');
+if (engine.stats?.contextualFalsePositiveGuard !== true) throw new Error('Bağlamsal yanlış pozitif koruması etkin değil');
 
 const broken = engine.check('gonu',{
   previousWord:'iyi',
@@ -64,4 +66,4 @@ const direct = engine.contextualOrthographyV312('gonu',{
 });
 if (!direct || direct.suggestion !== 'günü' || direct.genitiveFrame !== true) throw new Error(`Bağlam çözümlemesi başarısız: ${JSON.stringify(direct)}`);
 
-console.log('V3.1.2 bağlamsal çoklu-harf yazım ve öneri sıralama regresyonu başarılı.');
+console.log('V3.1.2 bağlamsal çoklu-harf yazım, öneri sıralama ve yanlış pozitif koruma regresyonu başarılı.');
