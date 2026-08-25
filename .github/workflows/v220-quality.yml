@@ -1,4 +1,4 @@
-name: Warext V1 dil motoru kalite doğrulama
+name: Warext V1.0.3 yerel kalite doğrulama
 
 on:
   push:
@@ -12,28 +12,19 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: warext-local-quality-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   quality:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 1
-      - name: V1 yerel varlıklarını üret ve denetle
+      - name: Tamamen yerel kalite ve paket doğrulaması
         shell: bash
         run: bash tools/build_release.sh
-      - name: Sözdizim katmanını yeniden doğrula
-        shell: bash
-        run: |
-          node --check upload/js/warext/turkish-spellcheck/quality-v220.js
-          node --check upload/js/warext/turkish-spellcheck/syntax-v220.js
-          node --check upload/js/warext/turkish-spellcheck/syntax-tuning-v220.js
-          NODE_OPTIONS="--require ./tests/v220-preload.js" node tests/v220-syntax-quality-regression.js
-      - name: Gerçek Türkçe dependency benchmarkını yeniden doğrula
-        shell: bash
-        run: |
-          git clone -q https://github.com/UniversalDependencies/UD_Turkish-BOUN.git /tmp/ud-tr-boun
-          git -C /tmp/ud-tr-boun checkout -q f828b02872123a8dfb336584eab0767c4e55c5f9
-          cat /tmp/ud-tr-boun/tr_boun-ud-dev.conllu /tmp/ud-tr-boun/tr_boun-ud-test.conllu > /tmp/ud-tr-benchmark.conllu
-          NODE_OPTIONS="--require ./tests/v220-preload.js" node tests/v220-ud-benchmark.js /tmp/ud-tr-benchmark.conllu
