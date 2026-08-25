@@ -1,9 +1,9 @@
 {
     "legacy_addon_id": "",
-    "title": "Warext Turkish Spell Check",
-    "description": "Tamamen yerel Türkçe yazım, dilbilgisi, noktalama ve belge düzeyi anlam denetimi. V3 yerel semantik motoru; cümleler arası konu bütünlüğü, mantıksal çelişki, neden-sonuç ilişkisi, zamir gönderimi, zaman ve kişi sürekliliği, nicelik çelişkisi, semantik benzerlik ve paragraf bütünlük puanı sağlar. Harici API/model/servis gerekmez.",
-    "version_id": 5300072,
-    "version_string": "1.0.2",
+    "title": "Warext Studios | Türkçe Yazım Denetimi",
+    "description": "Tamamen yerel Türkçe yazım, dilbilgisi, noktalama ve belge düzeyi anlam denetimi. V3.1 yerel önerme grafiği; varlık belleği, zamir/gönderim çözümleme, durum-olay-nicelik tutarlılığı, semantik rol denetimi, neden-sonuç bilgi tabanı, zaman/koşul ayrımı ve paragraf konu bütünlüğünü birlikte analiz eder. Harici API, model veya servis gerekmez.",
+    "version_id": 5300073,
+    "version_string": "1.0.3",
     "dev": "Warext Studios",
     "dev_url": "",
     "faq_url": "",

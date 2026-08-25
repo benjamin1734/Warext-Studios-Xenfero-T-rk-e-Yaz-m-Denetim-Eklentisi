@@ -1,4 +1,4 @@
-name: Warext XenForo V1.0.2
+name: Warext XenForo V1.0.3
 
 on:
   push:
@@ -32,6 +32,7 @@ jobs:
           node tests/v110-advanced-regression.js
           node tests/longtext-regression.js
           node tests/v300-semantic-document-regression.js
+          node tests/v310-semantic-reasoning-regression.js
           python3 - <<'PY'
           import json
           import xml.etree.ElementTree as ET
@@ -39,15 +40,17 @@ jobs:
 
           root = Path('upload')
           addon = json.loads((root / 'src/addons/Warext/TurkishSpellCheck/addon.json').read_text(encoding='utf-8'))
-          if addon.get('version_string') != '1.0.2' or int(addon.get('version_id', 0)) != 5300072:
+          if addon.get('version_string') != '1.0.3' or int(addon.get('version_id', 0)) != 5300073:
               raise SystemExit('Sürüm doğrulaması başarısız')
           bootstrap = (root / 'js/warext/turkish-spellcheck/bootstrap-v110.js').read_text(encoding='utf-8')
           required_assets = [
               'runtime-v240.js',
               'semantic-model-v300.js',
+              'semantic-knowledge-v310.js',
               'semantic-document-v300.js',
               'semantic-tuning-v301.js',
               'semantic-tuning-v302.js',
+              'semantic-reasoning-v310.js',
               'document-v300.js',
               'context-v230.js',
               'context-tuning-v231.js',
@@ -57,13 +60,23 @@ jobs:
           for asset in required_assets:
               if asset not in bootstrap:
                   raise SystemExit('Bootstrap varlığı eksik: ' + asset)
-          if "const VERSION = '1.0.2';" not in bootstrap or "const ASSET_VERSION = '3003';" not in bootstrap:
+          if "const VERSION = '1.0.3';" not in bootstrap or "const ASSET_VERSION = '3100';" not in bootstrap:
               raise SystemExit('Önbellek sürüm anahtarı geçersiz')
+          if "dataset.wtscSemantic = 'v310'" not in bootstrap:
+              raise SystemExit('Semantik çalışma zamanı sürümü geçersiz')
           template = (root / 'src/addons/Warext/TurkishSpellCheck/_data/template_modifications.xml').read_text(encoding='utf-8')
-          if '?wtsc=3003' not in template:
+          if template.count('?wtsc=3100') < 2:
               raise SystemExit('Template önbellek kırıcı eksik')
           for path in (root / 'src/addons/Warext/TurkishSpellCheck/_data').rglob('*.xml'):
               ET.parse(path)
+          for path in [
+              root / 'js/warext/turkish-spellcheck/semantic-knowledge-v310.js',
+              root / 'js/warext/turkish-spellcheck/semantic-reasoning-v310.js'
+          ]:
+              source = path.read_text(encoding='utf-8')
+              for marker in ['fetch(', 'XMLHttpRequest', 'WebSocket(', 'https://', 'http://']:
+                  if marker in source:
+                      raise SystemExit(f'Harici çalışma zamanı bağımlılığı yasak: {path}: {marker}')
           PY
 
       - name: XenForo kurulum paketini üret
@@ -86,23 +99,25 @@ jobs:
           target.write_text(json.dumps(hashes, ensure_ascii=False, indent=4) + '\n', encoding='utf-8')
           PY
           rm -rf release
-          rm -f Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo.zip Warext-Turkce-Yazim-Denetimi-V1.0.2-XenForo.zip
-          zip -qr Warext-Turkce-Yazim-Denetimi-V1.0.2-XenForo.zip upload LICENSE
-          unzip -tq Warext-Turkce-Yazim-Denetimi-V1.0.2-XenForo.zip
+          rm -f Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo.zip Warext-Turkce-Yazim-Denetimi-V1.0.2-XenForo.zip Warext-Turkce-Yazim-Denetimi-V1.0.3-XenForo.zip
+          zip -qr Warext-Turkce-Yazim-Denetimi-V1.0.3-XenForo.zip upload LICENSE
+          unzip -tq Warext-Turkce-Yazim-Denetimi-V1.0.3-XenForo.zip
           python3 - <<'PY'
           import json
           import zipfile
 
-          package = 'Warext-Turkce-Yazim-Denetimi-V1.0.2-XenForo.zip'
+          package = 'Warext-Turkce-Yazim-Denetimi-V1.0.3-XenForo.zip'
           required = {
               'upload/src/addons/Warext/TurkishSpellCheck/addon.json',
               'upload/src/addons/Warext/TurkishSpellCheck/hashes.json',
               'upload/src/addons/Warext/TurkishSpellCheck/Setup.php',
               'upload/js/warext/turkish-spellcheck/runtime-v240.js',
               'upload/js/warext/turkish-spellcheck/semantic-model-v300.js',
+              'upload/js/warext/turkish-spellcheck/semantic-knowledge-v310.js',
               'upload/js/warext/turkish-spellcheck/semantic-document-v300.js',
               'upload/js/warext/turkish-spellcheck/semantic-tuning-v301.js',
               'upload/js/warext/turkish-spellcheck/semantic-tuning-v302.js',
+              'upload/js/warext/turkish-spellcheck/semantic-reasoning-v310.js',
               'upload/js/warext/turkish-spellcheck/document-v300.js'
           }
           with zipfile.ZipFile(package) as archive:
@@ -111,15 +126,15 @@ jobs:
               if missing:
                   raise SystemExit('Kurulum paketinde zorunlu dosya eksik: ' + ', '.join(missing))
               addon = json.loads(archive.read('upload/src/addons/Warext/TurkishSpellCheck/addon.json').decode('utf-8'))
-              if addon.get('version_string') != '1.0.2' or int(addon.get('version_id', 0)) != 5300072:
+              if addon.get('version_string') != '1.0.3' or int(addon.get('version_id', 0)) != 5300073:
                   raise SystemExit('ZIP sürümü geçersiz')
           PY
 
       - name: Kurulum paketini artifact olarak yükle
         uses: actions/upload-artifact@v4
         with:
-          name: Warext-Turkce-Yazim-Denetimi-V1.0.2-XenForo
-          path: Warext-Turkce-Yazim-Denetimi-V1.0.2-XenForo.zip
+          name: Warext-Turkce-Yazim-Denetimi-V1.0.3-XenForo
+          path: Warext-Turkce-Yazim-Denetimi-V1.0.3-XenForo.zip
           if-no-files-found: error
           retention-days: 90
 
@@ -129,12 +144,12 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf release
-          rm -f SHA256SUMS Warext-SpellCheck-V1-XenForo-Install.zip README.txt CHANGELOG.md THIRD_PARTY.md BUILD_FAILURE.txt Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo.zip
+          rm -f SHA256SUMS Warext-SpellCheck-V1-XenForo-Install.zip README.txt CHANGELOG.md THIRD_PARTY.md BUILD_FAILURE.txt Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo.zip Warext-Turkce-Yazim-Denetimi-V1.0.2-XenForo.zip
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "V1.0.2"
+          git commit -m "V1.0.3"
           git push

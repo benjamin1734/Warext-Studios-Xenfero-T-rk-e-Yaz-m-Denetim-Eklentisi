@@ -6,13 +6,15 @@ XenForo 2.3+ için tamamen yerel çalışan Türkçe yazım, dilbilgisi, noktala
 
 Kurulum dosyası:
 
-`Warext-Turkce-Yazim-Denetimi-V1.0.2-XenForo.zip`
+`Warext-Turkce-Yazim-Denetimi-V1.0.3-XenForo.zip`
 
 ZIP dosyasını çıkarmadan XenForo yönetim panelindeki **Add-ons → Install/upgrade from archive** alanına yükleyin.
 
-V1.0.2, önceki sürümlerin üzerine doğrudan yükseltilebilir. Statik JavaScript dosyalarında sürüm anahtarlı önbellek kırma kullanılır.
+V1.0.3, önceki sürümlerin üzerine doğrudan yükseltilebilir. Statik JavaScript dosyalarında sürüm anahtarlı önbellek kırma kullanılır.
 
-V1.0.2 ile yerel V3 semantik motoru eklendi. Sistem artık yalnızca kelime denetimi yapmaz; tüm paragrafı cümleler arası anlam ve mantık ilişkileriyle birlikte değerlendirir. Konu sürekliliği, neden-sonuç bağı, karşıtlık, nicelik ve varlık çelişkileri, zamir gönderimleri, zaman akışı, kişi sürekliliği, tekrar, konu sapması ve genel paragraf bütünlüğü birlikte analiz edilir. Analiz tamamen yereldir ve çalışma zamanında harici API, model veya servis kullanmaz.
+V1.0.3 ile yerel V3.1 anlam motoru eklendi. Motor yalnızca kelime veya yan yana cümle benzerliği üzerinden çalışmaz; paragrafı önerme grafiğine dönüştürerek varlıkları, eylemleri, durumları, miktarları, zaman bilgisini ve cümleler arası gönderimleri bellekte izler. Aynı varlık hakkında ilerleyen cümlelerde kurulan durumlar karşılaştırılır, gerçek durum değişiklikleri ayrı tutulur, koşullu ve varsayımsal cümleler kesin olgu gibi değerlendirilmez, zamirlerin olası referansları izlenir, eylem-özne/nesne uyumu denetlenir ve yerel neden-sonuç bilgi tabanı ile çıkarımlar sınanır. Konu sapması, kopuk sonuç zinciri, nicelik çelişkisi, olayın olumlu/olumsuz anlatım çatışması ve doğal Türkçe akışından belirgin sapmalar belge bütünü içinde değerlendirilir.
+
+Tüm sözlük, morfoloji, dil modeli, semantik bilgi tabanı ve anlam çıkarım bileşenleri eklenti paketinin içindedir. Çalışma zamanında harici API, bulut modeli, uzak yapay zekâ servisi veya başka bir ağ servisi kullanılmaz.
 
 XenForo arşiv kurucusu kapalıysa `src/config.php` içine aşağıdaki ayarın eklenmesi gerekir:
 
