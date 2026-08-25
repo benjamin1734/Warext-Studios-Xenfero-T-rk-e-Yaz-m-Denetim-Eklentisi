@@ -104,8 +104,8 @@ def check_addon(root):
     missing = sorted(referenced - option_ids)
     if missing:
         fail('Template içinde tanımsız option bulundu: ' + ', '.join(missing))
-    if template.count('?wtsc=3100') < 2:
-        fail('V3.1 önbellek kırıcı template bağlantısı eksik')
+    if template.count('?wtsc=3110') < 2:
+        fail('V3.1.1 önbellek kırıcı template bağlantısı eksik')
     if "link('warext-spell-feedback')" not in template:
         fail('Yerel geri bildirim route bağlantısı eksik')
 
@@ -114,10 +114,10 @@ def check_runtime(root):
     runtime = root / 'upload' / RUNTIME_REL
     bootstrap_path = runtime / 'bootstrap-v110.js'
     bootstrap = read_text(bootstrap_path)
-    if "const VERSION = '1.0.3';" not in bootstrap or "const ASSET_VERSION = '3100';" not in bootstrap:
+    if "const VERSION = '1.0.3';" not in bootstrap or "const ASSET_VERSION = '3110';" not in bootstrap:
         fail('Bootstrap sürümü geçersiz')
-    if "dataset.wtscSemantic = 'v310'" not in bootstrap:
-        fail('V3.1 çalışma zamanı işareti eksik')
+    if "dataset.wtscSemantic = 'v311'" not in bootstrap:
+        fail('V3.1.1 çalışma zamanı işareti eksik')
     required = {
         'text-core-v110.js', 'lexicon-v200.js', 'dictionary-v110.js', 'corrections-v110.js', 'language-v110.js',
         'semantic-v110.js', 'semantic-deep-v110.js', 'semantic-context-v110.js', 'entities-v200.js', 'idioms-v200.js',
@@ -125,7 +125,7 @@ def check_runtime(root):
         'quality-v210.js', 'quality-v220.js', 'syntax-v220.js', 'syntax-tuning-v220.js', 'semantic-ui-v110.js',
         'context-v230.js', 'context-tuning-v231.js', 'semantic-model-v300.js', 'semantic-knowledge-v310.js', 'runtime-v240.js',
         'semantic-document-v300.js', 'semantic-tuning-v301.js', 'semantic-tuning-v302.js', 'semantic-reasoning-v310.js',
-        'editor-v110.js', 'longtext-v110.js', 'document-v300.js'
+        'semantic-reasoning-tuning-v311.js', 'editor-v110.js', 'longtext-v110.js', 'document-v300.js'
     }
     loaded = set(re.findall(r"loadScript\('([^']+\.js)'", bootstrap))
     disk = {path.name for path in runtime.glob('*.js') if path.name != 'bootstrap-v110.js'}
@@ -152,6 +152,10 @@ def check_runtime(root):
     for marker in ['externalDependencies:0', 'propositionGraph:true', 'entityMemory:true', 'coreferenceResolution:true', 'stateLedger:true', 'selectionalSemantics:true', 'causalKnowledgeBase:true']:
         if marker not in semantic:
             fail(f'V3.1 anlam motoru özelliği eksik: {marker}')
+    tuning = read_text(runtime / 'semantic-reasoning-tuning-v311.js')
+    for marker in ['externalDependencies:0', 'hypotheticalAssertionsExcluded:true', 'entityScopedTransitions:true', 'ambiguousPronounCalibration:true']:
+        if marker not in tuning:
+            fail(f'V3.1.1 kalibrasyon özelliği eksik: {marker}')
 
 
 def check_resources(root):
@@ -222,7 +226,8 @@ def check_package(root, package_path):
             'upload/src/addons/Warext/TurkishSpellCheck/hashes.json',
             'upload/js/warext/turkish-spellcheck/bootstrap-v110.js',
             'upload/js/warext/turkish-spellcheck/semantic-knowledge-v310.js',
-            'upload/js/warext/turkish-spellcheck/semantic-reasoning-v310.js'
+            'upload/js/warext/turkish-spellcheck/semantic-reasoning-v310.js',
+            'upload/js/warext/turkish-spellcheck/semantic-reasoning-tuning-v311.js'
         }
         missing = sorted(required - names)
         if missing:
@@ -272,7 +277,7 @@ def main():
     check_hashes(root)
     if args.package:
         check_package(root, args.package)
-    print(json.dumps({'release':VERSION_STRING,'filesScanned':scanned,'runtimeExternalDependencies':0,'semanticEngine':'v310','status':'ok'}, ensure_ascii=False, separators=(',', ':')))
+    print(json.dumps({'release':VERSION_STRING,'filesScanned':scanned,'runtimeExternalDependencies':0,'semanticEngine':'v311','status':'ok'}, ensure_ascii=False, separators=(',', ':')))
 
 
 if __name__ == '__main__':
