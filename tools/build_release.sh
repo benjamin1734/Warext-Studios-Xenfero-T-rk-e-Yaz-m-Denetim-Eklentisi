@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PACKAGE="Warext-Turkce-Yazim-Denetimi-V1.0.3-XenForo.zip"
+PACKAGE="Warext-Turkce-Yazim-Denetimi-V1.0.4-XenForo.zip"
 RUNTIME="$ROOT/upload/js/warext/turkish-spellcheck"
 ADDON="$ROOT/upload/src/addons/Warext/TurkishSpellCheck"
 
@@ -42,10 +42,11 @@ node "$ROOT/tests/v300-semantic-document-regression.js"
 node "$ROOT/tests/v310-semantic-reasoning-regression.js"
 node "$ROOT/tests/v311-semantic-benchmark.js"
 node "$ROOT/tests/v311-document-performance-contract.js"
+node "$ROOT/tests/v312-contextual-orthography-regression.js"
 
 python3 "$ROOT/tools/final_audit.py" "$ROOT"
 
-rm -f "$ROOT/Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip" "$ROOT/Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo.zip" "$ROOT/Warext-Turkce-Yazim-Denetimi-V1.0.2-XenForo.zip" "$ROOT/$PACKAGE"
+rm -f "$ROOT/Warext-Turkce-Yazim-Denetimi-V1-XenForo.zip" "$ROOT/Warext-Turkce-Yazim-Denetimi-V1.0.1-XenForo.zip" "$ROOT/Warext-Turkce-Yazim-Denetimi-V1.0.2-XenForo.zip" "$ROOT/Warext-Turkce-Yazim-Denetimi-V1.0.3-XenForo.zip" "$ROOT/$PACKAGE"
 cd "$ROOT"
 zip -qr "$PACKAGE" upload LICENSE
 unzip -tq "$PACKAGE"

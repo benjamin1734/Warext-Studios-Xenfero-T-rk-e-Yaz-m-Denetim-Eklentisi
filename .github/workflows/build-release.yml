@@ -1,4 +1,4 @@
-name: Warext XenForo V1.0.3
+name: Warext XenForo V1.0.4
 
 on:
   push:
@@ -30,8 +30,8 @@ jobs:
       - name: Kurulum paketini artifact olarak yükle
         uses: actions/upload-artifact@v4
         with:
-          name: Warext-Turkce-Yazim-Denetimi-V1.0.3-XenForo
-          path: Warext-Turkce-Yazim-Denetimi-V1.0.3-XenForo.zip
+          name: Warext-Turkce-Yazim-Denetimi-V1.0.4-XenForo
+          path: Warext-Turkce-Yazim-Denetimi-V1.0.4-XenForo.zip
           if-no-files-found: error
           retention-days: 90
 
@@ -46,5 +46,5 @@ jobs:
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "V1.0.3 paketini güncelle"
+          git commit -m "V1.0.4"
           git push

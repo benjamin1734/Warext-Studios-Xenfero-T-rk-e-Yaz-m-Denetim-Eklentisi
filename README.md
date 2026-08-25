@@ -6,17 +6,19 @@ XenForo 2.3+ için tamamen yerel çalışan Türkçe yazım, dilbilgisi, noktala
 
 Kurulum dosyası:
 
-`Warext-Turkce-Yazim-Denetimi-V1.0.3-XenForo.zip`
+`Warext-Turkce-Yazim-Denetimi-V1.0.4-XenForo.zip`
 
 ZIP dosyasını çıkarmadan XenForo yönetim panelindeki **Add-ons → Install/upgrade from archive** alanına yükleyin.
 
-V1.0.3 önceki sürümlerin üzerine doğrudan yükseltilebilir. Statik çalışma zamanı dosyalarında sürüm anahtarlı önbellek kırma kullanılır.
+V1.0.4 önceki sürümlerin üzerine doğrudan yükseltilebilir. Statik çalışma zamanı dosyalarında sürüm anahtarlı önbellek kırma kullanılır.
 
-## Yerel V3.1.1 anlam motoru
+## Yerel V3.1.2 dil ve anlam motoru
 
-V1.0.3 içindeki V3.1.1 katmanı metni yalnızca kelime veya yan yana cümle benzerliği üzerinden değerlendirmez. Paragraf; varlık, eylem, durum, miktar, zaman ve gönderim ilişkilerinden oluşan yerel bir önerme grafiğine dönüştürülür.
+V1.0.4 ile sözlükte veya morfolojik çözümlemede tek başına geçerli görünebilen fakat cümle içinde yanlış olan biçimler için bağlama duyarlı yazım katmanı eklendi. Sistem yalnızca bir harflik Türkçe karakter dönüşümlerine bağlı kalmaz; sınırlı ve güvenli çoklu ünlü adayları üretir, adayları yerel sözlük, morfolojik kök, ek yapısı ve yerel dil modeliyle yeniden sıralar.
 
-Motor aynı varlık hakkında ilerleyen cümlelerde kurulan bilgileri bellekte izler. Gerçek durum değişiklikleri ile çelişkiler ayrılır; koşullu, sorulu, aktarılmış ve varsayımsal cümleler kesin olgu gibi değerlendirilmez. Nicelik değişimi bildiren “dört kutu daha eklendi” türü ifadeler toplam stok değeriyle karıştırılmaz. Zamirlerin olası referansları izlenir, birden fazla kişiye gidebilen gönderimler işaretlenir, eylem-özne/nesne semantik rolleri denetlenir ve yerel neden-sonuç bilgi tabanı ile çıkarımlar sınanır.
+Tamlayan-tamlanan yapıları ayrıca değerlendirilir. Örneğin `Dünyanın en iyi gonu bugün olabilir` cümlesindeki `gonu`, tek başına sözlük/morfoloji katmanlarından kaçabilse bile `Dünyanın ...` tamlayanı ve beklenen iyelikli isim yapısı birlikte değerlendirilerek `günü` önerisine dönüştürülebilir. Aynı mekanizma belirli bir kelimeye sabitlenmiş değildir; benzer çoklu-harf ve ünlü uyumu kaçaklarını bağlama göre araştırır.
+
+V3.1.1 önerme grafiği de korunur. Paragraf; varlık, eylem, durum, miktar, zaman ve gönderim ilişkilerinden oluşan yerel bir önerme grafiğine dönüştürülür. Gerçek durum değişiklikleri ile çelişkiler ayrılır; koşullu, sorulu, aktarılmış ve varsayımsal cümleler kesin olgu gibi değerlendirilmez. Zamirlerin olası referansları izlenir, eylem-özne/nesne semantik rolleri denetlenir ve yerel neden-sonuç bilgi tabanı ile çıkarımlar sınanır.
 
 Belge düzeyinde konu sapması, kopuk neden-sonuç zinciri, durum ve olay kutupluluk çatışması, nicelik tutarsızlığı, gönderim belirsizliği ve doğal Türkçe akışından belirgin sapmalar birlikte değerlendirilir.
 
@@ -32,7 +34,7 @@ Manuel SQL içe aktarma gerekmez. Eklentiye ait tablolar kurulum sırasında oto
 
 ## Kalite doğrulaması
 
-Paketleme hattı JavaScript, PHP, shell, Python, XML ve JSON doğrulamalarına ek olarak sözlük, dilbilgisi, sözdizimi, uzun metin ve V3.1.1 semantik regresyon/benchmark testlerini çalıştırır. Paket yalnızca bu kontroller ve dosya bütünlüğü denetimi başarılı olduğunda oluşturulur.
+Paketleme hattı JavaScript, PHP, shell, Python, XML ve JSON doğrulamalarına ek olarak sözlük, dilbilgisi, sözdizimi, uzun metin, V3.1.1 semantik benchmark ve V3.1.2 bağlamsal yazım regresyonlarını çalıştırır. Paket yalnızca bu kontroller ve dosya bütünlüğü denetimi başarılı olduğunda oluşturulur.
 
 ## Depo yapısı
 
