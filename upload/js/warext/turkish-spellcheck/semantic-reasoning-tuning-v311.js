@@ -198,6 +198,8 @@
     const ledger = new Map();
     for (const frame of frames) {
       if (!asserted(frame)) continue;
+      const frameText = segments[frame.index]?.text || '';
+      if (TRANSITION.test(frameText)) continue;
       for (const quantity of frame.quantities || []) {
         const unit = quantity.unit || 'count';
         const key = `${quantity.entity}:${unit}`;
@@ -254,6 +256,7 @@
       calibrationLayer:'v311-entity-scoped-reasoning',
       hypotheticalAssertionsExcluded:true,
       entityScopedTransitions:true,
+      deltaQuantitiesExcluded:true,
       ambiguousPronounCalibration:true,
       fullyLocal:true,
       externalDependencies:0
@@ -281,6 +284,7 @@
       reasoningLayer:'v311-local-graph-calibration',
       hypotheticalAssertionsExcluded:true,
       entityScopedTransitions:true,
+      deltaQuantitiesExcluded:true,
       externalDependencies:0,
       fullyLocal:true
     };
@@ -300,6 +304,7 @@
       reasoningLayer:'v311-local-graph-calibration',
       fullParagraphMeaning:true,
       localPropositionGraph:true,
+      deltaQuantitiesExcluded:true,
       externalDependencies:0,
       fullyLocal:true
     };
@@ -311,6 +316,7 @@
     semanticCalibrationVersion:VERSION,
     hypotheticalAssertionsExcluded:true,
     entityScopedTransitions:true,
+    deltaQuantitiesExcluded:true,
     ambiguousPronounCalibration:true,
     externalDependencies:0
   };
