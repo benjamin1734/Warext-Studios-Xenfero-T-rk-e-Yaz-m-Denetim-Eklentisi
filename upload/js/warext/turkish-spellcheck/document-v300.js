@@ -7,10 +7,12 @@
   if (!core || !engine?.analyzeParagraph || !engine?.analyzeSemanticDocument) return;
   window.__warextDocumentV300 = true;
 
-  const VERSION = '3.0.0';
+  const VERSION = '3.1.0';
   const states = new WeakMap();
   const stateList = new Set();
   const observedRoots = new WeakSet();
+  const reportCache = new Map();
+  const CACHE_LIMIT = 18;
   const LABELS = new Map([
     ['spelling','Yazım'],['grammar','Dilbilgisi'],['punctuation','Noktalama'],['semantic','Anlam'],['syntax','Sözdizimi'],['discourse','Bağlam'],['style','Anlatım'],['logic','Mantık']
   ]);
@@ -227,6 +229,7 @@
     const ranges = [];
     for (const st of [...stateList]) {
       if (!st.el?.isConnected) {
+        cancelScheduled(st);
         stateList.delete(st);
         continue;
       }
@@ -248,27 +251,83 @@
     try { return !!engine.isValid?.(raw); } catch (_) { return false; }
   }
 
-  function run(st) {
+  function hashText(text) {
+    let hash = 2166136261;
+    for (let index = 0; index < text.length; index++) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash,16777619);
+    }
+    return `${text.length}:${hash >>> 0}`;
+  }
+
+  function cacheGet(text) {
+    const key = hashText(text);
+    const entry = reportCache.get(key);
+    if (!entry || entry.text !== text) return null;
+    reportCache.delete(key);
+    reportCache.set(key,entry);
+    return entry;
+  }
+
+  function cachePut(text,report,items,sentenceCount) {
+    const key = hashText(text);
+    reportCache.delete(key);
+    reportCache.set(key,{text,report,items,sentenceCount});
+    while (reportCache.size > CACHE_LIMIT) reportCache.delete(reportCache.keys().next().value);
+  }
+
+  function scheduleIdle(fn,timeout = 900) {
+    if (typeof requestIdleCallback === 'function') return {type:'idle',id:requestIdleCallback(fn,{timeout})};
+    return {type:'timer',id:setTimeout(() => fn({didTimeout:true,timeRemaining:() => 8}),24)};
+  }
+
+  function cancelIdle(handle) {
+    if (!handle) return;
+    if (handle.type === 'idle' && typeof cancelIdleCallback === 'function') cancelIdleCallback(handle.id);
+    else clearTimeout(handle.id);
+  }
+
+  function cancelScheduled(st) {
+    clearTimeout(st.timer);
+    st.timer = 0;
+    cancelIdle(st.idleHandle);
+    st.idleHandle = null;
+  }
+
+  function applyResult(st,text,report,items,sentenceCount,source,elapsed = 0) {
     if (!st.el?.isConnected) return;
-    const snap = snapshot(st.el);
-    if (!snap) return;
-    const text = snap.text;
-    const sentenceCount = core.sentenceSegments(text).length;
-    if (text.length < 90 || sentenceCount < 2) {
-      st.report = null;
-      st.items = [];
-      st.sentenceCount = sentenceCount;
-      render(st);
-      refreshHighlights();
+    st.report = report;
+    st.items = items;
+    st.sentenceCount = sentenceCount;
+    st.lastText = text;
+    st.el.dataset.wtscDocumentIssues = String(items.length);
+    st.el.dataset.wtscDocumentState = 'ready';
+    st.el.dataset.wtscDocumentSentences = String(sentenceCount);
+    st.el.dataset.wtscCoherenceScore = String(report?.coherence?.score ?? report?.semanticDocument?.coherence?.score ?? 100);
+    st.el.dataset.wtscDocumentSource = source;
+    st.el.dataset.wtscDocumentAnalysisMs = String(Math.max(0,Math.round(elapsed)));
+    st.el.dataset.wtscDocumentCacheSize = String(reportCache.size);
+    render(st);
+    refreshHighlights();
+  }
+
+  function analyzeNow(st,text,sentenceCount,scanId) {
+    if (scanId !== st.scanId || !st.el?.isConnected) return;
+    const cached = cacheGet(text);
+    if (cached) {
+      st.cacheHits++;
+      st.el.dataset.wtscDocumentCacheHits = String(st.cacheHits);
+      applyResult(st,text,cached.report,cached.items.map(item => ({...item})),cached.sentenceCount,'cache',0);
       return;
     }
-    st.el.dataset.wtscDocumentState = 'scanning';
+    const started = performance.now();
     let report = {warnings:[],fixes:[]};
     try { report = engine.analyzeParagraph(text,{semantic:true,punctuation:true,properNames:true,longText:true,fullParagraph:true}) || report; }
     catch (_) {}
+    if (scanId !== st.scanId || !st.el?.isConnected) return;
     const combined = [...(report.fixes || []),...(report.warnings || [])];
     const seen = new Set();
-    st.items = combined.filter(item => {
+    const items = combined.filter(item => {
       if (!item || item.end < item.start) return false;
       const confidence = item.confidence == null ? 0.72 : Number(item.confidence);
       if (confidence < 0.68) return false;
@@ -278,31 +337,69 @@
       seen.add(key);
       return true;
     }).sort((a,b) => (b.confidence || 0) - (a.confidence || 0) || a.start - b.start).slice(0,36);
-    st.report = report;
-    st.sentenceCount = sentenceCount;
-    st.el.dataset.wtscDocumentIssues = String(st.items.length);
-    st.el.dataset.wtscDocumentState = 'ready';
-    st.el.dataset.wtscDocumentSentences = String(sentenceCount);
-    st.el.dataset.wtscCoherenceScore = String(report.coherence?.score ?? report.semanticDocument?.coherence?.score ?? 100);
-    render(st);
-    refreshHighlights();
+    const elapsed = performance.now() - started;
+    cachePut(text,report,items.map(item => ({...item})),sentenceCount);
+    st.scans++;
+    st.el.dataset.wtscDocumentScans = String(st.scans);
+    applyResult(st,text,report,items,sentenceCount,'analysis',elapsed);
+  }
+
+  function run(st) {
+    if (!st.el?.isConnected) return;
+    const snap = snapshot(st.el);
+    if (!snap) return;
+    const text = snap.text;
+    const sentenceCount = core.sentenceSegments(text).length;
+    st.scanId++;
+    const scanId = st.scanId;
+    cancelIdle(st.idleHandle);
+    st.idleHandle = null;
+    if (text.length < 90 || sentenceCount < 2) {
+      st.report = null;
+      st.items = [];
+      st.sentenceCount = sentenceCount;
+      st.lastText = text;
+      st.el.dataset.wtscDocumentState = 'short';
+      render(st);
+      refreshHighlights();
+      return;
+    }
+    if (text === st.lastText && st.report) {
+      st.el.dataset.wtscDocumentState = 'ready';
+      st.el.dataset.wtscDocumentSource = 'unchanged';
+      return;
+    }
+    st.el.dataset.wtscDocumentState = 'waiting-idle';
+    const timeout = text.length > 12000 ? 1500 : text.length > 5000 ? 1150 : 800;
+    st.idleHandle = scheduleIdle(() => {
+      st.idleHandle = null;
+      if (scanId !== st.scanId) return;
+      analyzeNow(st,text,sentenceCount,scanId);
+    },timeout);
   }
 
   function attach(el) {
     if (!el || states.has(el) || !(isMessageTextarea(el) || isRichEditor(el))) return;
-    const st = {el,items:[],report:null,sentenceCount:0,timer:0};
+    const st = {el,items:[],report:null,sentenceCount:0,timer:0,idleHandle:null,scanId:0,lastText:'',scans:0,cacheHits:0};
     states.set(el,st);
     stateList.add(st);
     st.schedule = delay => {
       clearTimeout(st.timer);
-      st.timer = setTimeout(() => run(st),delay);
+      cancelIdle(st.idleHandle);
+      st.idleHandle = null;
+      st.scanId++;
+      st.timer = setTimeout(() => {
+        st.timer = 0;
+        run(st);
+      },delay);
     };
     el.dataset.wtscDocumentV300Bound = '1';
-    el.addEventListener('input',() => st.schedule(520),{passive:true});
-    el.addEventListener('paste',() => st.schedule(160),{passive:true});
-    el.addEventListener('cut',() => st.schedule(180),{passive:true});
-    el.addEventListener('focus',() => st.schedule(650),{passive:true});
-    st.schedule(800);
+    el.dataset.wtscDocumentRuntime = VERSION;
+    el.addEventListener('input',() => st.schedule(620),{passive:true});
+    el.addEventListener('paste',() => st.schedule(220),{passive:true});
+    el.addEventListener('cut',() => st.schedule(240),{passive:true});
+    el.addEventListener('focus',() => st.schedule(720),{passive:true});
+    st.schedule(900);
   }
 
   function observe(root = document) {
@@ -317,14 +414,24 @@
     observer.observe(target,{childList:true,subtree:true});
   }
 
+  function rescanVisible() {
+    for (const st of stateList) if (st.el?.isConnected && document.visibilityState === 'visible') st.schedule?.(80);
+  }
+
   window.WarextDocumentV300 = {
     VERSION,
     rescan(root = document) { editorElements(root).forEach(el => states.get(el)?.schedule?.(0)); },
     getReport(el) { return states.get(el)?.report || null; },
-    getIssues(el) { return (states.get(el)?.items || []).map(item => ({...item,suggestions:[...(item.suggestions || [])]})); }
+    getIssues(el) { return (states.get(el)?.items || []).map(item => ({...item,suggestions:[...(item.suggestions || [])]})); },
+    getPerformance(el) {
+      const st = states.get(el);
+      return st ? {scans:st.scans,cacheHits:st.cacheHits,cacheEntries:reportCache.size,lastTextLength:st.lastText.length} : null;
+    },
+    clearCache() { reportCache.clear(); }
   };
 
   installStyle();
+  document.addEventListener('visibilitychange',rescanVisible,{passive:true});
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',() => observe(document),{once:true});
   else observe(document);
 })();

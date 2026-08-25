@@ -1,0 +1,25 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const file = path.join(__dirname,'../upload/js/warext/turkish-spellcheck/document-v300.js');
+const source = fs.readFileSync(file,'utf8');
+assert.ok(source.includes("const VERSION = '3.1.0';"));
+assert.ok(source.includes('requestIdleCallback'));
+assert.ok(source.includes('cancelIdleCallback'));
+assert.ok(source.includes('reportCache = new Map()'));
+assert.ok(source.includes('CACHE_LIMIT = 18'));
+assert.ok(source.includes("wtscDocumentSource = source"));
+assert.ok(source.includes('wtscDocumentAnalysisMs'));
+assert.ok(source.includes('wtscDocumentCacheHits'));
+assert.ok(source.includes('text === st.lastText'));
+assert.ok(source.includes('cacheGet(text)'));
+assert.ok(source.includes('cachePut(text,report'));
+assert.ok(source.includes('scanId !== st.scanId'));
+assert.ok(source.includes("document.addEventListener('visibilitychange'"));
+assert.ok(source.includes('getPerformance(el)'));
+assert.ok(source.includes('clearCache()'));
+assert.ok(!/https?:\/\//u.test(source));
+assert.ok(!/WebSocket|EventSource|sendBeacon/u.test(source));
+console.log('V3.1 belge analizi idle zamanlama, iptal, tekrar kullanım ve yerel performans sözleşmesi başarılı.');

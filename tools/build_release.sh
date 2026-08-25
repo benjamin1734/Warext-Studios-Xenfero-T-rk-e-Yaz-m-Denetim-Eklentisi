@@ -41,6 +41,7 @@ node "$ROOT/tests/longtext-regression.js"
 node "$ROOT/tests/v300-semantic-document-regression.js"
 node "$ROOT/tests/v310-semantic-reasoning-regression.js"
 node "$ROOT/tests/v311-semantic-benchmark.js"
+node "$ROOT/tests/v311-document-performance-contract.js"
 
 python3 "$ROOT/tools/final_audit.py" "$ROOT"
 
