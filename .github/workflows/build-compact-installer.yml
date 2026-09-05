@@ -22,7 +22,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 1 MB altı özellik-tam kurulum paketini üret
-        run: python3 tools/build_compact_installer.py
+        run: |
+          python3 tools/build_compact_installer.py
+          python3 tools/harden_compact_installer.py
 
       - name: PHP kurulum kodunu doğrula
         run: |
