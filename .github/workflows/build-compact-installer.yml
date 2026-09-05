@@ -1,0 +1,42 @@
+name: Warext V1.0.4 Compact Installer
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: warext-spell-check-compact-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compact:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 1 MB altı özellik-tam kurulum paketini üret
+        run: python3 tools/build_compact_installer.py
+
+      - name: PHP kurulum kodunu doğrula
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/wtsc-compact-check
+          mkdir -p /tmp/wtsc-compact-check
+          unzip -q Warext-Turkce-Yazim-Denetimi-V1.0.4-XenForo-COMPACT.zip -d /tmp/wtsc-compact-check
+          php -l /tmp/wtsc-compact-check/upload/src/addons/Warext/TurkishSpellCheck/Setup.php
+          unzip -tq Warext-Turkce-Yazim-Denetimi-V1.0.4-XenForo-COMPACT.zip
+
+      - name: Compact kurulum paketini artifact olarak yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: Warext-Turkce-Yazim-Denetimi-V1.0.4-XenForo-COMPACT
+          path: Warext-Turkce-Yazim-Denetimi-V1.0.4-XenForo-COMPACT.zip
+          if-no-files-found: error
+          retention-days: 90
